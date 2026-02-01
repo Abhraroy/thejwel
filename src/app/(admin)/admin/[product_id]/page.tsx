@@ -1,0 +1,157 @@
+"use client"
+import ProductDisplay from '@/components/ProductUI/ProductDisplay';
+import ProductReview from '@/components/ProductUI/ProductReview';
+import { useParams } from 'next/navigation';
+import { createClient } from '@/app/utils/supabase/client';
+import { useEffect, useState } from 'react';
+
+
+export default function ProductPage() {
+  const params = useParams();
+  const product_id = params?.product_id as string;
+  const [productDetails, setProductDetails] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const supabase = createClient();
+  
+  useEffect(() => {
+    if (!product_id) {
+      setError("Product ID is missing");
+      setLoading(false);
+      return;
+    }
+
+    const getProductdetails = async () => {
+      try {
+        const { data, error: productError } = await supabase
+          .from("products")
+          .select(`
+            *,
+            product_images!product_images_product_id_fkey(*),
+            reviews(*),
+            categories(*)
+          `)
+          .eq("product_id", product_id)
+          .single();
+        
+        if (productError) {
+          console.error("Error fetching product:", productError);
+          setError("Failed to load product. Please try again.");
+          setProductDetails(null);
+        } else if (data) {
+          console.log("product details", data);
+          console.log("Available fields:", Object.keys(data));
+          console.log("tags:", data.tags);
+          console.log("collection:", data.collection);
+          console.log("metal_type:", data.metal_type);
+          
+          // If no product images, use thumbnail_image as fallback
+          if (!data.product_images || data.product_images.length === 0) {
+            if (data.thumbnail_image) {
+              data.product_images = [{
+                image_url: data.thumbnail_image,
+                product_id: data.product_id
+              }];
+            }
+          }
+          
+          // Wrap in array since ProductDisplay expects an array
+          setProductDetails([data]);
+          setError(null);
+        } else {
+          setError("Product not found");
+          setProductDetails(null);
+        }
+      } catch (err) {
+        console.error("Error fetching product:", err);
+        setError("An error occurred while loading the product");
+        setProductDetails(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const reviewData = async () => {
+      if (!product_id) return;
+      
+      try {
+        const { data: reviewData, error: reviewError } = await supabase
+          .from("reviews")
+          .select(`
+            *,
+            review_images(*),
+            users(*)  
+          `)
+          .eq("product_id", product_id);
+        
+        if (reviewError) {
+          console.error("Error fetching reviews:", reviewError);
+          setReviews([]);
+        } else {
+          console.log("reviews data", reviewData);
+          setReviews(reviewData || []);
+        }
+      } catch (err) {
+        console.error("Error fetching reviews:", err);
+        setReviews([]);
+      }
+    };
+
+    setLoading(true);
+    getProductdetails();
+    reviewData();
+  }, [product_id]);
+
+
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-theme-cream flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-sage mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !productDetails) {
+    return (
+      <div className="min-h-screen bg-theme-cream flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-16 h-16 text-gray-400 mx-auto mb-4"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+            />
+          </svg>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Product Not Found</h2>
+          <p className="text-gray-600 mb-6">{error || "The product you're looking for doesn't exist."}</p>
+          <a
+            href="/"
+            className="inline-block px-6 py-3 bg-theme-sage hover:bg-theme-olive text-white font-medium rounded-lg transition-colors duration-200"
+          >
+            Back to Home
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-theme-cream flex flex-col">
+      {productDetails && Array.isArray(productDetails) && productDetails.length > 0 && (
+        <ProductDisplay productDetails={productDetails} />
+      )}
+    </div>
+  );
+}
