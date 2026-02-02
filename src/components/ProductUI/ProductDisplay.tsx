@@ -49,6 +49,10 @@ export default function ProductDisplay({
 
   const product = productDetails?.[0];
   const productImages = product?.product_images ?? [];
+  const carouselImages =
+    Array.isArray(productImages) && productImages.length > 0
+      ? productImages
+      : [{ image_url: "/placeholder.png", image_id: "placeholder" }];
   const selectedImageUrl =
     productImages[selectedImage]?.image_url ??
     productImages[0]?.image_url ??
@@ -131,6 +135,64 @@ export default function ProductDisplay({
   const touchStartXRef = useRef<number | null>(null);
   const touchEndXRef = useRef<number | null>(null);
   const SWIPE_THRESHOLD_PX = 50;
+
+  // Smooth swipe carousel (mobile + tablet): native momentum scroll + snap + sync to selectedImage
+  const mobileCarouselRef = useRef<HTMLDivElement>(null);
+  const tabletCarouselRef = useRef<HTMLDivElement>(null);
+  const viewerCarouselRef = useRef<HTMLDivElement>(null);
+  const carouselScrollRafRef = useRef<number | null>(null);
+
+  const syncSelectedFromCarousel = (el: HTMLDivElement | null) => {
+    if (!el) return;
+    const width = el.clientWidth || 1;
+    const idx = Math.round(el.scrollLeft / width);
+    const maxIdx = Math.max(0, (carouselImages?.length ?? 1) - 1);
+    const clamped = Math.max(0, Math.min(idx, maxIdx));
+    if (clamped !== selectedImage) setSelectedImage(clamped);
+  };
+
+  const onCarouselScroll =
+    (ref: React.RefObject<HTMLDivElement | null>) =>
+    (_e: React.UIEvent<HTMLDivElement>) => {
+      if (carouselScrollRafRef.current) {
+        cancelAnimationFrame(carouselScrollRafRef.current);
+      }
+      carouselScrollRafRef.current = requestAnimationFrame(() => {
+        syncSelectedFromCarousel(ref.current);
+      });
+    };
+
+  // When thumbnails / arrows / other UI changes selectedImage, smoothly scroll carousel to match.
+  useEffect(() => {
+    const refs = [mobileCarouselRef, tabletCarouselRef, viewerCarouselRef];
+    refs.forEach((ref) => {
+      const el = ref.current;
+      if (!el) return;
+      const width = el.clientWidth || 1;
+      const targetLeft = width * selectedImage;
+      if (Math.abs(el.scrollLeft - targetLeft) < 2) return;
+      el.scrollTo({ left: targetLeft, behavior: "smooth" });
+    });
+  }, [selectedImage, carouselImages?.length]);
+
+  // Keep snap alignment on resize (viewport width changes)
+  useEffect(() => {
+    const onResize = () => {
+      [mobileCarouselRef.current, tabletCarouselRef.current, viewerCarouselRef.current].forEach((el) => {
+        if (!el) return;
+        const width = el.clientWidth || 1;
+        el.scrollTo({ left: width * selectedImage, behavior: "auto" });
+      });
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [selectedImage]);
+
+  useEffect(() => {
+    return () => {
+      if (carouselScrollRafRef.current) cancelAnimationFrame(carouselScrollRafRef.current);
+    };
+  }, []);
 
   
 
@@ -249,16 +311,29 @@ export default function ProductDisplay({
             ">
               {/* Main Image */}
               <div className="relative aspect-square w-full max-w-[90vw] overflow-hidden rounded-2xl bg-gray-100">
-                <Image
-                  src={
-                    productImages[selectedImage]?.image_url
-                  }
-                  alt={`${productDetails[0]?.product_name}`}
-                  fill
-                  className="object-cover cursor-pointer"
-                  priority
-                  onClick={() => setProductImageView(true)}
-                />
+                <div
+                  ref={mobileCarouselRef}
+                  onScroll={onCarouselScroll(mobileCarouselRef)}
+                  className="flex h-full w-full overflow-x-auto overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain"
+                  style={{ WebkitOverflowScrolling: "touch" }}
+                >
+                  {carouselImages.map((img: any, idx: number) => (
+                    <div
+                      key={img?.image_id ?? idx}
+                      className="relative h-full basis-full shrink-0 snap-center"
+                    >
+                      <Image
+                        src={img?.image_url ?? "/placeholder.png"}
+                        alt={`${productDetails?.[0]?.product_name ?? "Product"} ${idx + 1}`}
+                        fill
+                        className="object-cover cursor-pointer"
+                        priority={idx === 0}
+                        onClick={() => setProductImageView(true)}
+                        sizes="100vw"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
               {/* Thumbnail Images */}
               <div className="flex w-full flex-row justify-center gap-2">
@@ -599,14 +674,29 @@ export default function ProductDisplay({
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
-                <Image
-                  src={productImages[selectedImage]?.image_url}
-                  alt={productImages[selectedImage]?.image_url}
-                  fill
-                  className="object-cover"
-                  priority
-                  onClick={() => setProductImageView(true)}
-                />
+                <div
+                  ref={tabletCarouselRef}
+                  onScroll={onCarouselScroll(tabletCarouselRef)}
+                  className="flex h-full w-full overflow-x-auto overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain"
+                  style={{ WebkitOverflowScrolling: "touch" }}
+                >
+                  {carouselImages.map((img: any, idx: number) => (
+                    <div
+                      key={img?.image_id ?? idx}
+                      className="relative h-full basis-full shrink-0 snap-center"
+                    >
+                      <Image
+                        src={img?.image_url ?? "/placeholder.png"}
+                        alt={`${product?.product_name ?? "Product"} ${idx + 1}`}
+                        fill
+                        className="object-cover"
+                        priority={idx === 0}
+                        onClick={() => setProductImageView(true)}
+                        sizes="50vw"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             {/* Zoom Layer - Outside container to avoid clipping */}
@@ -1183,7 +1273,7 @@ export default function ProductDisplay({
       {/* Full Screen Image Viewer */}
       {productImageView && (
         <div
-          className="fixed inset-0 bg-white z-[100] flex items-center justify-center transition-opacity duration-300 ease-in-out"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-white/70 backdrop-blur-2xl transition-opacity duration-300 ease-in-out supports-[backdrop-filter]:bg-white/40"
           onClick={() => setProductImageView(false)}
         >
           {/* Close Button */}
@@ -1192,7 +1282,7 @@ export default function ProductDisplay({
               e.stopPropagation();
               setProductImageView(false);
             }}
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 z-[101] p-2 sm:p-3 bg-gray-900/10 hover:bg-gray-900/20 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+            className="absolute top-4 left-4 sm:top-6 sm:left-2 md:top-8 md:left-8 z-[101] p-2 sm:p-3 hover:bg-gray-900/20 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
             aria-label="Close image viewer"
           >
             <svg
@@ -1201,7 +1291,7 @@ export default function ProductDisplay({
               viewBox="0 0 24 24"
               strokeWidth={2.5}
               stroke="currentColor"
-              className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-gray-900"
+              className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-gray-900/50"
             >
               <path
                 strokeLinecap="round"
@@ -1211,99 +1301,40 @@ export default function ProductDisplay({
             </svg>
           </button>
 
-          {/* Prev / Next controls (desktop + mobile) */}
-          {Array.isArray(productImages) && productImages.length > 1 && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goPrevImage();
-                }}
-                className="absolute left-3 sm:left-6 md:left-8 z-[101] p-2.5 sm:p-3 bg-gray-900/10 hover:bg-gray-900/20 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
-                aria-label="Previous image"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  stroke="currentColor"
-                  className="w-6 h-6 sm:w-7 sm:h-7 text-gray-900"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                </svg>
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goNextImage();
-                }}
-                className="absolute right-3 sm:right-6 md:right-8 z-[101] p-2.5 sm:p-3 bg-gray-900/10 hover:bg-gray-900/20 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
-                aria-label="Next image"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  stroke="currentColor"
-                  className="w-6 h-6 sm:w-7 sm:h-7 text-gray-900"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5 15.75 12l-7.5 7.5" />
-                </svg>
-              </button>
-            </>
-          )}
+          
 
           {/* Product Image (swipeable on mobile) */}
           <div
-            className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12"
+            className="relative w-full h-full flex items-center justify-center p-0 sm:p-8 md:p-12 backdrop-blur-3xl bg-white/30 supports-[backdrop-filter]:bg-white/15"
             onClick={(e) => e.stopPropagation()}
-            onTouchStart={(e) => {
-              if (!Array.isArray(productImages) || productImages.length <= 1) return;
-              touchStartXRef.current = e.touches[0]?.clientX ?? null;
-              touchEndXRef.current = null;
-            }}
-            onTouchMove={(e) => {
-              if (!Array.isArray(productImages) || productImages.length <= 1) return;
-              touchEndXRef.current = e.touches[0]?.clientX ?? null;
-            }}
-            onTouchEnd={() => {
-              if (!Array.isArray(productImages) || productImages.length <= 1) return;
-              const startX = touchStartXRef.current;
-              const endX = touchEndXRef.current;
-              touchStartXRef.current = null;
-              touchEndXRef.current = null;
-              if (startX === null || endX === null) return;
-              const delta = startX - endX;
-              if (Math.abs(delta) < SWIPE_THRESHOLD_PX) return;
-              if (delta > 0) {
-                goNextImage(); // swipe left
-              } else {
-                goPrevImage(); // swipe right
-              }
-            }}
           >
-            <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
-              <Image
-                src={productImages[selectedImage]?.image_url}
-                alt={productImages[selectedImage]?.image_url || "Product image"}
-                fill
-                className="object-contain"
-                priority
-                sizes="100vw"
-              />
+            <div
+              ref={viewerCarouselRef}
+              onScroll={onCarouselScroll(viewerCarouselRef)}
+              className="flex h-full w-full overflow-x-auto overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              {carouselImages.map((img: any, idx: number) => (
+                <div
+                  key={img?.image_id ?? idx}
+                  className="h-full basis-full shrink-0 snap-center flex items-center justify-center"
+                >
+                  <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
+                    <Image
+                      src={img?.image_url ?? "/placeholder.png"}
+                      alt={img?.image_url || "Product image"}
+                      fill
+                      className="object-contain"
+                      priority={idx === 0}
+                      sizes="100vw"
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Counter + hint */}
-          {Array.isArray(productImages) && productImages.length > 1 && (
-            <div className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-[101] px-3 py-1.5 rounded-full bg-black/60 text-white text-xs sm:text-sm">
-             • Swipe on mobile • Use ← →
-            </div>
-          )}
-
+        
           {/* Thumbnails strip */}
           {Array.isArray(productImages) && productImages.length > 1 && (
             <div
