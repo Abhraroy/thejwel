@@ -213,7 +213,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
     setThumbnailImagePreview(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
   
     const startTime = performance.now();

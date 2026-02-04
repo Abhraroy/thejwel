@@ -169,6 +169,7 @@ export async function createProduct(productData: any) {
     const supabase = await createClient();
 
     const payload = {
+      sku: productData.sku,
       product_name: productData.product_name,
       category_id: productData.category_id,
       subcategory_id: productData.subcategory_id,
@@ -251,6 +252,7 @@ export async function updateProduct(productId: string, productData: any) {
       productData.thumbnail_image = uploadResult.url;
     }
     const payload = {
+      sku: productData.sku,
       product_name: productData.product_name,
       category_id: productData.category_id,
       subcategory_id: productData.subcategory_id,

@@ -57,7 +57,7 @@ export default function AdminLoginPage() {
     if (error) setError('')
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')

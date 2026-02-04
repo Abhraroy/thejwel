@@ -178,14 +178,16 @@ export default function CategoriesList({ category, isDarkTheme }: { category: Ca
     setShowAddSubCategory(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent, category_id: string) => {
-    e.preventDefault();
-    setSubmitting(true);
-    console.log("category_id",category_id)
-    console.log('Subcategory form data:', formData);
-    
-    try {
-      let imageUrl: string | undefined = undefined;
+  const handleSubmit =
+    (category_id: string) =>
+    async (e: React.SubmitEvent) => {
+      e.preventDefault();
+      setSubmitting(true);
+      console.log("category_id", category_id);
+      console.log("Subcategory form data:", formData);
+
+      try {
+        let imageUrl: string | undefined = undefined;
 
       // Upload image via API if it's a new file
       if (formData.subcategory_image_url instanceof File) {
@@ -240,13 +242,17 @@ export default function CategoriesList({ category, isDarkTheme }: { category: Ca
       }else{
         alert(`Failed to create sub category: ${result?.error}`)
       }
-    } catch (error) {
-      console.error('Submit error:', error);
-      alert(error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      } catch (error) {
+        console.error("Submit error:", error);
+        alert(
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred. Please try again."
+        );
+      } finally {
+        setSubmitting(false);
+      }
+    };
 
   const handleEditSubCategory = (subcategory_id: string,subcategory_name: string,subcategory_image_url: string,subcategory_image_url_preview: string,is_active: boolean) => {
     console.log("subcategory_id",subcategory_id)
@@ -464,7 +470,7 @@ export default function CategoriesList({ category, isDarkTheme }: { category: Ca
                           Add New Sub Category
                         </h3>
                         
-                        <form onSubmit={(e) => handleSubmit(e, category.category_id)} className="space-y-6">
+                        <form onSubmit={handleSubmit(category.category_id)} className="space-y-6">
                           {/* Basic Information */}
                           <div className="space-y-4">
                             <div>

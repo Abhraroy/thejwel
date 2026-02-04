@@ -130,7 +130,7 @@ export default function ReviewForm({ productId, onClose, onSuccess }: ReviewForm
     return uploadedUrls;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setError(null);
 

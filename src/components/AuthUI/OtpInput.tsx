@@ -110,7 +110,7 @@ export default function OtpInput({ length = 6, onComplete, containerClassName = 
   };
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     const completeOtp = otp.join('');
     

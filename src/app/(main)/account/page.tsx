@@ -2,9 +2,11 @@
 import { createClient } from "@/app/utils/supabase/client";
 
 import AddressSection from "@/components/Address/AddressSection";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useStore } from "@/zustandStore/zustandStore";
+import { toast } from "react-toastify";
 
 // Icon Components
 const PhoneIcon = () => (
@@ -145,6 +147,7 @@ export default function AccountPage() {
   const [addresses, setAddresses] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
   const [loadingOrderItems, setLoadingOrderItems] = useState<string | null>(
     null
   );
@@ -166,6 +169,29 @@ export default function AccountPage() {
     setPaymentConcluded,
     setShowPaymentConcluded,
   } = useStore();
+
+  const copyToClipboard = async (text: string) => {
+    // Prefer modern clipboard API when available.
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard");
+      return;
+    }
+
+    // Fallback for older browsers / non-secure contexts.
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    if (!ok) throw new Error("Copy failed");
+  };
 
   const fetchUserProfile = async () => {
     setLoadingProfile(true);
@@ -246,7 +272,7 @@ export default function AccountPage() {
     setNameUpdateState(!nameUpdateState);
   };
 
-  const handleEmailUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleEmailUpdate = async (e: React.SubmitEvent) => {
     e.preventDefault();
     const email = (e.target as HTMLFormElement).email.value;
     console.log("email", email);
@@ -278,7 +304,7 @@ export default function AccountPage() {
     }
   };
 
-  const handleNameUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleNameUpdate = async (e: React.SubmitEvent) => {
     e.preventDefault();
     const firstName = (e.target as HTMLFormElement).firstName.value;
     const lastName = (e.target as HTMLFormElement).lastName.value;
@@ -578,6 +604,12 @@ export default function AccountPage() {
                           day: "numeric",
                         })
                       : "N/A";
+                    const orderNumberToCopy =
+                      order?.order_number ?? order?.order_id ?? "";
+                    const orderNumberToDisplay =
+                      order?.order_number?.slice(-8) ??
+                      order?.order_id?.slice(0, 8) ??
+                      "N/A";
                     const shippingAddress = order?.shipping_address;
                     const isExpanded = expandedOrderId === order?.order_id;
                     const orderItems =
@@ -598,10 +630,34 @@ export default function AccountPage() {
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                               <span className="text-xs sm:text-sm font-semibold text-gray-900">
                                 Order #
-                                {order?.order_number?.slice(-8) ??
-                                  order?.order_id?.slice(0, 8) ??
-                                  "N/A"}
+                                {orderNumberToDisplay}
                               </span>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (!orderNumberToCopy) return;
+                                  try {
+                                    await copyToClipboard(orderNumberToCopy);
+                                    setCopiedOrderId(order?.order_id ?? null);
+                                    window.setTimeout(
+                                      () => setCopiedOrderId(null),
+                                      1200
+                                    );
+                                  } catch (err) {
+                                    console.error(
+                                      "Failed to copy order number:",
+                                      err
+                                    );
+                                  }
+                                }}
+                                disabled={!orderNumberToCopy}
+                                className=" px-2 py-1 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed w-fit font-open-sans font-extrabold text-sm
+                                cursor-pointer "
+                              >
+                                {copiedOrderId === (order?.order_id ?? null)
+                                  ? "Copied!"
+                                  : "Click to copy order number"}
+                              </button>
                               <span
                                 className={`px-2.5 py-1 rounded-full text-xs font-medium w-fit ${
                                   order?.order_status === "delivered"
@@ -877,6 +933,17 @@ export default function AccountPage() {
                   >
                     Start Shopping
                   </a>
+                </div>
+              )}
+
+              {!loadingOrders && orders && orders.length > 0 && (
+                <div className="mt-5 flex justify-end">
+                  <Link
+                    href="/account/orders"
+                    className="px-4 py-2 text-sm font-semibold rounded-md border border-gray-200 text-gray-800 hover:bg-gray-50 transition-colors"
+                  >
+                    View all orders
+                  </Link>
                 </div>
               )}
             </div>

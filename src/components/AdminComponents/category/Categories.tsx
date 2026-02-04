@@ -145,7 +145,7 @@ export default function Categories({ isDarkTheme, category }: CategoriesProps) {
   };
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setSubmitting(true);
 

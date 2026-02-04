@@ -39,7 +39,7 @@ export default function PhoneNumberInput({ containerClassName = 'w-full bg-white
       };
     }, [setMobnoInputState]);
   
-    const handlePhoneSubmit = async (e: React.FormEvent) => {
+    const handlePhoneSubmit = async (e: React.SubmitEvent) => {
       e.preventDefault();
       // Basic validation for 10-digit phone number
       let cleanedPhone = phoneNumber.replace(/\D/g, '');
