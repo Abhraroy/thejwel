@@ -205,15 +205,23 @@ export default function HomePage(
 //   const [loadingNewArrivals, setLoadingNewArrivals] = useState(true);
 //   const [loadingCategories, setLoadingCategories] = useState(true);
   const supabase = createClient();
-
+  const [carouselItems, setCarouselItems] = useState<string[]>([]);
   // Simple slides array for the carousel
-  const carouselItems = [
-    "https://battulaaljewels.com/website/images/product-banner.webp",
-    "https://battulaaljewels.com/website/images/product-banner.webp",
-    "https://battulaaljewels.com/website/images/product-banner.webp",
-    "https://battulaaljewels.com/website/images/product-banner.webp",
-    "https://battulaaljewels.com/website/images/product-banner.webp",
-  ].map((src, index) => (
+  useEffect(() => {
+    const fetchCarouselItems = async () => {
+      const { data, error } = await supabase.from("image_resources").select("imagelink").eq("section_name", "homepage_hero");
+      if (error) {
+        console.error("Error fetching carousel items:", error);
+      }
+      if (data) {
+        setCarouselItems(data.map((item) => item.imagelink));
+      }
+    };
+    fetchCarouselItems();
+  }, []);
+
+
+  const carouselItemsArray = carouselItems.map((src, index) => (
     <div
       key={index}
       className="w-full h-full relative"
@@ -419,7 +427,7 @@ export default function HomePage(
         {/* Carousel */}
         <Suspense fallback={<CarouselSkeleton />}>
           <Carousel
-            items={carouselItems}
+            items={carouselItemsArray}
             autoSlideInterval={3000}
             className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px]"
           />

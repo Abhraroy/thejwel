@@ -132,7 +132,7 @@ export default function Footer({ className = "" }: FooterProps) {
   ];
 
   const customerService: FooterLink[] = [
-    { label: "Track Order", href: "/track-order" },
+    { label: "Track Order", href: "https://www.rapidshyp.com/shipment-tracking" },
     { label: "Returns & Exchanges", href: "/returns" },
   ];
 

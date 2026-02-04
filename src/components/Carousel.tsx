@@ -3,16 +3,28 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface CarouselProps {
-  items: React.ReactNode[];
+  items?: React.ReactNode[];
   autoSlideInterval?: number; // in milliseconds
   className?: string;
+  /**
+   * Controls the slide/image height across breakpoints.
+   * Defaults to a responsive height that works well for hero/banner images.
+   */
+  heightClassName?: string;
+  /**
+   * Applied to each slide wrapper. Useful when you want extra padding/overlays.
+   */
+  slideClassName?: string;
 }
 
 export default function Carousel({ 
-  items, 
+  items,
   autoSlideInterval = 6000,
-  className = '' 
+  className = '',
+  heightClassName = 'h-[200px] sm:h-[320px] md:h-[420px] lg:h-[520px]',
+  slideClassName = '',
 }: CarouselProps) {
+  const safeItems = Array.isArray(items) ? items : [];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -26,12 +38,16 @@ export default function Carousel({
   const minSwipeDistance = 50;
 
   const goToNext = useCallback(() => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length);
-  }, [items.length]);
+    setCurrentIndex((prevIndex) =>
+      safeItems.length ? (prevIndex + 1) % safeItems.length : 0
+    );
+  }, [safeItems.length]);
 
   const goToPrevious = useCallback(() => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + items.length) % items.length);
-  }, [items.length]);
+    setCurrentIndex((prevIndex) =>
+      safeItems.length ? (prevIndex - 1 + safeItems.length) % safeItems.length : 0
+    );
+  }, [safeItems.length]);
 
   // Touch handlers for swipe
   const onTouchStart = (e: React.TouchEvent) => {
@@ -66,23 +82,42 @@ export default function Carousel({
   };
 
   useEffect(() => {
-    if (items.length <= 1 || isPaused) return;
+    if (safeItems.length <= 1 || isPaused) return;
 
     const interval = setInterval(() => {
       goToNext();
     }, autoSlideInterval);
 
     return () => clearInterval(interval);
-  }, [goToNext, autoSlideInterval, items.length, isPaused]);
+  }, [goToNext, autoSlideInterval, safeItems.length, isPaused]);
 
-  if (items.length === 0) {
-    return null;
+  // Empty state when items prop is missing / empty
+  if (safeItems.length === 0) {
+    return (
+      <div
+        className={[
+          'relative w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-50',
+          heightClassName,
+          className,
+        ].join(' ')}
+      >
+        <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">
+          No carousel items to display
+        </div>
+      </div>
+    );
   }
 
   return (
     <div 
       ref={containerRef}
-      className={`relative w-full overflow-hidden ${className}`}
+      className={[
+        'relative w-full overflow-hidden',
+        heightClassName,
+        // Ensure images inside slides have a consistent size on all screens
+        '[&_img]:w-full [&_img]:h-full [&_img]:object-cover',
+        className,
+      ].join(' ')}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={onTouchStart}
@@ -97,10 +132,15 @@ export default function Carousel({
             transform: `translateX(-${currentIndex * 100}%)`,
           }}
         >
-          {items.map((item, index) => (
+          {safeItems.map((item, index) => (
             <div
               key={index}
-              className="min-w-full w-full flex-shrink-0 h-full"
+              className={[
+                'min-w-full w-full shrink-0 h-full',
+                // In case a slide uses Next/Image "fill", this keeps layout stable.
+                'relative',
+                slideClassName,
+              ].join(' ')}
             >
               {item}
             </div>
@@ -153,9 +193,9 @@ export default function Carousel({
       </button>
 
       {/* Indicator Dots */}
-      {items.length > 1 && (
+      {safeItems.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-          {items.map((_, index) => (
+          {safeItems.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}

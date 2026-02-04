@@ -97,6 +97,22 @@ const CategoryIcon = ({ className = "w-5 h-5" }) => (
   </svg>
 );
 
+const ResourcesIcon = ({ className = "w-5 h-5" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={2}
+    stroke="currentColor"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+    />
+  </svg>
+);
 const LogoutIcon = ({ className = "w-5 h-5" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -166,6 +182,7 @@ export default function AdminSidebar({ isDarkTheme, onThemeToggle }: AdminSideba
     { id: "products", label: "Products", icon: ProductIcon, href: "/admin/products" },
     { id: "reviews", label: "Reviews", icon: ReviewIcon, href: "/admin/reviews" },
     { id: "orders", label: "Orders", icon: OrdersIcon, href: "/admin/orders" },
+    {id:"resources", label: "Resources", icon: ResourcesIcon, href: "/admin/resources" },
   ];
 
   const handleLogout = async () => {
