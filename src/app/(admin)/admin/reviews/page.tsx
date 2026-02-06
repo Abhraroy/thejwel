@@ -1,30 +1,30 @@
-import supabase from "@/lib/supabase/admin";
+
 import Reviews from "@/components/AdminComponents/review/Reviews";
+import { getReviews } from "./action";
 
 export default async function ReviewsPage() {
-  const { data: reviewsData, error } = await supabase
-    .from("reviews")
-    .select(
-      `
-      *,
-      products(*),
-      users(*),
-      review_images(*)
-    `
-    )
-    .order("created_at", { ascending: false })
-    .limit(500);
+  
+  const { success, data: reviewsData, message } = await getReviews();
 
-  if (error) {
-    console.error("Error fetching reviews:", error);
+  if (!success) {
+    console.error("Error fetching reviews:", message);
     return (
       <div className="w-full p-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">Error fetching reviews: {error.message}</p>
+          <p className="text-red-800">Error fetching reviews: {message}</p>
         </div>
       </div>
     );
   }
 
+  if (reviewsData?.length === 0) {
+    return (
+      <div className="w-full p-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-800">No reviews found</p>
+        </div>
+      </div>
+    );
+  }
   return <Reviews initialReviews={reviewsData ?? []} />;
 }

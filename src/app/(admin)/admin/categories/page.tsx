@@ -1,36 +1,33 @@
-import supabase from "@/lib/supabase/admin";
+
 import CategoryHeader from "../../../../components/AdminComponents/category/CategoryHeader";
 import CategoriesList from "@/components/AdminComponents/category/CategoriesList";
 import Categories from "@/components/AdminComponents/category/Categories";
-
-export  default async function CategoriesPage() {
+import { getCategories } from "./action";
+export default async function CategoriesPage() {
   const isDarkTheme = false;
 
-  const { data: categoriesData, error } = await supabase.from('categories').select('*, sub_categories(*)').order('created_at', { ascending: false });
-  if (error) {
-    console.error('Error fetching categories:', error);
-    return <div>Error fetching categories: {error.message}</div>;
+  const { success, data: categoriesData, message } = await getCategories();
+  if (!success) {
+    console.error('Error fetching categories:', message);
+    return <div>Error fetching categories: {message}</div>;
   }
-  console.log('categoriesData', categoriesData);
-
 
   return <>
-  <div className="p-6">
-  <CategoryHeader isDarkTheme={false} />
-  <Categories isDarkTheme={false} />
-  <div
-        className={`${
-          isDarkTheme ? 'bg-black border border-gray-700' : 'bg-white'
-        } rounded-lg shadow p-6`}
+    <div className="p-6">
+      <CategoryHeader isDarkTheme={false} />
+      <Categories isDarkTheme={false} />
+      <div
+        className={`${isDarkTheme ? 'bg-black border border-gray-700' : 'bg-white'
+          } rounded-lg shadow p-6`}
       >
         <h2 className={`text-xl font-semibold mb-2 ${isDarkTheme ? 'text-white' : 'text-gray-900'}`}>
-          Main Categories ({categoriesData.length})
+          Main Categories ({categoriesData?.length || 0})
         </h2>
         <p className={`text-sm mb-4 ${isDarkTheme ? 'text-gray-400' : 'text-gray-600'}`}>
           Manage your jewelry categories.
         </p>
 
-        {categoriesData.length === 0 ? (
+        {categoriesData?.length === 0 ? (
           <div className={`text-center py-12 ${isDarkTheme ? 'text-gray-400' : 'text-gray-500'}`}>
             No categories added yet. Click &quot;Add Category&quot; to create your first category.
           </div>
@@ -63,15 +60,15 @@ export  default async function CategoriesPage() {
                 </tr>
               </thead>
               <tbody>
-              {categoriesData.map((category : any) => (
-              <CategoriesList key={category.category_id} category={category} isDarkTheme={isDarkTheme} />
-          ))}
+                {categoriesData?.map((category: any) => (
+                  <CategoriesList key={category.category_id} category={category} isDarkTheme={isDarkTheme} />
+                ))}
               </tbody>
             </table>
           </div>
         )}
       </div>
-  </div>
+    </div>
   </>
 }
 

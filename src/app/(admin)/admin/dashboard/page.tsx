@@ -1,35 +1,14 @@
-import supabase from "@/lib/supabase/admin";
+
 import Dashboard from "../../../../components/AdminComponents/Dashboard";
+import { getDashboardData } from "./action";
 
 export default async function DashboardPage() {
   const isDarkTheme = false;
-
-  // Calculate date range for last 7 days
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Include today, so 6 days back = 7 days total
-
-  // Fetch all dashboard data in parallel
-  const [productsRes, ordersRes, reviewsRes, recentOrdersRes, orderItemsRes] = await Promise.all([
-    supabase
-      .from("products")
-      .select("product_id", { count: "exact", head: true }),
-    supabase
-      .from("orders")
-      .select("order_id, total_amount", { count: "exact" }),
-    supabase
-      .from("reviews")
-      .select("review_id", { count: "exact", head: true }),
-    supabase
-      .from("orders")
-      .select("order_date, total_amount")
-      .gte("order_date", sevenDaysAgo.toISOString())
-      .order("order_date", { ascending: true }),
-    supabase
-      .from("order_items")
-      .select("quantity, products(category_id, categories(category_name))"),
-  ]);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  const { productsRes, ordersRes, reviewsRes, recentOrdersRes, orderItemsRes } = await getDashboardData();
 
   // Calculate statistics
   const totalProducts = productsRes.count || 0;

@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { createProduct, updateProduct } from "../../../app/(admin)/admin/actions/Product";
-import { Category, getCategories } from "../../../app/(admin)/admin/actions/categories";
+import { Category, getCategories, getSubCategories } from "../../../app/(admin)/admin/actions/categories";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -39,15 +38,17 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
   const editingProduct = product ?? selectedProduct;
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [subCategoriesList, setSubCategoriesList] = useState<any[]>([]);
+  // Allow empty string for numeric inputs so placeholder can show (instead of a leading 0).
+  type NumericInput = number | "";
   const [formData, setFormData] = useState({
     product_name: "",
     description: "",
     category_id: "",
     subcategory_id: "",
     sku: "",
-    base_price: 0,
+    base_price: "" as NumericInput,
     discount_percentage: 0,
-    final_price: 0,
+    final_price: "" as NumericInput,
     stock_quantity: 1,
     weight_grams: 0,
     thumbnail_image: null as File | string | null,
@@ -92,9 +93,9 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
         category_id: safeString(editingProduct.category_id),
         subcategory_id: safeString(editingProduct.subcategory_id),
         sku: safeString(editingProduct.sku),
-        base_price: safeNumber(editingProduct.base_price, 0),
+        base_price: safeNumber(editingProduct.base_price, 0) as NumericInput,
         discount_percentage: safeNumber(editingProduct.discount_percentage, 0),
-        final_price: safeNumber(editingProduct.final_price, 0),
+        final_price: safeNumber(editingProduct.final_price, 0) as NumericInput,
         stock_quantity: safeNumber(editingProduct.stock_quantity, 1),
         weight_grams: safeNumber(editingProduct.weight_grams, 0),
         thumbnail_image: (editingProduct.thumbnail_image ?? null) as string | null,
@@ -121,9 +122,9 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
         category_id: "",
         subcategory_id: "",
         sku: "",
-        base_price: 0,
+        base_price: "" as NumericInput,
         discount_percentage: 0,
-        final_price: 0,
+        final_price: "" as NumericInput,
         stock_quantity: 1,
         weight_grams: 0,
         thumbnail_image: null,
@@ -139,21 +140,20 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
 
 
   const fetchSubCategories = async (categoryId: string) => {
-    const supabase = await createClient();
-    const result = await supabase.from("sub_categories").select("*").eq("category_id", categoryId);
-    if(result.data){
-      console.log("Sub categories fetched successfully");
+    const result = await getSubCategories(categoryId);
+    if(result.success && result.data){
       setSubCategoriesList(result.data as any[]);
     }else{
-      console.error("Error fetching sub categories:", result.error);
+      console.error("Error fetching sub categories:", result.message);
     }
   }
 
-  const calculateDiscountPercentage = (base: number, final: number) => {
-    if (base <= 0) return "0";
+  const calculateDiscountPercentage = (base: number, final: number): number => {
+    if (base <= 0) return 0;
     const discount = ((base - final) / base) * 100;
-    if (!isFinite(discount)) return "0";
-    return discount.toFixed(2);
+    if (!Number.isFinite(discount)) return 0;
+    // Whole number (no decimals) and never negative.
+    return Math.max(0, Math.round(discount));
   };
 
   const handleInputChange = (
@@ -164,11 +164,17 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
     const { name, value, type } = e.target;
 
     if (name === "base_price" || name === "final_price") {
-      const numericValue = Number(value);
+      const numericValue: NumericInput =
+        value === "" ? "" : Number.isFinite(Number(value)) ? Number(value) : "";
       setFormData((prev) => {
+        const nextBase = name === "base_price" ? numericValue : prev.base_price;
+        const nextFinal = name === "final_price" ? numericValue : prev.final_price;
+        const baseNum = nextBase === "" ? 0 : nextBase;
+        const finalNum = nextFinal === "" ? 0 : nextFinal;
         return {
           ...prev,
           [name]: numericValue,
+          discount_percentage: calculateDiscountPercentage(baseNum, finalNum),
         };
       });
       return;
@@ -321,9 +327,9 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
       category_id: "",
       subcategory_id: "",
       sku: "",
-      base_price: 0,
+      base_price: "" as NumericInput,
       discount_percentage: 0,
-      final_price: 0,
+      final_price: "" as NumericInput,
       stock_quantity: 1,
       weight_grams: 0,
       thumbnail_image: null,
@@ -942,7 +948,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
                   <img
                     src={thumbnailImagePreview}
                     alt="Thumbnail preview"
-                    className="w-full aspect-[2/3] object-cover rounded-lg border"
+                    className="w-full aspect-2/3 object-cover rounded-lg border"
                   />
                   <button
                     type="button"

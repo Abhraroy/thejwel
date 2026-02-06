@@ -528,3 +528,21 @@ export async function deleteSubCategory(
     };
   }
 }
+
+
+export async function getSubCategories(categoryId: string): Promise<{ success: boolean; data?: any[]; message?: string }> {
+  try {
+    const { data, error } = await supabase
+    .from("sub_categories")
+    .select("*")
+    .eq("category_id", categoryId);
+  if (error) {
+    console.error("Error fetching sub categories:", error);
+    return { success: false, data: [], message: error.message };
+    }
+    return { success: true, data: data, message: "Sub categories fetched successfully" };
+  } catch (error) {
+    console.error("Error fetching sub categories:", error);
+    return { success: false, data: [], message: error instanceof Error ? error.message : "Failed to fetch sub categories" };
+  }
+}

@@ -2,6 +2,7 @@ import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/lib/supabase/server";
+import adminsupabase from "@/lib/supabase/admin";
 import { getAuthToken } from "@/app/utils/Phonepe";
 import { redis } from "@/app/utils/Redis";
 let cachedToken = {
@@ -10,7 +11,7 @@ let cachedToken = {
 };
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
+  const userSupabase = await createClient();
   let totalAmount = 0;
   let amountInPaise = 0;
   let user_id = null;
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
     address_id = body.address_id || null;
     console.log("Address ID received:", address_id);
-    address_data = await supabase
+    address_data = await adminsupabase
       .from("addresses")
       .select("*")
       .eq("address_id", address_id)
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
   }
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await userSupabase.auth.getUser();
   if (!user) {
     return NextResponse.json(
       { message: "User is not authenticated found" },
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     );
   }
   if (user) {
-    const userData = await supabase
+    const userData = await adminsupabase
       .from("users")
       .select("*, cart(*)")
       .eq("phone_number", "+" + user.phone)
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
         user_id = userDataResult.user_id;
         cart_id = userDataResult.cart?.cart_id;
         if (cart_id) {
-          cartData = await supabase
+          cartData = await adminsupabase
             .from("cart_items")
             .select(
               `
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await adminsupabase
     .from("orders")
     .insert(orderData)
     .select("*")
@@ -197,7 +198,7 @@ export async function POST(request: NextRequest) {
 
   console.log("orderItemsPayload", orderItemsPayload);
   
-  const { error: orderItemsError } = await supabase
+  const { error: orderItemsError } = await adminsupabase
     .from("order_items")
     .insert(orderItemsPayload);
   
@@ -280,7 +281,7 @@ export async function POST(request: NextRequest) {
   );
   console.log("payment_res", payment_res.data);
   if (payment_res.data && payment_res.data.orderId) {
-    const payment_res_phonepay = await supabase
+    const payment_res_phonepay = await adminsupabase
       .from("orders")
       .update({
         order_number: payment_res.data.orderId,

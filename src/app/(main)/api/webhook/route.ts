@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import adminsupabase from "@/lib/supabase/admin";
 import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
     console.log("Valid authorization header");
     console.log("authHeader", authHeader);
     console.log("hash", hash);
-    const supabase = await createClient();
 
     let body;
     try {
@@ -53,7 +52,7 @@ export async function POST(request: NextRequest) {
         subtotal:body.payload.amount/100,
         total_amount:body.payload.amount/100,
     }
-    const { data, error } = await supabase.from("orders")
+    const { data, error } = await adminsupabase.from("orders")
     .insert(orderData)
     .select("*")
     .single();
@@ -64,7 +63,7 @@ export async function POST(request: NextRequest) {
     const orderId = data.order_id;
     const cartId = body.payload.metaInfo.udf5;
     const lastAddedProductTime = body.payload.metaInfo.udf4;
-    const cartData = await supabase.from("cart_items")
+    const cartData = await adminsupabase.from("cart_items")
     .select("*,products(*)")
     .eq("cart_id",cartId)
     .order("added_at", { ascending: false });
@@ -80,7 +79,7 @@ export async function POST(request: NextRequest) {
             unit_price:item.products.final_price,
             total_price:item.products.final_price * item.quantity,
           }
-          const { data, error } = await supabase.from("order_items")
+          const { data, error } = await adminsupabase.from("order_items")
           .insert(orderItemsPayload)
           .select("*")
           .single();

@@ -1,7 +1,8 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { updateOrdersStatus } from "@/app/(admin)/admin/actions/order";
+import { toast } from "react-toastify";
 
 type OrderStatus =
   | "pending"
@@ -71,10 +72,7 @@ const allowedStatuses: OrderStatus[] = [
   "cancelled",
 ];
 
-const statusDateField: Partial<Record<OrderStatus, keyof Order>> = {
-  shipped: "shipped_date",
-  delivered: "delivered_date",
-};
+
 
 const currency = (value: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
@@ -106,7 +104,6 @@ interface OrdersProps {
 }
 
 export default function Orders({ initialOrders }: OrdersProps) {
-  const supabase = createClient();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -164,41 +161,20 @@ export default function Orders({ initialOrders }: OrdersProps) {
   };
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
-    try {
-      const dateField = statusDateField[newStatus];
-      const timestamp = dateField ? new Date().toISOString() : undefined;
-      const updatePayload: Partial<Order> = {
-        order_status: newStatus,
-        ...(dateField && timestamp ? { [dateField]: timestamp } : {}),
-      };
-      setUpdatingId(orderId);
-      const { error } = await supabase
-        .from("orders")
-        .update(updatePayload)
-        .eq("order_id", orderId);
-      if (error) {
-        console.error("Error updating order status:", error);
-        setError("Failed to update order status");
-        return;
-      }
-      setOrders((prev) =>
-        prev.map((order) =>
-          order.order_id === orderId
-            ? {
-                ...order,
-                order_status: newStatus,
-                ...(dateField && timestamp ? { [dateField]: timestamp } : {}),
-              }
-            : order
-        )
-      );
-      setError(null);
-    } catch (err) {
-      console.error("Error updating order status:", err);
-      setError("Failed to update order status");
-    } finally {
-      setUpdatingId(null);
+    const { success, data, message } = await updateOrdersStatus(orderId, newStatus);
+    if (!success) {
+      toast.error(message);
+      return;
     }
+    toast.success(message);
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.order_id === orderId
+          ? { ...order, order_status: newStatus }
+          : order
+      )
+    );
+    setUpdatingId(null);
   };
 
   return (

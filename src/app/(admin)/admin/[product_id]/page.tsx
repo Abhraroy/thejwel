@@ -2,8 +2,8 @@
 import ProductDisplay from '@/components/ProductUI/ProductDisplay';
 import ProductReview from '@/components/ProductUI/ProductReview';
 import { useParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
+import { getProductDetails, getReviewsForProduct } from './action';
 
 
 export default function ProductPage() {
@@ -13,7 +13,6 @@ export default function ProductPage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
   
   useEffect(() => {
     if (!product_id) {
@@ -23,83 +22,32 @@ export default function ProductPage() {
     }
 
     const getProductdetails = async () => {
-      try {
-        const { data, error: productError } = await supabase
-          .from("products")
-          .select(`
-            *,
-            product_images!product_images_product_id_fkey(*),
-            reviews(*),
-            categories(*)
-          `)
-          .eq("product_id", product_id)
-          .single();
         
-        if (productError) {
-          console.error("Error fetching product:", productError);
-          setError("Failed to load product. Please try again.");
+        const { success, data: productData, message } = await getProductDetails(product_id);
+        if (!success) {
+          setError(message);
           setProductDetails(null);
-        } else if (data) {
-          console.log("product details", data);
-          console.log("Available fields:", Object.keys(data));
-          console.log("tags:", data.tags);
-          console.log("collection:", data.collection);
-          console.log("metal_type:", data.metal_type);
-          
-          // If no product images, use thumbnail_image as fallback
-          if (!data.product_images || data.product_images.length === 0) {
-            if (data.thumbnail_image) {
-              data.product_images = [{
-                image_url: data.thumbnail_image,
-                product_id: data.product_id
-              }];
-            }
-          }
-          
-          // Wrap in array since ProductDisplay expects an array
-          setProductDetails([data]);
-          setError(null);
-        } else {
-          setError("Product not found");
-          setProductDetails(null);
+          return;
         }
-      } catch (err) {
-        console.error("Error fetching product:", err);
-        setError("An error occurred while loading the product");
-        setProductDetails(null);
-      } finally {
+        setProductDetails([productData ?? []]);
+        setError(null);
         setLoading(false);
-      }
     };
-
+    setLoading(true);
+    getProductdetails();
     const reviewData = async () => {
       if (!product_id) return;
       
-      try {
-        const { data: reviewData, error: reviewError } = await supabase
-          .from("reviews")
-          .select(`
-            *,
-            review_images(*),
-            users(*)  
-          `)
-          .eq("product_id", product_id);
-        
-        if (reviewError) {
-          console.error("Error fetching reviews:", reviewError);
-          setReviews([]);
-        } else {
-          console.log("reviews data", reviewData);
-          setReviews(reviewData || []);
-        }
-      } catch (err) {
-        console.error("Error fetching reviews:", err);
-        setReviews([]);
+      const { success, data: reviewsData, message } = await getReviewsForProduct(product_id);
+      if (!success) {
+        setError(message ?? "Error fetching reviews");
+        setReviews( [] as any[]);
+        setLoading(false);
+        return;
       }
+      setReviews(reviewsData ?? [] as any[]);
+      setLoading(false);
     };
-
-    setLoading(true);
-    getProductdetails();
     reviewData();
   }, [product_id]);
 

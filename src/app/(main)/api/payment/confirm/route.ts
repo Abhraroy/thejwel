@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import adminsupabase from "@/lib/supabase/admin";
 import axios from "axios";
 import { redis } from "@/app/utils/Redis";
 export async function GET(request: NextRequest) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const userSupabase = await createClient();
+  const { data, error } = await userSupabase.auth.getUser();
   if (error) {
     return NextResponse.json(
       { message: "User is not authenticated found" },
       { status: 404 }
     );
   }
-  const { data: userData } = await supabase
+  const { data: userData } = await adminsupabase
     .from("users")
     .select("*")
     .eq("phone_number", "+" + data.user?.phone)
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
   if (paymentState === "COMPLETED") {
     // Idempotency guard: this route is polled from `/redirect`, so we must not run side-effects twice.
     // If the order is already completed, return early.
-    const existingOrder = await supabase
+    const existingOrder = await adminsupabase
       .from("orders")
       .select("order_id, payment_status")
       .eq("order_number", orderStatusResponse.data.orderId)
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: orderData, error } = await supabase
+    const { data: orderData, error } = await adminsupabase
       .from("orders")
       .update({
         payment_status: "completed",
@@ -117,7 +118,7 @@ export async function GET(request: NextRequest) {
       }
 
       for (const [productId, orderedQty] of qtyByProductId.entries()) {
-        const productRes = await supabase
+        const productRes = await adminsupabase
           .from("products")
           .select("stock_quantity")
           .eq("product_id", productId)
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
         const currentStock = Number(productRes.data?.stock_quantity) || 0;
         const nextStock = Math.max(0, currentStock - orderedQty);
 
-        const updateStockRes = await supabase
+        const updateStockRes = await adminsupabase
           .from("products")
           .update({ stock_quantity: nextStock })
           .eq("product_id", productId);

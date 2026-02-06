@@ -1194,7 +1194,7 @@ export default function ProductsList({ products, isDarkTheme }: ProductsListProp
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`flex-shrink-0 transition-all ${
+                      className={`shrink-0 transition-all ${
                         currentImageIndex === index
                           ? "ring-2 ring-[#E94E8B]"
                           : "opacity-60 hover:opacity-100"
