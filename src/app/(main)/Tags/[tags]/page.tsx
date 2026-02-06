@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductUI/ProductCard";
 import { useParams } from "next/navigation";
-import { createClient } from "@/app/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 // Tag display names mapping
 const tagDisplayNames: Record<string, string> = {

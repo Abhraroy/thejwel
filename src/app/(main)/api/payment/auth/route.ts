@@ -1,7 +1,7 @@
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { createClient } from "@/app/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { getAuthToken } from "@/app/utils/Phonepe";
 import { redis } from "@/app/utils/Redis";
 let cachedToken = {

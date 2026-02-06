@@ -1,5 +1,5 @@
 "use client";
-import { createClient } from "@/app/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 import AddressSection from "@/components/Address/AddressSection";
 import Link from "next/link";
@@ -211,6 +211,7 @@ export default function AccountPage() {
         router.push("/");
         return;
       }
+      console.log("data from auth getUser", data);
       if (!data?.user?.phone) {
         router.push("/");
         return;

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useStore } from "@/zustandStore/zustandStore";
-import { createClient } from "@/app/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { addToLocalCart, addToDbCart } from "@/utilityFunctions/CartFunctions";
 import { toast } from "react-toastify";
 import { getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";

@@ -9,7 +9,7 @@ import ProductCard, {
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { createClient } from "@/app/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 // Product interface
 interface Product {

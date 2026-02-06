@@ -360,7 +360,7 @@
 
 
 import HomePage from "@/components/HomePage";
-import { createClient } from "@/app/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function Home() {
   const supabase = await createClient();

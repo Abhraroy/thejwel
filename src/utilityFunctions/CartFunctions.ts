@@ -1,3 +1,4 @@
+
 export const addToLocalCart = (product: any) => {
     console.log(product)
     console.log("Adding to local cart")

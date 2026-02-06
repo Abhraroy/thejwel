@@ -6,7 +6,7 @@ import ProductCarousel from "@/components/ProductUI/ProductCarousel";
 import Image from "next/image";
 import { useStore } from "@/zustandStore/zustandStore";
 import { useEffect, useState, Suspense } from "react";
-import { createClient } from "@/app/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 import {
   createCart,

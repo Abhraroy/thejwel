@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AddressForm from './AddressForm';
-import { createClient } from '@/app/utils/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 interface AddressSectionProps {
   userId: string;

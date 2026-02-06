@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/app/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useStore } from "@/zustandStore/zustandStore";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductUI/ProductCard";

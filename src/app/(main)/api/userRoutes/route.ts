@@ -1,5 +1,5 @@
 import { NextRequest,NextResponse } from "next/server";
-import { createClient } from "@/app/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { createCart } from "@/utilityFunctions/CartFunctions";
 import { getOrCreateWishlist } from "@/utilityFunctions/WishListFunctions";
 
@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
     const { data: insertedUser, error: insertError } = await supabase
       .from("users")
       .insert({
+        user_id: data.user?.id || null,
         email: body.email || null,
         first_name: body.first_name || null,
         last_name: body.last_name || null,

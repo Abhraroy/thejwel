@@ -2,7 +2,7 @@
 import ProductDisplay from '@/components/ProductUI/ProductDisplay';
 import ProductReview from '@/components/ProductUI/ProductReview';
 import { useParams } from 'next/navigation';
-import { createClient } from '@/app/utils/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 
 

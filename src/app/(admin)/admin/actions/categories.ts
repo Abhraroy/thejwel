@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/app/utils/supabase/server";
+import supabase from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import {
   uploadImageToCloudflare,
@@ -52,8 +52,6 @@ export async function getCategories(): Promise<{
   error?: string;
 }> {
   try {
-    const supabase = await createClient();
-
     const { data, error } = await supabase
       .from("categories")
       .select("*, sub_categories(*)")
@@ -85,8 +83,6 @@ export async function getCategory(
   categoryId: string
 ): Promise<{ success: boolean; data?: Category; error?: string }> {
   try {
-    const supabase = await createClient();
-
     const { data, error } = await supabase
       .from("categories")
       .select("*")
@@ -119,8 +115,6 @@ export async function createCategory(
   formData: CreateCategoryData
 ): Promise<{ success: boolean; data?: Category; error?: string }> {
   try {
-    const supabase = await createClient();
-
     let imageUrl: string | null = null;
     let uploadedImageKey: string | null = null;
 
@@ -196,8 +190,6 @@ export async function updateCategory(
   formData: UpdateCategoryData
 ): Promise<{ success: boolean; data?: Category; error?: string }> {
   try {
-    const supabase = await createClient();
-
     const categoryId = formData.category_id;
 
     // Get current category data to handle image cleanup if needed
@@ -293,8 +285,6 @@ export async function deleteCategory(
   categoryId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
-
     // Get category data to clean up image
     const { data: category, error: fetchError } = await supabase
       .from("categories")
@@ -340,7 +330,6 @@ export async function deleteCategory(
 
 export async function createSubCategory(formData: any) {
   try {
-    const supabase = await createClient();
     let imageUrl: string | null = null;
     let uploadedImageKey: string | null = null;
     
@@ -415,8 +404,6 @@ export async function updateSubCategory(formData: any) {
     typeof formData.subcategory_image_url
   );
   try {
-    const supabase = await createClient();
-
     // Handle image - if it's a File, upload it; if it's a string (URL), use it directly
     if (formData.subcategory_image_url instanceof File) {
       console.log("subcategory_image_url is a file");
@@ -499,8 +486,6 @@ export async function deleteSubCategory(
   subcategoryId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
-
     // Get category data to clean up image
     const { data: subcategory, error: fetchError } = await supabase
       .from("sub_categories")

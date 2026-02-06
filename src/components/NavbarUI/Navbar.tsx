@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from "next/image";
 import HamburgerSidebar from './HamburgerSidebar';
-import { createClient } from '@/app/utils/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 interface NavbarProps {
   cartCount?: number;

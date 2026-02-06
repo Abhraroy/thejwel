@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { createClient as createSupabaseClient } from "@/app/utils/supabase/client";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB
 

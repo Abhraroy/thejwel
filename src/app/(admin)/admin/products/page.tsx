@@ -1,4 +1,4 @@
-import { createClient } from "@/app/utils/supabase/server";
+import supabase from "@/lib/supabase/admin";
 import ProductHeader from "@/components/AdminComponents/product/ProductHeader";
 import ProductsList from "@/components/AdminComponents/product/ProductsList";
 import ProductForm from "@/components/AdminComponents/product/Products";
@@ -7,7 +7,6 @@ import ProductForm from "@/components/AdminComponents/product/Products";
 export default async function ProductsPage() {
   const isDarkTheme = false;
 
-  const supabase = await createClient();
   const { data: productsData, error } = await supabase
     .from('products')
     .select('*, categories(*), sub_categories(*), product_images(*)')

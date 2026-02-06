@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/app/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import CopyOrderNumberButton from "./CopyOrderNumberButton";
 
 const CalendarIcon = () => (

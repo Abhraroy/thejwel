@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/app/utils/supabase/server";
+import supabase from "@/lib/supabase/admin";
 import {
   deleteImageFromCloudflare,
   uploadImageToCloudflare,
@@ -9,8 +9,6 @@ import { extractR2KeyFromUrl } from ".";
 
 export async function uploadProductImages(productId: string, files: File[]) {
   try {
-    const supabase = await createClient();
-
     if (files.length === 0) {
       return { success: false, error: "No files provided" };
     }
@@ -38,8 +36,6 @@ export async function uploadProductImages(productId: string, files: File[]) {
 
 export async function saveProductImageUrls(productId: string, imageUrls: string[]) {
   try {
-    const supabase = await createClient();
-
     if (!imageUrls || imageUrls.length === 0) {
       return { success: false, error: "No image URLs provided" };
     }
@@ -69,7 +65,6 @@ export async function saveProductImageUrls(productId: string, imageUrls: string[
 }
 
 export async function getProducts() {
-  const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")
     .select("*,categories(*),product_images(*),sub_categories(*)")
@@ -166,8 +161,6 @@ export async function getProducts() {
 
 export async function createProduct(productData: any) {
   try {
-    const supabase = await createClient();
-
     const payload = {
       sku: productData.sku,
       product_name: productData.product_name,
@@ -222,7 +215,6 @@ export async function createProduct(productData: any) {
 export async function updateProduct(productId: string, productData: any) {
   try {
     console.log("productData", productData);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .select("*,categories(*),sub_categories(*)")
@@ -296,8 +288,6 @@ export async function updateProduct(productId: string, productData: any) {
 
 export async function deleteProductImage(imageId: string) {
   try {
-    const supabase = await createClient();
-    
     // First, get the image record to retrieve the URL
     const { data: imageData, error: fetchError } = await supabase
       .from("product_images")
@@ -341,7 +331,6 @@ export async function deleteProductImage(imageId: string) {
 
 export async function deleteProduct(productId: string) {
   try {
-    const supabase = await createClient();
     const {data:productData,error:productError} = await supabase
       .from("products")
       .select("*")

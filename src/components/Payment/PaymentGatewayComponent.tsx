@@ -10,7 +10,7 @@ import {
 import PhoneNumberInput from "../AuthUI/PhoneNumberInput";
 import OtpInput from "../AuthUI/OtpInput";
 import AddressForm from "../Address/AddressForm";
-import { createClient } from "@/app/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 export default function PaymentGatewayComponent() {
   const [transacToken, setTransacToken] = useState<string | null>(null);

@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { createClient } from "@/app/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Base URL for sitemap entries.

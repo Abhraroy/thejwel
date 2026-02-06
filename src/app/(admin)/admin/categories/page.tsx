@@ -1,4 +1,4 @@
-import { createClient } from "@/app/utils/supabase/server";
+import supabase from "@/lib/supabase/admin";
 import CategoryHeader from "../../../../components/AdminComponents/category/CategoryHeader";
 import CategoriesList from "@/components/AdminComponents/category/CategoriesList";
 import Categories from "@/components/AdminComponents/category/Categories";
@@ -6,7 +6,6 @@ import Categories from "@/components/AdminComponents/category/Categories";
 export  default async function CategoriesPage() {
   const isDarkTheme = false;
 
-  const supabase = await createClient();
   const { data: categoriesData, error } = await supabase.from('categories').select('*, sub_categories(*)').order('created_at', { ascending: false });
   if (error) {
     console.error('Error fetching categories:', error);

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { createClient } from "@/app/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { createProduct, updateProduct } from "../../../app/(admin)/admin/actions/Product";
 import { Category, getCategories } from "../../../app/(admin)/admin/actions/categories";
 import axios from "axios";

@@ -1,8 +1,7 @@
-import { createClient } from "@/app/utils/supabase/server";
+import supabase from "@/lib/supabase/admin";
 import Dashboard from "../../../../components/AdminComponents/Dashboard";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
   const isDarkTheme = false;
 
   // Calculate date range for last 7 days
