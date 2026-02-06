@@ -228,7 +228,11 @@ export default function HomePage(
     >
       <Image
         src={src}
-        alt={`Jewelry Banner ${index + 1}`}
+        alt="Where Tradition Meets Modern Sparkle
+
+Welcome to TheJWEL, your trusted online jewellery destination from the heart of Kolkata. We specialize in exquisitely crafted American Diamond jewellery and timeless Temple jewellery, designed to complement both modern elegance and traditional grace.
+
+From everyday sophistication to festive grandeur, TheJWEL brings you jewellery that feels luxurious, looks stunning, and fits beautifully into your lifestyle."
         fill={true}
         className="object-cover"
         priority={index === 0}

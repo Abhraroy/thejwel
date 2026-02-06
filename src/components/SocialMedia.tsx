@@ -185,27 +185,6 @@ export default function SocialMedia() {
       <div className="max-w-7xl mx-auto">
         {/* Animated ambient background */}
         <div className="relative">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={active.id}
-              className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl"
-              style={{ background: active.glow }}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                x: shouldReduceMotion ? 0 : [0, 18, 0],
-                y: shouldReduceMotion ? 0 : [0, -14, 0],
-              }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={
-                shouldReduceMotion
-                  ? { duration: 0.2 }
-                  : { duration: 6, repeat: Infinity, ease: "easeInOut" }
-              }
-            />
-          </AnimatePresence>
-
           <div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full blur-3xl bg-[#360000]/10" />
 
           {/* Header */}
