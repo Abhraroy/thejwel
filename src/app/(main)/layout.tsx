@@ -16,6 +16,7 @@ import Footer from "@/components/Footer";
 import PaymentGatewayWrapper from "@/components/Payment/PaymentGatewayWrapper";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import Script from "next/script";
 
 const geistSans = Geist({
@@ -115,22 +116,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-      {/* Google tag (gtag.js) */}
-      {/* <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-HLK9T5H9ZT"
-          strategy="afterInteractive"
-        />
-
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-HLK9T5H9ZT');
-          `}
-        </Script> */}
-
+      <SpeedInsights />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${sacramento.variable} ${satisfy.variable} ${sevillana.variable} ${playfair_display.variable} ${josefin_sans.variable} ${adamina.variable} ${open_sans.variable} antialiased`}
