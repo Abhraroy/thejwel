@@ -115,9 +115,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-      <SpeedInsights />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${sacramento.variable} ${satisfy.variable} ${sevillana.variable} ${playfair_display.variable} ${josefin_sans.variable} ${adamina.variable} ${open_sans.variable} antialiased`}
       >
@@ -137,6 +134,7 @@ export default function RootLayout({
           pauseOnHover
           theme="light"
         />
+        <SpeedInsights />
       </body>
     </html>
   );
