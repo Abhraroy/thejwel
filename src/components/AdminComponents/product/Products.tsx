@@ -504,6 +504,8 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
                     name="base_price"
                     value={formData.base_price}
                     onChange={handleInputChange}
+                    // Prevent accidental value changes when scrolling while focused (common on number inputs)
+                    onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
                     placeholder="899.00"
                     className={`w-full px-4 py-2 rounded-lg border transition-colors ${
                       isDarkTheme
@@ -528,6 +530,8 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
                     name="final_price"
                     value={formData.final_price}
                     onChange={handleInputChange}
+                    // Prevent accidental value changes when scrolling while focused (common on number inputs)
+                    onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
                     placeholder="549.00"
                     className={`w-full px-4 py-2 rounded-lg border transition-colors ${
                       isDarkTheme
