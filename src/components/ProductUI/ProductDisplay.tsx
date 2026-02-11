@@ -142,9 +142,21 @@ export default function ProductDisplay({
   const viewerCarouselRef = useRef<HTMLDivElement>(null);
   const carouselScrollRafRef = useRef<number | null>(null);
 
+  const scrollCarouselToIndex = (
+    el: HTMLDivElement | null,
+    idx: number,
+    behavior: ScrollBehavior = "smooth"
+  ) => {
+    if (!el) return;
+    const width = el.clientWidth;
+    if (!width || width <= 0) return;
+    el.scrollTo({ left: width * idx, behavior });
+  };
+
   const syncSelectedFromCarousel = (el: HTMLDivElement | null) => {
     if (!el) return;
-    const width = el.clientWidth || 1;
+    const width = el.clientWidth;
+    if (!width || width <= 0) return;
     const idx = Math.round(el.scrollLeft / width);
     const maxIdx = Math.max(0, (carouselImages?.length ?? 1) - 1);
     const clamped = Math.max(0, Math.min(idx, maxIdx));
@@ -168,12 +180,28 @@ export default function ProductDisplay({
     refs.forEach((ref) => {
       const el = ref.current;
       if (!el) return;
-      const width = el.clientWidth || 1;
+      const width = el.clientWidth;
+      if (!width || width <= 0) return; // don't try to scroll hidden (display:none) carousels
       const targetLeft = width * selectedImage;
       if (Math.abs(el.scrollLeft - targetLeft) < 2) return;
       el.scrollTo({ left: targetLeft, behavior: "smooth" });
     });
   }, [selectedImage, carouselImages?.length]);
+
+  // On opening the fullscreen viewer, immediately align the viewer carousel to the current selected image.
+  // Without this, it often opens at index 0 because `selectedImage` didn't change during open.
+  useEffect(() => {
+    if (!productImageView) return;
+    const el = viewerCarouselRef.current;
+    if (!el) return;
+
+    const align = () => {
+      scrollCarouselToIndex(el, selectedImage, "auto");
+    };
+
+    // Double rAF to ensure layout has settled after the overlay mounts.
+    requestAnimationFrame(() => requestAnimationFrame(align));
+  }, [productImageView, selectedImage, carouselImages?.length]);
 
   // Keep snap alignment on resize (viewport width changes)
   useEffect(() => {
@@ -1308,10 +1336,11 @@ export default function ProductDisplay({
             className="relative w-full h-full flex items-center justify-center p-0 sm:p-8 md:p-12 backdrop-blur-3xl bg-white/30 supports-[backdrop-filter]:bg-white/15"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Mobile/tablet: swipeable carousel */}
             <div
               ref={viewerCarouselRef}
               onScroll={onCarouselScroll(viewerCarouselRef)}
-              className="flex h-full w-full overflow-x-auto overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain"
+              className="flex md:hidden h-full w-full overflow-x-auto overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
               {carouselImages.map((img: any, idx: number) => (
@@ -1332,6 +1361,20 @@ export default function ProductDisplay({
                 </div>
               ))}
             </div>
+
+            {/* Desktop: no swipe carousel; just swap the main image when thumbnail is clicked */}
+            <div className="hidden md:flex w-full h-full items-center justify-center">
+              <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
+                <Image
+                  src={carouselImages?.[selectedImage]?.image_url ?? carouselImages?.[0]?.image_url ?? "/placeholder.png"}
+                  alt={`Product image ${selectedImage + 1}`}
+                  fill
+                  className="object-contain"
+                  priority
+                  sizes="100vw"
+                />
+              </div>
+            </div>
           </div>
 
         
@@ -1346,7 +1389,14 @@ export default function ProductDisplay({
                   {productImages.map((img: any, idx: number) => (
                     <button
                       key={img?.image_id ?? idx}
-                      onClick={() => setSelectedImage(idx)}
+                      onClick={() => {
+                        setSelectedImage(idx);
+                        // Make this deterministic in fullscreen: scroll immediately to the clicked index.
+                        // (Relying only on effects can fail if the carousel is mid-layout or width is 0.)
+                        requestAnimationFrame(() => {
+                          scrollCarouselToIndex(viewerCarouselRef.current, idx, "smooth");
+                        });
+                      }}
                       className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${
                         idx === selectedImage ? "border-[#E94E8B] scale-105" : "border-gray-200"
                       }`}
