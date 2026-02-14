@@ -273,7 +273,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
         if (!result.success) {
           throw new Error(result.error);
         }
-  
+        console.log("result", result);
         const updateTime = performance.now() - updateStartTime;
         console.log(`✅ Product update completed in ${updateTime.toFixed(2)}ms`);
         
