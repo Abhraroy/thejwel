@@ -1,6 +1,7 @@
 "use server";
 
 import supabase from "@/lib/supabase/admin";
+import { revalidatePath } from "next/cache";
 import {
   deleteImageFromCloudflare,
   uploadImageToCloudflare,
@@ -54,6 +55,8 @@ export async function saveProductImageUrls(productId: string, imageUrls: string[
       return { success: false, error: error.message };
     }
 
+    revalidatePath("/admin/products");
+    revalidatePath(`/admin/${productId}`);
     return { success: true, data: data };
   } catch (error) {
     console.error("Error saving product image URLs:", error);
@@ -196,6 +199,8 @@ export async function createProduct(productData: any) {
 
     if (error) throw error;
 
+    // Ensure admin products list reflects the new row in production (RSC cache)
+    revalidatePath("/admin/products");
     return { success: true, data };
   } catch (error: any) {
     console.error("Error creating product:", error);
@@ -275,6 +280,10 @@ export async function updateProduct(productId: string, productData: any) {
       console.error("Error updating product:", updateError);
       return { success: false, error: updateError.message };
     }
+
+    // Invalidate cached admin pages so router.refresh() picks up latest data in production.
+    revalidatePath("/admin/products");
+    revalidatePath(`/admin/${productId}`);
     return { success: true, data: updatedData };
   } catch (error) {
     console.error("Error updating product:", error);
@@ -318,7 +327,8 @@ export async function deleteProductImage(imageId: string) {
       console.error("Error deleting image from database:", deleteError);
       return { success: false, error: deleteError.message };
     }
-    
+
+    revalidatePath("/admin/products");
     return { success: true, message: "Image deleted successfully" };
   } catch (error) {
     console.error("Error deleting product image:", error);
@@ -356,6 +366,8 @@ export async function deleteProduct(productId: string) {
       console.error("Error deleting product:", error);
       return { success: false, error: error.message };
     }
+
+    revalidatePath("/admin/products");
     return { success: true, data: data };
   } catch (error) {
     console.error("Error deleting product:", error);
