@@ -6,8 +6,8 @@ export async function getProducts() {
         .from('products')
         .select('*, categories(*), sub_categories(*), product_images(*)')
         // Use a stable deterministic order so items don't "jump pages" when many rows share the same created_at
-        .order('created_at', { ascending: false })
-        .order('product_id', { ascending: false });
+        // .order('created_at', { ascending: false })
+        .order('sku', { ascending: true });
 
     if (error) {
         console.error('Error fetching products:', error);
