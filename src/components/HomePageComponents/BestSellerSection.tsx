@@ -2,7 +2,7 @@
 
 import ProductCarousel from "@/components/ProductUI/ProductCarousel";
 import ProductCarouselSkeleton from "@/components/ProductUI/ProductCaraouselSkeleton";
-import { Product } from "@/utilityFunctions/TypeInterface";
+import { Product } from "@/types/TypeInterface";
 
 interface Props {
   products: Product[];

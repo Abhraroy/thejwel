@@ -18,14 +18,14 @@ function Collection() {
       heading: "American Diamond",
       subHeading: "Luxury Redefined, Elegance Affordable",
       description: "Why choose between style and savings? Our American Diamond collection delivers dazzling brilliance for every occasion",
-      href: "/collection/american-diamond",
+      href: "/collection/American Diamond",
       image: "/collectionImages/American%20Diamond.JPG",
     },
     {
       heading: "Temple Jewellary",
       subHeading: "Timeless Traditions, Modern Grace",
       description: "Celebrate the rich legacy of Indian artistry with our exquisite Temple Jewelry collection — where tradition meets contemporary elegance.",
-      href: "/collection/temple",
+      href: "/collection/Temple Jewellary",
       image: "/collectionImages/TempleJewellary.JPG",
     }
   ];

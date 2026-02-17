@@ -1,46 +1,48 @@
+import type { CartLineItem, CartLineItems, CartProduct, LocalCart, LocalCartItem } from "@/types/CartTypes";
 
-export const addToLocalCart = (product: any) => {
+             
+
+export const addToLocalCart = (product: CartProduct): LocalCart => {
     console.log(product)
     console.log("Adding to local cart")
-    let cartMap = new Map();
-    const product_obj = {
-      ...product,
-    }
+    let cartMap = new Map<string, LocalCartItem>();
+    const product_obj: CartProduct = { ...product };
     
     const localCartItems = localStorage.getItem('cartItems')
-    let localCartItemsArray = localCartItems ? JSON.parse(localCartItems) : [];
+    let localCartItemsArray: LocalCart = localCartItems ? JSON.parse(localCartItems) : [];
     // console.log("localCartItemsArray before adding product", localCartItemsArray)
     if(localCartItemsArray.length === 0){
         cartMap.set(product_obj.product_id,{products:product_obj,quantity:1})
     }
     else{
-        localCartItemsArray.forEach((item: any) => {
+        localCartItemsArray.forEach((item: LocalCartItem) => {
             console.log("item",item)
             cartMap.set(item.products.product_id, item)
         })
         console.log("cartMap",cartMap)
         if(cartMap.has(product_obj.product_id)){
             console.log("Product already exists in cart")
-            cartMap.get(product_obj.product_id).quantity += 1
+            const existing = cartMap.get(product_obj.product_id);
+            if (existing) existing.quantity += 1;
         }
         else{
             console.log("Product does not exist in cart adding new product")
             cartMap.set(product_obj.product_id, {products:product_obj,quantity:1})
         }
     }
-    const updatedCart = Array.from(cartMap.values())
+    const updatedCart: LocalCart = Array.from(cartMap.values())
     console.log("updatedCart",updatedCart)
     localStorage.setItem("cartItems",JSON.stringify(updatedCart))
     return updatedCart;
 }
 
 
-export const removeFromLocalCart = (product:any)=>{
+export const removeFromLocalCart = (itemOrProduct: CartLineItem | CartProduct): LocalCart => {
     console.log("Removing from local cart")
-    console.log("product to remove", product)
-    let cartMap = new Map();
+    console.log("item/product to remove", itemOrProduct)
+    let cartMap = new Map<string, LocalCartItem>();
     const localCartItems = localStorage.getItem('cartItems')
-    let localCartItemsArray = localCartItems ? JSON.parse(localCartItems) : [];
+    let localCartItemsArray: LocalCart = localCartItems ? JSON.parse(localCartItems) : [];
     if(localCartItemsArray.length === 0){
         console.log("No items in cart")
         return localCartItemsArray;
@@ -48,15 +50,15 @@ export const removeFromLocalCart = (product:any)=>{
     else{
         // Get the product_id from the item structure
         // item can be {products: {...}, quantity: 1} or the product itself
-        const productToRemove = product?.products ?? product?.product ?? product;
-        const productIdToRemove = productToRemove?.product_id;
+        const productToRemove = (itemOrProduct as any)?.products ?? (itemOrProduct as any)?.product ?? itemOrProduct;
+        const productIdToRemove = (productToRemove as any)?.product_id ?? (itemOrProduct as any)?.product_id;
         
         if(!productIdToRemove){
             console.log("No product_id found in item to remove")
             return localCartItemsArray;
         }
         
-        localCartItemsArray.forEach((item: any) => {
+        localCartItemsArray.forEach((item: LocalCartItem) => {
             const itemProductId = item?.products?.product_id;
             if(itemProductId){
                 cartMap.set(itemProductId, item)
@@ -75,12 +77,12 @@ export const removeFromLocalCart = (product:any)=>{
     return Array.from(cartMap.values())
 }
 
-export const decreaseQuantityFromLocalCart = (product:any)=>{
+export const decreaseQuantityFromLocalCart = (itemOrProduct: CartLineItem | CartProduct): LocalCart => {
     console.log("Decreasing quantity from local cart")
-    console.log("product to decrease", product)
-    let cartMap = new Map();
+    console.log("item/product to decrease", itemOrProduct)
+    let cartMap = new Map<string, LocalCartItem>();
     const localCartItems = localStorage.getItem('cartItems')
-    let localCartItemsArray = localCartItems ? JSON.parse(localCartItems) : [];
+    let localCartItemsArray: LocalCart = localCartItems ? JSON.parse(localCartItems) : [];
     if(localCartItemsArray.length === 0){
         console.log("No items in cart")
         return localCartItemsArray;
@@ -88,15 +90,16 @@ export const decreaseQuantityFromLocalCart = (product:any)=>{
     else{
         // Get the product_id from the item structure
         // item can be {products: {...}, quantity: 1} or the product itself
-        const productToDecrease = product?.products ?? product?.product ?? product;
-        const productIdToDecrease = productToDecrease?.product_id;
+        console.log("item from localcart",itemOrProduct)
+        const productToDecrease = (itemOrProduct as any)?.products ?? (itemOrProduct as any)?.product ?? itemOrProduct;
+        const productIdToDecrease = (productToDecrease as any)?.product_id ?? (itemOrProduct as any)?.product_id;
         
         if(!productIdToDecrease){
             console.log("No product_id found in item to decrease")
             return localCartItemsArray;
         }
         
-        localCartItemsArray.forEach((item: any) => {
+        localCartItemsArray.forEach((item: LocalCartItem) => {
             const itemProductId = item?.products?.product_id;
             if(itemProductId){
                 cartMap.set(itemProductId, item)
@@ -252,8 +255,9 @@ export const getCartQuantityForProduct = (cartItems: any[] | null | undefined, p
 
 export const removeFromDbCart = async(product:any,CartId:string,supabase:any)=>{
     console.log("Removing from db cart")
-    console.log("product",product.product_id)
-    const {data,error} = await supabase.from("cart_items").delete().eq("cart_id",CartId).eq("product_id",product.product_id)
+    const pid = product?.product_id || product?.product_id || product?.products?.product_id || product?.product?.product_id;
+    console.log("product_id",pid)
+    const {data,error} = await supabase.from("cart_items").delete().eq("cart_id",CartId).eq("product_id",pid)
     if(error){
         console.log("error",error)
         return {success:false,error:error,message:"Failed to remove from cart"}
@@ -274,10 +278,12 @@ export const removeFromDbCart = async(product:any,CartId:string,supabase:any)=>{
 
 export const decreaseQuantityFromDbCart = async(product:any,CartId:string,supabase:any)=>{
     console.log("Decreasing quantity from db cart")
-    console.log("product",product.product_id)
+    const pid = product?.product_id || product?.product_id || product?.products?.product_id || product?.product?.product_id;
+    const currentQty = Number(product?.quantity ?? 0) || 0;
+    console.log("product_id",pid)
     const {data,error} = await supabase.from("cart_items").update({
-        quantity:product.quantity - 1,
-    }).eq("cart_id",CartId).eq("product_id",product.product_id)
+        quantity: currentQty - 1,
+    }).eq("cart_id",CartId).eq("product_id",pid)
     console.log("data",data)
     if(error){
         console.log("error",error)
@@ -298,7 +304,7 @@ export const decreaseQuantityFromDbCart = async(product:any,CartId:string,supaba
 }
 
 // Calculate cart count from cart items array
-export const calculateCartCount = (cartItems: any[]): number => {
+export const calculateCartCount = (cartItems: CartLineItems | any[]): number => {
     if (!Array.isArray(cartItems) || cartItems.length === 0) return 0;
     return cartItems.reduce((sum: number, item: any) => sum + (item.quantity ?? 1), 0);
 }
@@ -309,7 +315,7 @@ export const getLocalCartCount = (): number => {
     const localCartItems = localStorage.getItem('cartItems');
     if (!localCartItems) return 0;
     try {
-        const cartItems = JSON.parse(localCartItems);
+        const cartItems: LocalCart = JSON.parse(localCartItems);
         return calculateCartCount(cartItems);
     } catch {
         return 0;

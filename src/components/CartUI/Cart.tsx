@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { addToDbCart, addToLocalCart, decreaseQuantityFromDbCart, decreaseQuantityFromLocalCart, getCartData, removeFromDbCart, removeFromLocalCart, calculateCartCount, getLocalCartCount, getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";
 import CartItem from "./CartItem";
 import { toast } from "react-toastify";
+import type { CartLineItem, CartLineItems, LocalCart } from "@/types/CartTypes";
 
 interface CartProps {
   isOpen?: boolean;
@@ -20,7 +21,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
   const supabase = createClient();
   console.log("Initializing supabase",supabase)
 
-  const calculateSubTotal = (items: any) => {
+  const calculateSubTotal = (items: CartLineItems) => {
     if (!Array.isArray(items) || items.length === 0) return 0;
     return items.reduce((sum: number, item: any) => {
       const product = item?.products ?? item?.product ?? item;
@@ -30,9 +31,9 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
     }, 0);
   };
 
-  const handleDecreaseQuantity = async(product:any)=>{
+  const handleDecreaseQuantity = async(item: CartLineItem)=>{
     if(AuthenticatedState){
-       const updatedItem = await decreaseQuantityFromDbCart(product,CartId,supabase)
+       const updatedItem = await decreaseQuantityFromDbCart(item,CartId,supabase)
        console.log("updatedItem",updatedItem)
         setCartItems(updatedItem);
         // Update cart count for authenticated users
@@ -41,16 +42,16 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
         }
     }
     else{
-      const updatedItem = await decreaseQuantityFromLocalCart(product)
+      const updatedItem = await decreaseQuantityFromLocalCart(item)
       setCartItems(updatedItem);
       // Update cart count for unauthenticated users
       setCartCount(getLocalCartCount());
     }
   }
 
-  const handleRemoveItem = async(product:any)=>{
+  const handleRemoveItem = async(item: CartLineItem)=>{
     if(AuthenticatedState){
-      const updatedItem = await removeFromDbCart(product,CartId,supabase)
+      const updatedItem = await removeFromDbCart(item,CartId,supabase)
       setCartItems(updatedItem);
       // Update cart count for authenticated users
       if (updatedItem && Array.isArray(updatedItem)) {
@@ -58,17 +59,18 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
       }
     }
     else{
-      const updatedItem = await removeFromLocalCart(product)
+      const updatedItem = await removeFromLocalCart(item)
       setCartItems(updatedItem);
       // Update cart count for unauthenticated users
       setCartCount(getLocalCartCount());
     }
   }
   
-  const handleIncreaseQuantity = async(product:any)=>{
+  const handleIncreaseQuantity = async(item: CartLineItem)=>{
     // Stock guard for incrementing quantity inside cart
-    const productObj = product?.products ?? product?.product ?? product;
-    const productId = productObj?.product_id;
+    const productObj = ("products" in item ? item.products : undefined) ?? item;
+    const productId =
+      (productObj as any)?.product_id ?? ("product_id" in item ? item.product_id : undefined);
     const requiredNextQty = getCartQuantityForProduct(cartItems, productId) + 1;
     if (productId) {
       const latestStockRes = await supabase
@@ -90,10 +92,11 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
 
     if(AuthenticatedState){
       console.log("Adding to db cart")
-      console.log("product",product.product_id)
+      console.log("product_id", productId)
       console.log("CartId",CartId)
       console.log("supabase",supabase)
-      const updatedItem = await addToDbCart(product,CartId,supabase)
+      const payload = ("products" in item ? item.products : null) ?? { product_id: productId };
+      const updatedItem = await addToDbCart(payload,CartId,supabase)
       setCartItems(updatedItem);
       // Update cart count for authenticated users
       if (updatedItem && Array.isArray(updatedItem)) {
@@ -102,7 +105,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
     }
     else{
       console.log("User is not authenticated adding to local cart")
-      const updatedItem = addToLocalCart(product.products)
+      const updatedItem = addToLocalCart(productObj as any)
       setCartItems(updatedItem);
       // Update cart count for unauthenticated users
       setCartCount(getLocalCartCount());
@@ -125,9 +128,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
         const localCartItems = localStorage.getItem("cartItems");
         console.log("cart items from local storage", localCartItems);
         if (cartItems) {
-          const tempCartItems = localCartItems
-            ? JSON.parse(localCartItems)
-            : [];
+          const tempCartItems: LocalCart = localCartItems ? JSON.parse(localCartItems) : [];
           console.log("tempCartItems", typeof tempCartItems);
           setCartItems(tempCartItems);
         }
@@ -257,14 +258,16 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
             ) : (
               <div className="space-y-3 sm:space-y-4  ">
                 {cartItems &&
-                  cartItems.map((item: any) => {
+                  cartItems.map((item: CartLineItem) => {
                     // Use stable unique key - cart_item_id for DB items, product_id for local items
-                    const product = item?.products ?? item?.product ?? item;
+                    const product = ("products" in item ? item.products : undefined) ?? item;
+                    const dbCartItemId = "cart_item_id" in item ? item.cart_item_id : undefined;
+                    const dbProductId = "product_id" in item ? item.product_id : undefined;
                     const uniqueKey =
-                      item.cart_item_id ||
-                      product?.product_id ||
-                      item.product_id ||
-                      `cart-item-${product?.product_id || "unknown"}`;
+                      dbCartItemId ||
+                      (product as any)?.product_id ||
+                      dbProductId ||
+                      `cart-item-${(product as any)?.product_id || "unknown"}`;
 
                     return (
                       <CartItem
@@ -321,12 +324,13 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
                     const items = Array.isArray(cartItems) ? cartItems : [];
                     const qtyByProductId = new Map<string, { qty: number; name?: string }>();
                     for (const item of items) {
-                      const product = item?.products ?? item?.product ?? item;
-                      const pid = product?.product_id ?? item?.product_id;
+                      const product = ("products" in item ? item.products : undefined) ?? item;
+                      const pid =
+                        (product as any)?.product_id ?? ("product_id" in item ? item.product_id : undefined);
                       const qty = Number(item?.quantity ?? 1) || 0;
                       if (!pid || qty <= 0) continue;
                       const prev = qtyByProductId.get(pid);
-                      qtyByProductId.set(pid, { qty: (prev?.qty || 0) + qty, name: product?.product_name });
+                      qtyByProductId.set(pid, { qty: (prev?.qty || 0) + qty, name: (product as any)?.product_name });
                     }
 
                     const productIds = Array.from(qtyByProductId.keys());

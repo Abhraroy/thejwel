@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import ProductCard from "./ProductCard";
-import { Product } from "@/utilityFunctions/TypeInterface";
+import { Product } from "@/types/TypeInterface";
 
 interface ProductCarouselProps {
   sectionHeading: string;

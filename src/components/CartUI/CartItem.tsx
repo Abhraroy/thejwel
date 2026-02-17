@@ -3,12 +3,13 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/zustandStore/zustandStore";
+import type { CartLineItem } from "@/types/CartTypes";
 
 interface CartItemProps {
-  item: any;
-  onDecrease: (item: any) => void;
-  onIncrease: (item: any) => void;
-  onRemove: (item: any) => void;
+  item: CartLineItem;
+  onDecrease: (item: CartLineItem) => void;
+  onIncrease: (item: CartLineItem) => void;
+  onRemove: (item: CartLineItem) => void;
 }
 
 export default function CartItem({
@@ -19,12 +20,12 @@ export default function CartItem({
 }: CartItemProps) {
   const router = useRouter();
   const { setIsCartOpen } = useStore();
-  const product = item?.products ?? item?.product ?? item;
-  const productName = product?.product_name || product?.name || "Product";
-  const productImage = product?.thumbnail_image || product?.image_url || null;
-  const price = Number(product?.final_price ?? product?.price ?? 0);
+  const product = ("products" in item ? item.products : undefined) ?? undefined;
+  const productName = product?.product_name || (product as any)?.name || "Product";
+  const productImage = product?.thumbnail_image || (product as any)?.image_url || null;
+  const price = Number(product?.final_price ?? (product as any)?.price ?? 0);
   const quantity = Number(item?.quantity ?? 1);
-  const productSlugOrId = product?.slug || product?.product_id || product?.id;
+  const productSlugOrId = (product as any)?.slug || product?.product_id || (product as any)?.id;
 
   const handleNavigate = () => {
     if (productSlugOrId) {

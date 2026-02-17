@@ -1,5 +1,3 @@
-
-
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
@@ -70,6 +68,13 @@ CREATE TABLE public.coupons (
   is_active boolean DEFAULT true,
   CONSTRAINT coupons_pkey PRIMARY KEY (coupon_id)
 );
+CREATE TABLE public.image_resources (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  image_link text,
+  section_name text,
+  CONSTRAINT image_resources_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.order_items (
   order_item_id uuid NOT NULL DEFAULT uuid_generate_v4(),
   order_id uuid NOT NULL,
@@ -122,15 +127,15 @@ CREATE TABLE public.product_images (
 CREATE TABLE public.products (
   product_id uuid NOT NULL DEFAULT uuid_generate_v4(),
   category_id uuid,
-  product_name character varying NOT NULL,
+  product_name character varying,
   description text,
-  base_price numeric NOT NULL,
+  base_price numeric,
   discount_percentage numeric DEFAULT 0,
-  final_price numeric NOT NULL,
+  final_price numeric,
   stock_quantity integer DEFAULT 0,
   weight_grams numeric,
-  created_at timestamp without time zone DEFAULT now(),
-  updated_at timestamp without time zone DEFAULT now(),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
   subcategory_id uuid,
   thumbnail_image text,
   size ARRAY,

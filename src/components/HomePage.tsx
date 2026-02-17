@@ -13,7 +13,8 @@ import {
   calculateCartCount,
   getLocalCartCount,
 } from "@/utilityFunctions/CartFunctions";
-import { Product } from "@/utilityFunctions/TypeInterface";
+import { Product } from "@/types/TypeInterface";
+import type { LocalCart } from "@/types/CartTypes";
 import ProductCarouselSkeleton from "@/components/ProductUI/ProductCaraouselSkeleton";
 
 const OccasionSection = dynamic(
@@ -258,7 +259,7 @@ From everyday sophistication to festive grandeur, TheJWEL brings you jewellery t
       const localCartItems = localStorage.getItem("cartItems");
       if (!localCartItems) return;
 
-      const localCartItemsArray = JSON.parse(localCartItems);
+      const localCartItemsArray: LocalCart = JSON.parse(localCartItems);
       if (
         !Array.isArray(localCartItemsArray) ||
         localCartItemsArray.length === 0
@@ -288,7 +289,7 @@ From everyday sophistication to festive grandeur, TheJWEL brings you jewellery t
 
       // Process each local cart item
       const updatePromises = localCartItemsArray.map(async (item) => {
-        const productId = item.products?.product_id || item.product_id;
+        const productId = item.products?.product_id;
         const localQuantity = item.quantity || 1;
 
         if (existingProductsMap.has(productId)) {

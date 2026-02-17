@@ -2,6 +2,12 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import CopyOrderNumberButton from "./CopyOrderNumberButton";
+import { orderItemsWithProducts, orderWithItemsAndProducts, userWithOrdersAndItemsAndProducts } from "@/types/RelationTypeInterface";
+
+
+
+
+
 
 const CalendarIcon = () => (
   <svg
@@ -45,7 +51,16 @@ export default async function OrdersPage() {
       `
     )
     .eq("phone_number", phoneNumber)
-    .single();
+    .single<userWithOrdersAndItemsAndProducts>();
+
+
+
+
+
+
+
+
+
 
   if (userError) {
     return (
@@ -72,9 +87,9 @@ export default async function OrdersPage() {
     );
   }
 
-  const ordersAll = [...(user?.orders ?? [])].sort((a: any, b: any) => {
-    const dateA = new Date(a.order_date).getTime();
-    const dateB = new Date(b.order_date).getTime();
+  const ordersAll = [...(user?.orders ?? [])].sort((a: orderWithItemsAndProducts, b: orderWithItemsAndProducts) => {
+    const dateA = new Date(a.order_date ?? "").getTime();
+    const dateB = new Date(b.order_date ?? "").getTime();
     return dateB - dateA;
   });
 
@@ -108,9 +123,9 @@ export default async function OrdersPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {ordersAll.map((order: any) => {
+            {ordersAll.map((order: orderWithItemsAndProducts) => {
               const orderDate = order?.order_date
-                ? new Date(order.order_date).toLocaleDateString("en-US", {
+                ? new Date(order.order_date ?? "").toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "short",
                     day: "numeric",
@@ -171,7 +186,6 @@ export default async function OrdersPage() {
                         <span className="font-semibold text-gray-900">
                           ₹
                           {order?.total_amount?.toFixed(2) ??
-                            order?.order_total?.toFixed(2) ??
                             "0.00"}
                         </span>
                       </p>
@@ -195,13 +209,13 @@ export default async function OrdersPage() {
                       <div className="mt-3">
                         {orderItems.length > 0 ? (
                           <div className="space-y-3">
-                            {orderItems.map((item: any, index: number) => (
+                            {orderItems.map((item, index: number) => (
                               <div
-                                key={item?.order_item_id ?? index}
+                                key={item.order_item_id ?? index}
                                 className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200"
                               >
                                 {item?.products?.thumbnail_image && (
-                                  <div className="flex-shrink-0 w-full sm:w-auto">
+                                  <div className="shrink-0 w-full sm:w-auto">
                                     <img
                                       src={item.products.thumbnail_image}
                                       alt={
@@ -239,7 +253,7 @@ export default async function OrdersPage() {
                                     </span>
                                   </div>
                                 </div>
-                                <div className="flex-shrink-0 w-full sm:w-auto text-left sm:text-right">
+                                <div className="shrink-0 w-full sm:w-auto text-left sm:text-right">
                                   <p className="text-sm sm:text-base font-bold text-gray-900">
                                     ₹
                                     {(item?.products?.final_price?.toFixed(2) ??

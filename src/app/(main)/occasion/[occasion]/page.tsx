@@ -1,34 +1,17 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import Navbar from "@/components/NavbarUI/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard, {
   // Product as ProductCardProduct,
 } from "@/components/ProductUI/ProductCard";
-import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { productWithImages } from "@/types/RelationTypeInterface";
+import { Category } from "@/types/TypeInterface";
 
-// Product interface
-interface Product {
-  id: string;
-  title: string;
-  imageUrl: string;
-  price: number;
-  originalPrice: number;
-  slug: string;
-  category: string;
-}
 
-// Category filter interface
-interface CategoryFilter {
-  id: string;
-  label: string;
-  value: string;
-  imageUrl: string;
-}
 
 export default function OccasionPage() {
   const supabase = createClient();
@@ -40,52 +23,9 @@ export default function OccasionPage() {
   const [selectedSort, setSelectedSort] = useState<string>("featured");
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-  const [products, setProducts] = useState<any>([]);
-  // Sample categories based on the collection
-  const categories: CategoryFilter[] = [
-    {
-      id: "all",
-      label: "All Products",
-      value: "all",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-    },
-    {
-      id: "hallmark",
-      label: "Hallmark",
-      value: "hallmark",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-    },
-    {
-      id: "american",
-      label: "American Diamond",
-      value: "american",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-    },
-    {
-      id: "gold-plated",
-      label: "Gold Plated",
-      value: "gold-plated",
-      imageUrl:
-        "https://gurupujan.com/cdn/shop/files/Artificial_Gold_Chain_1_Gram_Gold_Plated_20_Inch_for_boys_and_men_offering_a_stylish_affordable_accessory_for_any_occasion.1.png?v=1756272428",
-    },
-    {
-      id: "silver",
-      label: "Silver",
-      value: "silver",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-    },
-    {
-      id: "oxidized",
-      label: "Oxidized",
-      value: "oxidized",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-    },
-  ];
+  const [products, setProducts] = useState<productWithImages[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Sort options
   const sortOptions = [
@@ -94,138 +34,6 @@ export default function OccasionPage() {
     { value: "price-high", label: "Price: High to Low" },
     { value: "newest", label: "Newest First" },
   ];
-
-  // Sample products - In real app, fetch based on collectionid
-  const allProducts: Product[] = [
-    {
-      id: "1",
-      title: "Hallmark Gold Plated Necklace with Earrings Set",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-      price: 549.0,
-      originalPrice: 899.0,
-      slug: "hallmark-gold-necklace-earrings",
-      category: "hallmark",
-    },
-    {
-      id: "2",
-      title: "American Diamond Studded Earrings",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-      price: 699.0,
-      originalPrice: 999.0,
-      slug: "american-diamond-earrings",
-      category: "american",
-    },
-    {
-      id: "3",
-      title: "Gold Plated Chain for Men 20 Inch",
-      imageUrl:
-        "https://gurupujan.com/cdn/shop/files/Artificial_Gold_Chain_1_Gram_Gold_Plated_20_Inch_for_boys_and_men_offering_a_stylish_affordable_accessory_for_any_occasion.1.png?v=1756272428",
-      price: 299.0,
-      originalPrice: 499.0,
-      slug: "gold-plated-chain-20-inch",
-      category: "gold-plated",
-    },
-    {
-      id: "4",
-      title: "Silver Plated Necklace Set with Stones",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-      price: 799.0,
-      originalPrice: 1299.0,
-      slug: "silver-necklace-set",
-      category: "silver",
-    },
-    {
-      id: "5",
-      title: "Oxidized Jhumka Earrings Traditional",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-      price: 399.0,
-      originalPrice: 699.0,
-      slug: "oxidized-jhumka-earrings",
-      category: "oxidized",
-    },
-    {
-      id: "6",
-      title: "Hallmark Pendant with Chain Set",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-      price: 649.0,
-      originalPrice: 999.0,
-      slug: "hallmark-pendant-chain",
-      category: "hallmark",
-    },
-    {
-      id: "7",
-      title: "American Diamond Necklace Set",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-      price: 849.0,
-      originalPrice: 1399.0,
-      slug: "american-diamond-necklace",
-      category: "american",
-    },
-    {
-      id: "8",
-      title: "Premium Gold Chain 22 Inch for Men",
-      imageUrl:
-        "https://gurupujan.com/cdn/shop/files/Artificial_Gold_Chain_1_Gram_Gold_Plated_20_Inch_for_boys_and_men_offering_a_stylish_affordable_accessory_for_any_occasion.1.png?v=1756272428",
-      price: 399.0,
-      originalPrice: 599.0,
-      slug: "premium-gold-chain-22-inch",
-      category: "gold-plated",
-    },
-    {
-      id: "9",
-      title: "Silver Stone Studded Ring Set",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-      price: 499.0,
-      originalPrice: 799.0,
-      slug: "silver-stone-ring-set",
-      category: "silver",
-    },
-    {
-      id: "10",
-      title: "Oxidized Choker Necklace Traditional",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-      price: 549.0,
-      originalPrice: 899.0,
-      slug: "oxidized-choker-necklace",
-      category: "oxidized",
-    },
-    {
-      id: "11",
-      title: "Hallmark Bangle Set for Women",
-      imageUrl:
-        "https://www.onlinepng.com/cdn/shop/files/CH-928725-1.jpg?v=1719396928",
-      price: 749.0,
-      originalPrice: 1199.0,
-      slug: "hallmark-bangle-set",
-      category: "hallmark",
-    },
-    {
-      id: "12",
-      title: "Classic Gold Chain 24 Inch",
-      imageUrl:
-        "https://gurupujan.com/cdn/shop/files/Artificial_Gold_Chain_1_Gram_Gold_Plated_20_Inch_for_boys_and_men_offering_a_stylish_affordable_accessory_for_any_occasion.1.png?v=1756272428",
-      price: 449.0,
-      originalPrice: 749.0,
-      slug: "classic-gold-chain-24-inch",
-      category: "gold-plated",
-    },
-  ];
-
-  // Filter products
-  const filteredProducts = allProducts.filter(
-    (product) =>
-      selectedCategory === "all" || product.category === selectedCategory
-  );
-
-  
 
   // Wishlist toggle
   const toggleWishlist = (productId: string) => {
@@ -244,40 +52,75 @@ export default function OccasionPage() {
   useEffect(()=>{
     console.log("decodedOccasion",decodedOccasion)
     const getProducts = async()=>{
-      const {data,error}:any = await supabase.from("products")
-      .select(`
-      *,
-      product_images(*)
-      `)
-      .filter("occasion", "eq", decodedOccasion)
-      .eq("listed_status", true)
-      .order("updated_at", { ascending: false })
-      if(error){
-        console.log("error",error)
+      setLoading(true);
+      setSelectedCategory("all");
+
+      try{
+        const {data,error} = await supabase.from("products")
+        .select(`
+        *,
+        product_images(*),
+        categories(*)
+        `)
+        .filter("occasion", "eq", decodedOccasion)
+        .eq("listed_status", true)
+        .order("updated_at", { ascending: false })
+
+        if(error){
+          console.log("error",error)
+          setProducts([]);
+          setCategories([]);
+        }
+        else{
+          console.log("products",data)
+          const productsData = (data ?? []) as productWithImages[];
+          setProducts(productsData);
+
+          // Derive categories available in this occasion from joined data
+          const unique = new Map<string, Category>();
+          for (const p of productsData) {
+            const c = p.categories ?? null;
+            if (c?.category_id) unique.set(c.category_id, c);
+          }
+          const derived = Array.from(unique.values()).sort((a, b) =>
+            (a.category_name ?? "").localeCompare(b.category_name ?? "")
+          );
+          setCategories(derived);
+        }
       }
-      else{
-        console.log("products",data)
-        setProducts(data);
+      catch(err){
+        console.log("error",err)
+        setProducts([]);
+        setCategories([]);
+      }
+      finally{
+        setLoading(false);
       }
     }
     getProducts();
   },[decodedOccasion])
 
   const sortedProducts = useMemo(() => {
+    // FILTER by category slug (or show all)
+    const filtered =
+      selectedCategory === "all"
+        ? products
+        : products.filter((p) => p.categories?.slug === selectedCategory);
+
     // SORT
-    let sorted = [...products];
+    let sorted = [...filtered];
   
     switch (selectedSort) {
       case "price-low":
-        sorted.sort((a, b) => a.final_price - b.final_price);
+        sorted.sort((a, b) => (a.final_price ?? 0) - (b.final_price ?? 0));
         break;
   
       case "price-high":
-        sorted.sort((a, b) => b.final_price - a.final_price);
+        sorted.sort((a, b) => (b.final_price ?? 0) - (a.final_price ?? 0));
         break;
   
       case "newest":
-        sorted.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+        sorted.sort((a, b) => new Date(b.updated_at ?? "").getTime() - new Date(a.updated_at ?? "").getTime());
         break;
       case "featured":
         break;
@@ -286,16 +129,45 @@ export default function OccasionPage() {
     }
   
     return sorted;
-  }, [ selectedSort, products]);
+  }, [selectedSort, selectedCategory, products]);
 
 
   
 
   console.log("sortedProducts",sortedProducts)
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-theme-cream">
+        <div className="bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 md:pt-8 pb-4">
+            <div className="flex items-center justify-between gap-4 animate-pulse">
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="h-8 w-1/3 bg-gray-200 rounded" />
+                <div className="h-4 w-1/4 bg-gray-200 rounded" />
+              </div>
+              <div className="h-10 w-28 bg-gray-200 rounded-lg" />
+            </div>
+          </div>
+        </div>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {sortedProducts.map((product:productWithImages,index:number) => {
+              return (
+                <ProductCard key={index} product={product} isLoading />
+              );
+            })}
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-theme-cream">
-      {/* <Navbar cartCount={0} /> */}
 
       <main className="w-full">
         {/* Header with Title and Dropdown */}
@@ -381,12 +253,47 @@ export default function OccasionPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
             <div className="overflow-x-auto scrollbar-hide">
               <div className="flex gap-3 md:gap-4 pb-2 pt-2 min-w-max md:min-w-0 md:justify-center md:flex-wrap">
+                {/* All */}
+                <button
+                  key="all"
+                  onClick={() => setSelectedCategory("all")}
+                  className={`flex flex-col items-center group shrink-0 w-16 md:w-20 transition-all ${
+                    selectedCategory === "all"
+                      ? "opacity-100"
+                      : "opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <div
+                    className={`relative w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden bg-white transition-all duration-300 mb-1.5 md:mb-2 shadow-sm group-hover:shadow-md ${
+                      selectedCategory === "all"
+                        ? "ring-2 ring-theme-olive ring-offset-0"
+                        : "ring-2 ring-theme-sage/30 group-hover:ring-theme-sage ring-offset-0"
+                    }`}
+                  >
+                    <Image
+                      src="/logo/cropped-logo.svg"
+                      alt="All"
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-300"
+                      sizes="(max-width: 768px) 56px, 64px"
+                    />
+                  </div>
+                  <span
+                    className={`text-[10px] md:text-xs font-medium text-center transition-colors duration-200 leading-tight ${
+                      selectedCategory === "all"
+                        ? "text-theme-olive font-semibold"
+                        : "text-theme-sage group-hover:text-theme-olive"
+                    }`}
+                  >
+                    All
+                  </span>
+                </button>
                 {categories.map((category) => (
                   <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.value)}
+                    key={category.category_id}
+                    onClick={() => setSelectedCategory(category.slug)}
                     className={`flex flex-col items-center group shrink-0 w-16 md:w-20 transition-all ${
-                      selectedCategory === category.value
+                      selectedCategory === category.slug
                         ? "opacity-100"
                         : "opacity-70 hover:opacity-100"
                     }`}
@@ -394,14 +301,14 @@ export default function OccasionPage() {
                     {/* Circular Image Container */}
                     <div
                       className={`relative w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden bg-white transition-all duration-300 mb-1.5 md:mb-2 shadow-sm group-hover:shadow-md ${
-                        selectedCategory === category.value
+                        selectedCategory === category.slug
                           ? "ring-2 ring-theme-olive ring-offset-0"
                           : "ring-2 ring-theme-sage/30 group-hover:ring-theme-sage ring-offset-0"
                       }`}
                     >
                       <Image
-                        src={category.imageUrl}
-                        alt={category.label}
+                        src={category.category_image_url ?? "/logo/cropped-logo.svg"}
+                        alt={category.category_name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-300"
                         sizes="(max-width: 768px) 56px, 64px"
@@ -411,12 +318,12 @@ export default function OccasionPage() {
                     {/* Category Name */}
                     <span
                       className={`text-[10px] md:text-xs font-medium text-center transition-colors duration-200 leading-tight ${
-                        selectedCategory === category.value
+                        selectedCategory === category.slug
                           ? "text-theme-olive font-semibold"
                           : "text-theme-sage group-hover:text-theme-olive"
                       }`}
                     >
-                      {category.label}
+                      {category.category_name}
                     </span>
                   </button>
                 ))}
@@ -440,7 +347,7 @@ export default function OccasionPage() {
 
           {/* Products Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {sortedProducts.map((product:any,index:number) => {
+            {sortedProducts.map((product:productWithImages,index:number) => {
               // Map to ProductCard format
              
               return (

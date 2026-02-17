@@ -5,20 +5,10 @@ import { Category, deleteCategory, createSubCategory, updateSubCategory, deleteS
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import useAdminStore from "../../../zustandStore/AdminZustandStore";
+import { categoryWithSubCategories } from '@/types/RelationTypeInterface';
+import { SubCategory } from '@/types/TypeInterface';
 
-const PlusIcon = ({ className = 'w-5 h-5' }) => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={2}
-      stroke="currentColor"
-      className={className}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-    </svg>
-  );
-  
+
   const ImageIcon = ({ className = 'w-5 h-5' }) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -65,24 +55,23 @@ const PlusIcon = ({ className = 'w-5 h-5' }) => (
   
 
 
-export default function CategoriesList({ category, isDarkTheme }: { category: Category, isDarkTheme: boolean }) {
+export default function CategoriesList({ category, isDarkTheme }: { category: categoryWithSubCategories, isDarkTheme: boolean }) {
   const router = useRouter();
   const { setShowAddCategory, setSelectedCategory } = useAdminStore();
   const [showSubCategories, setShowSubCategories] = useState(false);
   const [showAddSubCategory, setShowAddSubCategory] = useState(false);
-  const [subCategories, setSubCategories] = useState<[]>([]);
   const [subcategory_image_url_preview, setSubcategoryImageUrlPreview] = useState<string | null>(null);
   const [isEditingSubCategory, setIsEditingSubCategory] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     subcategory_id: '' as string | null,
     subcategory_name: '',
     category_id:'',
-    subcategory_image_url: null as File | string | null,
+    subcategory_image_url: null as File | string | null | undefined,
     is_active: true,
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const handleEdit = (categoryToEdit: Category) => {
+  const handleEdit = (categoryToEdit: categoryWithSubCategories) => {
     // Open the same category form in edit mode (overlay) like products
     setSelectedCategory(categoryToEdit);
     setShowAddCategory(true);
@@ -254,7 +243,7 @@ export default function CategoriesList({ category, isDarkTheme }: { category: Ca
       }
     };
 
-  const handleEditSubCategory = (subcategory_id: string,subcategory_name: string,subcategory_image_url: string,subcategory_image_url_preview: string,is_active: boolean) => {
+  const handleEditSubCategory = (subcategory_id: string,subcategory_name: string,subcategory_image_url: string | null | undefined,is_active: boolean | null | undefined) => {
     console.log("subcategory_id",subcategory_id)
     if(subcategory_id){
       setFormData({
@@ -262,7 +251,7 @@ export default function CategoriesList({ category, isDarkTheme }: { category: Ca
         subcategory_name: subcategory_name,
         category_id:'',
         subcategory_image_url: subcategory_image_url,
-        is_active: is_active
+        is_active: is_active ?? true
       })
       setIsEditingSubCategory(true)
       setShowAddSubCategory(true)
@@ -385,7 +374,7 @@ export default function CategoriesList({ category, isDarkTheme }: { category: Ca
                     <tr>
                     <td colSpan={1} className="py-4 px-4 pl-8 text-center">
                       <div className="flex flex-col gap-2 justify-start items-start">
-                        {category?.sub_categories?.length > 0 ? 
+                        {category?.sub_categories?.length && category?.sub_categories?.length > 0 ? 
                           <div className="flex flex-wrap gap-2 mt-2">
                             {/* Render subcategories here when available */}
                             <span className={`text-sm ${isDarkTheme ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -402,11 +391,11 @@ export default function CategoriesList({ category, isDarkTheme }: { category: Ca
                     </td>
                   </tr>
                  {
-                  category?.sub_categories?.length > 0 && category?.sub_categories?.map((subCategory:any)=>(
+                  category?.sub_categories?.length && category?.sub_categories?.length > 0 && category?.sub_categories?.map((subCategory:SubCategory)=>(
                     <tr key={subCategory.subcategory_id}>
                       <td colSpan={7} className="py-4 px-4 text-center border-b-3 border-t-3 border-gray-200">
                         <div className="flex flex-row items-center justify-around">
-                         <div className='w-1/4' > <img src={subCategory.subcategory_image_url} alt={subCategory.subcategory_name} className="w-20 h-20 rounded-full shrink-0 " /></div>
+                         <div className='w-1/4' > <img src={subCategory.subcategory_image_url ?? ''} alt={subCategory.subcategory_name ?? ''} className="w-20 h-20 rounded-full shrink-0 " /></div>
                           <div className='w-1/4 flex items-center justify-center'>
                             <span className={`text-[1rem] shrink-0 font-bold ${isDarkTheme ? 'text-gray-400' : 'text-gray-600'}`}>
                               {subCategory.subcategory_name}
@@ -423,7 +412,7 @@ export default function CategoriesList({ category, isDarkTheme }: { category: Ca
                                 ? 'hover:bg-gray-700 text-gray-300 hover:text-white'
                                 : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
                             }`}
-                            onClick={() => handleEditSubCategory(subCategory.subcategory_id,subCategory.subcategory_name,subCategory.subcategory_image_url,subCategory.subcategory_image_url_preview,subCategory.is_active)}
+                            onClick={() => handleEditSubCategory(subCategory.subcategory_id,subCategory.subcategory_name ?? '',subCategory.subcategory_image_url ?? '',subCategory.is_active ?? true)}
                             >
                               <EditIcon className="w-4 h-4" />
                             </button>
