@@ -318,6 +318,14 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
     setShowMobileSearch(false);
   };
 
+  const handleSearchSubmit = (qRaw?: string) => {
+    const q = (qRaw ?? searchQuery).trim();
+    if (!q) return;
+    router.push(`/search/${encodeURIComponent(q)}`);
+    setShowSuggestions(false);
+    setShowMobileSearch(false);
+  };
+
   // Sidebar menu items configuration
   const menuItems: MenuItem[] = [
     {
@@ -441,7 +449,7 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
           </button>
 
           {/* Logo Section */}
-          <div className="flex-shrink-0 ml-2 md:ml-0 flex-row flex ">
+          <div className="shrink-0 ml-2 md:ml-0 flex-row flex ">
             <a href="/" className="flex items-center gap-2 md:gap-3">
               <Image
                 src="/logo/cropped-logo.svg"
@@ -466,22 +474,34 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
           {/* Search Bar Section - Hidden on mobile, visible on tablet and up */}
           <div className="hidden md:flex flex-1 ml-auto md:max-w-[20rem] lg:max-w-2xl relative">
             <div className="relative w-full">
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search for products"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => {
-                  if (searchSuggestions.length > 0) {
-                    setShowSuggestions(true);
-                  }
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSearchSubmit();
                 }}
-                className="w-full h-10 md:h-12 px-4 pr-10 bg-white/80 rounded-lg border border-[#360000]/30 outline-none text-gray-700 placeholder-gray-500 text-sm md:text-base focus:bg-white focus:border-[#360000]/30 transition-colors"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <SearchIcon className="w-5 h-5 text-[#360000]/70" />
-              </div>
+                className="relative w-full"
+              >
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search for products"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => {
+                    if (searchSuggestions.length > 0) {
+                      setShowSuggestions(true);
+                    }
+                  }}
+                  className="w-full h-10 md:h-12 px-4 pr-10 bg-white/80 rounded-lg border border-[#360000]/30 outline-none text-gray-700 placeholder-gray-500 text-sm md:text-base focus:bg-white focus:border-[#360000]/30 transition-colors"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#360000]/70 hover:text-[#360000]/90 transition-colors"
+                  aria-label="Search"
+                >
+                  <SearchIcon className="w-5 h-5" />
+                </button>
+              </form>
             </div>
 
             {/* Suggestions Dropdown - Desktop */}
@@ -503,7 +523,7 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
                         className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left"
                       >
                         {suggestion.thumbnail_image && (
-                          <div className="relative w-12 h-12 flex-shrink-0 rounded overflow-hidden">
+                          <div className="relative w-12 h-12 shrink-0 rounded overflow-hidden">
                             <Image
                               src={suggestion.thumbnail_image}
                               alt={suggestion.product_name || ''}
@@ -575,23 +595,35 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
         {showMobileSearch && (
           <div className="md:hidden pb-4 px-4 relative">
             <div className="relative">
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search for products"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => {
-                  if (searchSuggestions.length > 0) {
-                    setShowSuggestions(true);
-                  }
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSearchSubmit();
                 }}
-                className="w-full h-10 px-4 pr-10 bg-white/80 rounded-lg border border-theme-sage/30 outline-none text-gray-700 placeholder-gray-500 text-sm focus:bg-white focus:border-theme-sage transition-colors"
-                autoFocus
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <SearchIcon className="w-5 h-5 text-theme-olive" />
-              </div>
+                className="relative"
+              >
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search for products"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => {
+                    if (searchSuggestions.length > 0) {
+                      setShowSuggestions(true);
+                    }
+                  }}
+                  className="w-full h-10 px-4 pr-10 bg-white/80 rounded-lg border border-theme-sage/30 outline-none text-gray-700 placeholder-gray-500 text-sm focus:bg-white focus:border-theme-sage transition-colors"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-olive hover:text-theme-olive/80 transition-colors"
+                  aria-label="Search"
+                >
+                  <SearchIcon className="w-5 h-5" />
+                </button>
+              </form>
             </div>
 
             {/* Suggestions Dropdown - Mobile */}
@@ -613,7 +645,7 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
                         className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left"
                       >
                         {suggestion.thumbnail_image && (
-                          <div className="relative w-12 h-12 flex-shrink-0 rounded overflow-hidden">
+                          <div className="relative w-12 h-12 shrink-0 rounded overflow-hidden">
                             <Image
                               src={suggestion.thumbnail_image}
                               alt={suggestion.product_name || ''}

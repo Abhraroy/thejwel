@@ -73,7 +73,9 @@ export async function POST(request: NextRequest) {
       wishlist: wishlistResult?.wishlist_id ?? null,
       warnings: [
         cartResult?.success === false ? cartResult.message : null,
-        wishlistResult?.success === false ? wishlistResult.error?.message : null,
+        wishlistResult?.success === false
+          ? ((wishlistResult as any)?.error?.message ?? "Failed to create wishlist")
+          : null,
       ].filter(Boolean),
     });
 }

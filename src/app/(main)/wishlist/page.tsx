@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useStore } from "@/zustandStore/zustandStore";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductUI/ProductCard";
-import { removeFromLocalWishList } from "@/utilityFunctions/WishListFunctions";
 import { addToDbCart, addToLocalCart } from "@/utilityFunctions/CartFunctions";
 
 export default function WishlistPage() {
@@ -241,7 +240,9 @@ export default function WishlistPage() {
   const handleAddToCart = async (product: any) => {
     if (AuthenticatedState && CartId) {
       const updatedItem = await addToDbCart(product, CartId, supabase);
-      setCartItems(updatedItem);
+      if (Array.isArray(updatedItem)) {
+        setCartItems(updatedItem);
+      }
     } else {
       const updatedItem = addToLocalCart(product);
       setCartItems(updatedItem);
