@@ -1,4 +1,5 @@
 import type { CartLineItem, CartLineItems, CartProduct, LocalCart, LocalCartItem } from "@/types/CartTypes";
+import { SupabaseClient } from "@supabase/supabase-js";
 
              
 
@@ -127,7 +128,7 @@ export const decreaseQuantityFromLocalCart = (itemOrProduct: CartLineItem | Cart
 }
 
 
-export const createCart = async(AuthUserId:string,supabase:any)=>{
+export const createCart = async(AuthUserId:string,supabase:SupabaseClient)=>{
     const {data,error} = await supabase.from("cart").insert({
         user_id:AuthUserId,
     }).select().single();
@@ -142,7 +143,7 @@ export const createCart = async(AuthUserId:string,supabase:any)=>{
 }
 
 
-export const getCartData = async(CartId:string,supabase:any)=>{
+export const getCartData = async(CartId:string,supabase:SupabaseClient)=>{
     const {data,error} = await supabase
     .from("cart_items")
     .select(`
@@ -174,7 +175,7 @@ export const getCartData = async(CartId:string,supabase:any)=>{
 
 
 
-export const addToDbCart = async(product:any,CartId:string,supabase:any)=>{
+export const addToDbCart = async(product:CartProduct,CartId:string,supabase:SupabaseClient)=>{
     console.log("Adding to db cart")
     console.log("product",product.product_id)
     console.log("supabase",supabase)
@@ -253,9 +254,9 @@ export const getCartQuantityForProduct = (cartItems: any[] | null | undefined, p
 };
 
 
-export const removeFromDbCart = async(product:any,CartId:string,supabase:any)=>{
+export const removeFromDbCart = async(product:CartProduct,CartId:string,supabase:SupabaseClient)=>{
     console.log("Removing from db cart")
-    const pid = product?.product_id || product?.product_id || product?.products?.product_id || product?.product?.product_id;
+    const pid = product?.product_id || product?.product_id || product?.product_id || product?.product_id;
     console.log("product_id",pid)
     const {data,error} = await supabase.from("cart_items").delete().eq("cart_id",CartId).eq("product_id",pid)
     if(error){
@@ -276,13 +277,12 @@ export const removeFromDbCart = async(product:any,CartId:string,supabase:any)=>{
     }
 }
 
-export const decreaseQuantityFromDbCart = async(product:any,CartId:string,supabase:any)=>{
+export const decreaseQuantityFromDbCart = async(product:CartProduct,CartId:string,supabase:SupabaseClient)=>{
     console.log("Decreasing quantity from db cart")
-    const pid = product?.product_id || product?.product_id || product?.products?.product_id || product?.product?.product_id;
-    const currentQty = Number(product?.quantity ?? 0) || 0;
+    const pid = product?.product_id || product?.product_id || product?.product_id || product?.product_id;
     console.log("product_id",pid)
     const {data,error} = await supabase.from("cart_items").update({
-        quantity: currentQty - 1,
+        quantity: product?.stock_quantity ? product?.stock_quantity - 1 : 0,
     }).eq("cart_id",CartId).eq("product_id",pid)
     console.log("data",data)
     if(error){

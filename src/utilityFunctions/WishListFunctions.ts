@@ -1,65 +1,8 @@
-export const addToLocalWishList = (product: any) => {
-    console.log(product)
-    console.log("Adding to local wishList")
-    let wishListMap = new Map();
-    const product_obj = {
-      ...product,
-    }
-    
-    const localWishListItems = localStorage.getItem('wishListItems')
-    let localWishListItemsArray = localWishListItems ? JSON.parse(localWishListItems) : [];
-    // console.log("localCartItemsArray before adding product", localCartItemsArray)
-    if(localWishListItemsArray.length === 0){
-        wishListMap.set(product_obj.product_id,{products:product_obj,quantity:1})
-    }
-    else{
-        localWishListItemsArray.forEach((item: any) => {
-            console.log("item",item)
-            wishListMap.set(item.products.product_id, item)
-        })
-        console.log("wishListMap",wishListMap)
-        if(wishListMap.has(product_obj.product_id)){
-            console.log("Product already exists in wish list")
-            wishListMap.get(product_obj.product_id).quantity += 1
-        }
-        else{
-            console.log("Product does not exist in wish list adding new product")
-            wishListMap.set(product_obj.product_id, {products:product_obj,quantity:1})
-        }
-    }
-    const updatedWishList = Array.from(wishListMap.values())
-    console.log("updatedWishList",updatedWishList)
-    localStorage.setItem("wishListItems",JSON.stringify(updatedWishList))
-    return updatedWishList;
-}
-
-
-export const removeFromLocalWishList = (product:any)=>{
-    console.log("Removing from local wishlist")
-    let wishListMap = new Map();
-    const localWishListItems = localStorage.getItem('wishListItems')
-    let localWishListItemsArray = localWishListItems ? JSON.parse(localWishListItems) : [];
-    if(localWishListItemsArray.length === 0){
-        console.log("No items in wish list")
-        return localWishListItemsArray;
-    }
-    else{
-        localWishListItemsArray.forEach((item: any) => {
-            wishListMap.set(item.products.product_id, item)
-        })
-        if(wishListMap.has(product.product_id)){
-            wishListMap.delete(product.product_id)
-        }
-        else{
-            console.log("Item not found in wish list")
-        }
-    }
-    localStorage.setItem("wishListItems",JSON.stringify(Array.from(wishListMap.values())))
-    return Array.from(wishListMap.values())
-}
+import { wishlistWithItemsAndProducts ,productWithImages } from "@/types/RelationTypeInterface";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 // Database wishlist functions
-export const getOrCreateWishlist = async (userId: string, supabase: any) => {
+export const getOrCreateWishlist = async (userId: string, supabase: SupabaseClient) => {
     try {
         // Check if wishlist exists
         const { data: existingWishlist, error: fetchError } = await supabase
@@ -98,7 +41,7 @@ export const getOrCreateWishlist = async (userId: string, supabase: any) => {
     }
 };
 
-export const addToDbWishlist = async (product: any, userId: string, supabase: any) => {
+export const addToDbWishlist = async (product: productWithImages, userId: string, supabase: SupabaseClient) => {
     try {
         // Get or create wishlist
         const wishlistResult = await getOrCreateWishlist(userId, supabase);
@@ -150,7 +93,7 @@ export const addToDbWishlist = async (product: any, userId: string, supabase: an
     }
 };
 
-export const removeFromDbWishlist = async (product: any, userId: string, supabase: any) => {
+export const removeFromDbWishlist = async (product: productWithImages, userId: string, supabase: SupabaseClient) => {
     try {
         // Get wishlist_id
         const { data: wishlist, error: wishlistError } = await supabase
@@ -184,7 +127,7 @@ export const removeFromDbWishlist = async (product: any, userId: string, supabas
     }
 };
 
-export const checkIfWishlisted = async (productId: string, userId: string, supabase: any) => {
+export const checkIfWishlisted = async (productId: string, userId: string, supabase: SupabaseClient) => {
     try {
         // Get wishlist_id
         const { data: wishlist, error: wishlistError } = await supabase

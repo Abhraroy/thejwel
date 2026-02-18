@@ -7,9 +7,9 @@ import { useStore } from "@/zustandStore/zustandStore";
 import { addToDbCart, addToLocalCart, calculateCartCount, getLocalCartCount } from "@/utilityFunctions/CartFunctions";
 import { createClient } from "@/lib/supabase/client";
 import { Product } from "@/types/TypeInterface";
+import { CartLineItems } from "@/types/CartTypes";
 import { 
-  addToLocalWishList, 
-  removeFromLocalWishList,
+  
   addToDbWishlist,
   removeFromDbWishlist,
   checkIfWishlisted
@@ -100,15 +100,16 @@ export default function ProductCard({
       }
     } else {
       // Use localStorage for unauthenticated users
-      if (newWishlistState) {
-        const updatedWishList = addToLocalWishList(product);
-        setWishListItems(updatedWishList);
-        console.log("updatedWishList", updatedWishList);
-      } else {
-        const updatedWishList = removeFromLocalWishList(product);
-        setWishListItems(updatedWishList);
-        console.log("removed from wishList", updatedWishList);
-      }
+      // if (newWishlistState) {
+      //   const updatedWishList = addToLocalWishList(product);
+      //   setWishListItems(updatedWishList);
+      //   console.log("updatedWishList", updatedWishList);
+      // } else {
+      //   const updatedWishList = removeFromLocalWishList(product);
+      //   setWishListItems(updatedWishList);
+      //   console.log("removed from wishList", updatedWishList);
+      // }
+      console.log("product",product)
     }
   };
 
@@ -144,7 +145,7 @@ export default function ProductCard({
       console.log("AuthUserId",AuthUserId)
       console.log("CartId",CartId)
       const updatedItem = await addToDbCart(product,CartId,supabase)
-      setCartItems(updatedItem);
+      setCartItems(updatedItem as CartLineItems);
       // Update cart count for authenticated users
       if (updatedItem && Array.isArray(updatedItem)) {
         setCartCount(calculateCartCount(updatedItem));
