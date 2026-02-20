@@ -152,6 +152,7 @@ export default function ProductDisplay({
   const tabletCarouselRef = useRef<HTMLDivElement>(null);
   const viewerCarouselRef = useRef<HTMLDivElement>(null);
   const carouselScrollRafRef = useRef<number | null>(null);
+  const ignoreViewerScrollSyncUntilRef = useRef<number>(0);
 
   const scrollCarouselToIndex = (
     el: HTMLDivElement | null,
@@ -184,6 +185,29 @@ export default function ProductDisplay({
         syncSelectedFromCarousel(ref.current);
       });
     };
+
+  // When the user clicks a thumbnail in fullscreen, we want an immediate jump to that image
+  // (no "start swiping" needed) and we must avoid the in-flight scroll event snapping the
+  // selection back to the previous slide.
+  const setFullscreenImageIndex = (idx: number, behavior: ScrollBehavior = "auto") => {
+    const maxIdx = Math.max(0, (carouselImages?.length ?? 1) - 1);
+    const clamped = Math.max(0, Math.min(idx, maxIdx));
+
+    ignoreViewerScrollSyncUntilRef.current = Date.now() + 350;
+    setSelectedImage(clamped);
+
+    requestAnimationFrame(() => {
+      scrollCarouselToIndex(viewerCarouselRef.current, clamped, behavior);
+    });
+  };
+
+  const onViewerCarouselScroll = (_e: React.UIEvent<HTMLDivElement>) => {
+    if (Date.now() < ignoreViewerScrollSyncUntilRef.current) return;
+    if (carouselScrollRafRef.current) cancelAnimationFrame(carouselScrollRafRef.current);
+    carouselScrollRafRef.current = requestAnimationFrame(() => {
+      syncSelectedFromCarousel(viewerCarouselRef.current);
+    });
+  };
 
   // When thumbnails / arrows / other UI changes selectedImage, smoothly scroll carousel to match.
   useEffect(() => {
@@ -1360,7 +1384,7 @@ export default function ProductDisplay({
             {/* Mobile/tablet: swipeable carousel */}
             <div
               ref={viewerCarouselRef}
-              onScroll={isViewerZoomed ? undefined : onCarouselScroll(viewerCarouselRef)}
+              onScroll={isViewerZoomed ? undefined : onViewerCarouselScroll}
               className={`flex md:hidden h-full w-full overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth overscroll-x-contain ${
                 isViewerZoomed ? "overflow-x-hidden" : "overflow-x-auto"
               }`}
@@ -1384,10 +1408,7 @@ export default function ProductDisplay({
                     onClick={(e) => {
                       e.stopPropagation();
                       if (idx !== selectedImage) {
-                        setSelectedImage(idx);
-                        requestAnimationFrame(() => {
-                          scrollCarouselToIndex(viewerCarouselRef.current, idx, "smooth");
-                        });
+                        setFullscreenImageIndex(idx, "smooth");
                         return;
                       }
                       if (isViewerZoomed) {
@@ -1493,13 +1514,9 @@ export default function ProductDisplay({
                   {productImages.map((img: any, idx: number) => (
                     <button
                       key={img?.image_id ?? idx}
+                      type="button"
                       onClick={() => {
-                        setSelectedImage(idx);
-                        // Make this deterministic in fullscreen: scroll immediately to the clicked index.
-                        // (Relying only on effects can fail if the carousel is mid-layout or width is 0.)
-                        requestAnimationFrame(() => {
-                          scrollCarouselToIndex(viewerCarouselRef.current, idx, "smooth");
-                        });
+                        setFullscreenImageIndex(idx, "auto");
                       }}
                       className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${
                         idx === selectedImage ? "border-[#E94E8B] scale-105" : "border-gray-200"
