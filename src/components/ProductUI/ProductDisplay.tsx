@@ -37,6 +37,8 @@ export default function ProductDisplay({
   const [showZoom, setShowZoom] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isViewerZoomed, setIsViewerZoomed] = useState(false);
+  const [viewerZoomPosition, setViewerZoomPosition] = useState({ x: 50, y: 50 });
   const [shouldTruncate, setShouldTruncate] = useState(false);
   const [truncatedDescription, setTruncatedDescription] = useState("");
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -130,6 +132,15 @@ export default function ProductDisplay({
       document.body.style.overflow = "unset";
     }
   }, [productImageView, productImages?.length]);
+
+  // Reset viewer zoom when viewer closes / image changes
+  useEffect(() => {
+    if (!productImageView) setIsViewerZoomed(false);
+  }, [productImageView]);
+
+  useEffect(() => {
+    if (isViewerZoomed) setIsViewerZoomed(false);
+  }, [selectedImage, isViewerZoomed]);
 
   // Touch swipe (mobile) for fullscreen viewer
   const touchStartXRef = useRef<number | null>(null);
@@ -318,6 +329,16 @@ export default function ProductDisplay({
 
   const handleMouseLeave = () => {
     setShowZoom(false);
+  };
+
+  const VIEWER_ZOOM_SCALE = 2.5;
+  const clampPercent = (v: number) => Math.max(0, Math.min(100, v));
+
+  const setViewerZoomFromClientPoint = (clientX: number, clientY: number, el: HTMLElement) => {
+    const rect = el.getBoundingClientRect();
+    const x = ((clientX - rect.left) / (rect.width || 1)) * 100;
+    const y = ((clientY - rect.top) / (rect.height || 1)) * 100;
+    setViewerZoomPosition({ x: clampPercent(x), y: clampPercent(y) });
   };
 
   // const descriptionLength = product.description.length;
@@ -1339,24 +1360,75 @@ export default function ProductDisplay({
             {/* Mobile/tablet: swipeable carousel */}
             <div
               ref={viewerCarouselRef}
-              onScroll={onCarouselScroll(viewerCarouselRef)}
-              className="flex md:hidden h-full w-full overflow-x-auto overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain"
-              style={{ WebkitOverflowScrolling: "touch" }}
+              onScroll={isViewerZoomed ? undefined : onCarouselScroll(viewerCarouselRef)}
+              className={`flex md:hidden h-full w-full overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth overscroll-x-contain ${
+                isViewerZoomed ? "overflow-x-hidden" : "overflow-x-auto"
+              }`}
+              style={{
+                WebkitOverflowScrolling: "touch",
+                touchAction: isViewerZoomed ? "none" : "pan-x",
+                overscrollBehaviorX: isViewerZoomed ? "none" : "contain",
+              }}
             >
               {carouselImages.map((img: any, idx: number) => (
                 <div
                   key={img?.image_id ?? idx}
                   className="h-full basis-full shrink-0 snap-center flex items-center justify-center"
                 >
-                  <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
-                    <Image
-                      src={img?.image_url ?? "/placeholder.png"}
-                      alt={img?.image_url || "Product image"}
-                      fill
-                      className="object-contain"
-                      priority={idx === 0}
-                      sizes="100vw"
-                    />
+                  <div
+                    className="relative w-full h-full max-w-7xl max-h-[90vh]"
+                    style={{
+                      touchAction: isViewerZoomed && idx === selectedImage ? "none" : "auto",
+                      cursor: isViewerZoomed && idx === selectedImage ? "zoom-out" : "zoom-in",
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (idx !== selectedImage) {
+                        setSelectedImage(idx);
+                        requestAnimationFrame(() => {
+                          scrollCarouselToIndex(viewerCarouselRef.current, idx, "smooth");
+                        });
+                        return;
+                      }
+                      if (isViewerZoomed) {
+                        setIsViewerZoomed(false);
+                        return;
+                      }
+                      setViewerZoomFromClientPoint(e.clientX, e.clientY, e.currentTarget);
+                      setIsViewerZoomed(true);
+                    }}
+                    onMouseMove={(e) => {
+                      if (!isViewerZoomed || idx !== selectedImage) return;
+                      setViewerZoomFromClientPoint(e.clientX, e.clientY, e.currentTarget);
+                    }}
+                    onTouchMove={(e) => {
+                      if (!isViewerZoomed || idx !== selectedImage) return;
+                      const t = e.touches?.[0];
+                      if (!t) return;
+                      e.preventDefault();
+                      setViewerZoomFromClientPoint(t.clientX, t.clientY, e.currentTarget);
+                    }}
+                  >
+                    {isViewerZoomed && idx === selectedImage ? (
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          backgroundImage: `url(${img?.image_url ?? "/placeholder.png"})`,
+                          backgroundSize: `${VIEWER_ZOOM_SCALE * 100}%`,
+                          backgroundPosition: `${viewerZoomPosition.x}% ${viewerZoomPosition.y}%`,
+                          backgroundRepeat: "no-repeat",
+                        }}
+                      />
+                    ) : (
+                      <Image
+                        src={img?.image_url ?? "/placeholder.png"}
+                        alt={img?.image_url || "Product image"}
+                        fill
+                        className="object-contain"
+                        priority={idx === 0}
+                        sizes="100vw"
+                      />
+                    )}
                   </div>
                 </div>
               ))}
@@ -1364,15 +1436,47 @@ export default function ProductDisplay({
 
             {/* Desktop: no swipe carousel; just swap the main image when thumbnail is clicked */}
             <div className="hidden md:flex w-full h-full items-center justify-center">
-              <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
-                <Image
-                  src={carouselImages?.[selectedImage]?.image_url ?? carouselImages?.[0]?.image_url ?? "/placeholder.png"}
-                  alt={`Product image ${selectedImage + 1}`}
-                  fill
-                  className="object-contain"
-                  priority
-                  sizes="100vw"
-                />
+              <div
+                className="relative w-full h-full max-w-7xl max-h-[90vh]"
+                style={{ cursor: isViewerZoomed ? "zoom-out" : "zoom-in" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isViewerZoomed) {
+                    setIsViewerZoomed(false);
+                    return;
+                  }
+                  setViewerZoomFromClientPoint(e.clientX, e.clientY, e.currentTarget);
+                  setIsViewerZoomed(true);
+                }}
+                onMouseMove={(e) => {
+                  if (!isViewerZoomed) return;
+                  setViewerZoomFromClientPoint(e.clientX, e.clientY, e.currentTarget);
+                }}
+              >
+                {isViewerZoomed ? (
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `url(${
+                        carouselImages?.[selectedImage]?.image_url ??
+                        carouselImages?.[0]?.image_url ??
+                        "/placeholder.png"
+                      })`,
+                      backgroundSize: `${VIEWER_ZOOM_SCALE * 100}%`,
+                      backgroundPosition: `${viewerZoomPosition.x}% ${viewerZoomPosition.y}%`,
+                      backgroundRepeat: "no-repeat",
+                    }}
+                  />
+                ) : (
+                  <Image
+                    src={carouselImages?.[selectedImage]?.image_url ?? carouselImages?.[0]?.image_url ?? "/placeholder.png"}
+                    alt={`Product image ${selectedImage + 1}`}
+                    fill
+                    className="object-contain"
+                    priority
+                    sizes="100vw"
+                  />
+                )}
               </div>
             </div>
           </div>
