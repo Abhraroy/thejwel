@@ -7,7 +7,6 @@ import { useStore } from "@/zustandStore/zustandStore";
 import { addToDbCart, addToLocalCart, calculateCartCount, getLocalCartCount } from "@/utilityFunctions/CartFunctions";
 import { createClient } from "@/lib/supabase/client";
 import { Product } from "@/types/TypeInterface";
-import { CartLineItems } from "@/types/CartTypes";
 import { 
   
   addToDbWishlist,
@@ -145,7 +144,9 @@ export default function ProductCard({
       console.log("AuthUserId",AuthUserId)
       console.log("CartId",CartId)
       const updatedItem = await addToDbCart(product,CartId,supabase)
-      setCartItems(updatedItem as CartLineItems);
+      if (Array.isArray(updatedItem)) {
+        setCartItems(updatedItem);
+      }
       // Update cart count for authenticated users
       if (updatedItem && Array.isArray(updatedItem)) {
         setCartCount(calculateCartCount(updatedItem));

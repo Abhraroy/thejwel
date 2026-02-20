@@ -268,7 +268,7 @@ export default function ProductDisplay({
       if (AuthenticatedState && CartId) {
         console.log("Adding to database cart");
         const updatedItems = await addToDbCart(productToAdd, CartId, supabase);
-        if (updatedItems) {
+        if (Array.isArray(updatedItems)) {
           setCartItems(updatedItems);
           setCartSuccess(true);
           setIsCartOpen(true);

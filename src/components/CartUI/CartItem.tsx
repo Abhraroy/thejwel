@@ -3,13 +3,13 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/zustandStore/zustandStore";
-import type { CartLineItem } from "@/types/CartTypes";
+import type { AnyCartItem } from "@/types/CartTypes";
 
 interface CartItemProps {
-  item: CartLineItem;
-  onDecrease: (item: CartLineItem) => void;
-  onIncrease: (item: CartLineItem) => void;
-  onRemove: (item: CartLineItem) => void;
+  item: AnyCartItem;
+  onDecrease: (item: AnyCartItem) => void;
+  onIncrease: (item: AnyCartItem) => void;
+  onRemove: (item: AnyCartItem) => void;
 }
 
 export default function CartItem({
@@ -20,7 +20,7 @@ export default function CartItem({
 }: CartItemProps) {
   const router = useRouter();
   const { setIsCartOpen } = useStore();
-  const product = ("products" in item ? item.products : undefined) ?? undefined;
+  const product = (item as any)?.products ?? undefined;
   const productName = product?.product_name || (product as any)?.name || "Product";
   const productImage = product?.thumbnail_image || (product as any)?.image_url || null;
   const price = Number(product?.final_price ?? (product as any)?.price ?? 0);

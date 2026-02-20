@@ -11,7 +11,7 @@ import PhoneNumberInput from "../AuthUI/PhoneNumberInput";
 import OtpInput from "../AuthUI/OtpInput";
 import AddressForm from "../Address/AddressForm";
 import { createClient } from "@/lib/supabase/client";
-import type { CartLineItems } from "@/types/CartTypes";
+import type { AnyCart } from "@/types/CartTypes";
 
 export default function PaymentGatewayComponent() {
   const [transacToken, setTransacToken] = useState<string | null>(null);
@@ -242,7 +242,7 @@ export default function PaymentGatewayComponent() {
                     </svg>
                     {cartItems && cartItems.length > 0 && (
                       <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center">
-                        {(cartItems as CartLineItems).reduce((sum, item: any) => sum + (Number(item?.quantity ?? 1) || 0), 0)}
+                        {(cartItems as AnyCart).reduce((sum, item: any) => sum + (Number(item?.quantity ?? 1) || 0), 0)}
                       </span>
                     )}
                   </div>
@@ -251,9 +251,9 @@ export default function PaymentGatewayComponent() {
                       Order Summary
                     </span>
                     <span className="text-gray-600 text-xs">
-                      {(cartItems as CartLineItems).reduce((sum, item: any) => sum + (Number(item?.quantity ?? 1) || 0), 0)}{" "}
+                      {(cartItems as AnyCart).reduce((sum, item: any) => sum + (Number(item?.quantity ?? 1) || 0), 0)}{" "}
                       items • ₹
-                      {(cartItems as CartLineItems)
+                      {(cartItems as AnyCart)
                         .reduce((sum: number, item: any) => {
                           const product = item?.products ?? item?.product ?? item;
                           const price = Number(product?.final_price ?? product?.price ?? 0);
@@ -276,7 +276,7 @@ export default function PaymentGatewayComponent() {
                     <span className="text-gray-600">Subtotal:</span>
                     <span className="text-gray-900 font-medium">
                       ₹
-                      {(cartItems as CartLineItems)
+                      {(cartItems as AnyCart)
                         .reduce((sum: number, item: any) => {
                           const product = item?.products ?? item?.product ?? item;
                           const price = Number(product?.base_price ?? 0);
@@ -291,13 +291,13 @@ export default function PaymentGatewayComponent() {
                     <span className="text-green-600 font-medium">
                       -₹
                       {(
-                        (cartItems as CartLineItems).reduce((sum: number, item: any) => {
+                        (cartItems as AnyCart).reduce((sum: number, item: any) => {
                           const product = item?.products ?? item?.product ?? item;
                           const price = Number(product?.base_price ?? 0);
                           const qty = Number(item?.quantity ?? 1) || 0;
                           return sum + price * qty;
                         }, 0) -
-                        (cartItems as CartLineItems).reduce((sum: number, item: any) => {
+                        (cartItems as AnyCart).reduce((sum: number, item: any) => {
                           const product = item?.products ?? item?.product ?? item;
                           const price = Number(product?.final_price ?? product?.price ?? 0);
                           const qty = Number(item?.quantity ?? 1) || 0;
@@ -310,7 +310,7 @@ export default function PaymentGatewayComponent() {
                     <span className="text-sm font-bold text-gray-900">Total:</span>
                     <span className="text-base font-bold text-amber-600">
                       ₹
-                      {(cartItems as CartLineItems)
+                      {(cartItems as AnyCart)
                         .reduce((sum: number, item: any) => {
                           const product = item?.products ?? item?.product ?? item;
                           const price = Number(product?.final_price ?? product?.price ?? 0);

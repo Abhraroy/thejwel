@@ -22,16 +22,32 @@ export type LocalCart = LocalCartItem[];
 
 /**
  * DB cart item shape we usually work with in UI after joining `products(*)`.
- * (Some queries might not include `products`, so it stays optional.)
  */
-export type DbCartItemWithProducts = CartItem & {
-  products?: Product | null;
+export type DbCartItem = CartItem & {
+  products: Product | null;
   cart?: Cart | null;
 };
 
-/**
- * Cart item used throughout the UI — either local cart item or DB cart item.
- */
-export type CartLineItem = LocalCartItem | DbCartItemWithProducts;
-export type CartLineItems = CartLineItem[];
+export type DbCart = DbCartItem[];
+
+export type AnyCartItem = LocalCartItem | DbCartItem;
+export type AnyCart = LocalCart | DbCart;
+
+export const isDbCartItem = (item: AnyCartItem): item is DbCartItem => {
+  return (
+    typeof item === "object" &&
+    item !== null &&
+    "cart_id" in item &&
+    "product_id" in item
+  );
+};
+
+export const isLocalCartItem = (item: AnyCartItem): item is LocalCartItem => {
+  return (
+    typeof item === "object" &&
+    item !== null &&
+    "products" in item &&
+    !("cart_id" in item)
+  );
+};
 

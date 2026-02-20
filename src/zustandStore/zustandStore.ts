@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import type { CartLineItems } from "@/types/CartTypes";
+import type { AnyCart, CartProduct } from "@/types/CartTypes";
 
 interface StoreState {
     MobnoInputState: boolean;
@@ -12,8 +12,8 @@ interface StoreState {
     setUpdateEmailState: () => void;
     AuthenticatedState: boolean;
     setAuthenticatedState: (auth: boolean) => void;
-    cartItems: CartLineItems;
-    setCartItems: (items: CartLineItems) => void;
+    cartItems: AnyCart;
+    setCartItems: (items: AnyCart) => void;
     cartCount: number;
     setCartCount: (count: number) => void;
     checkoutState: boolean;
@@ -56,7 +56,7 @@ export const useStore = create<StoreState>((set) => ({
     AuthenticatedState: false,
     setAuthenticatedState: (auth: boolean) => set({ AuthenticatedState: auth }),
     cartItems: [],
-    setCartItems: (items: CartLineItems) => set({ cartItems: items }),
+    setCartItems: (items: AnyCart) => set({ cartItems: items }),
     cartCount:0,
     setCartCount: (count: number) => set({ cartCount: count }),
     checkoutState:false,

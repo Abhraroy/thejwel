@@ -1,4 +1,11 @@
-import type { CartLineItem, CartLineItems, CartProduct, LocalCart, LocalCartItem } from "@/types/CartTypes";
+import type {
+  AnyCart,
+  CartProduct,
+  DbCart,
+  DbCartItem,
+  LocalCart,
+  LocalCartItem,
+} from "@/types/CartTypes";
 import { SupabaseClient } from "@supabase/supabase-js";
 
              
@@ -38,7 +45,9 @@ export const addToLocalCart = (product: CartProduct): LocalCart => {
 }
 
 
-export const removeFromLocalCart = (itemOrProduct: CartLineItem | CartProduct): LocalCart => {
+export const removeFromLocalCart = (
+  itemOrProduct: LocalCartItem | CartProduct
+): LocalCart => {
     console.log("Removing from local cart")
     console.log("item/product to remove", itemOrProduct)
     let cartMap = new Map<string, LocalCartItem>();
@@ -78,7 +87,9 @@ export const removeFromLocalCart = (itemOrProduct: CartLineItem | CartProduct): 
     return Array.from(cartMap.values())
 }
 
-export const decreaseQuantityFromLocalCart = (itemOrProduct: CartLineItem | CartProduct): LocalCart => {
+export const decreaseQuantityFromLocalCart = (
+  itemOrProduct: LocalCartItem | CartProduct
+): LocalCart => {
     console.log("Decreasing quantity from local cart")
     console.log("item/product to decrease", itemOrProduct)
     let cartMap = new Map<string, LocalCartItem>();
@@ -143,7 +154,7 @@ export const createCart = async(AuthUserId:string,supabase:SupabaseClient)=>{
 }
 
 
-export const getCartData = async(CartId:string,supabase:SupabaseClient)=>{
+export const getCartData = async (CartId: string, supabase: SupabaseClient) => {
     const {data,error} = await supabase
     .from("cart_items")
     .select(`
@@ -160,7 +171,7 @@ export const getCartData = async(CartId:string,supabase:SupabaseClient)=>{
     }
     else{
         console.log("cart data",data)
-        return {success:true,data:data,message:"Cart data fetched successfully"}
+        return {success:true,data:(data as DbCart),message:"Cart data fetched successfully"}
     }
 }
 
@@ -175,18 +186,43 @@ export const getCartData = async(CartId:string,supabase:SupabaseClient)=>{
 
 
 
-export const addToDbCart = async(product:CartProduct,CartId:string,supabase:SupabaseClient)=>{
+export type DbCartOpError = { success: false; error: unknown; message: string };
+export type DbCartOpResult = DbCart | DbCartOpError;
+
+type DbCartProductRef = { product_id: string };
+
+const getProductIdFromInput = (input: DbCartItem | LocalCartItem | CartProduct | DbCartProductRef): string | null => {
+  const fromItem = (input as any)?.product_id;
+  if (typeof fromItem === "string" && fromItem) return fromItem;
+  const fromLocal = (input as any)?.products?.product_id;
+  if (typeof fromLocal === "string" && fromLocal) return fromLocal;
+  const fromProduct = (input as any)?.product?.product_id;
+  if (typeof fromProduct === "string" && fromProduct) return fromProduct;
+  const fromPlain = (input as any)?.product_id;
+  if (typeof fromPlain === "string" && fromPlain) return fromPlain;
+  return null;
+};
+
+export const addToDbCart = async (
+  product: CartProduct | DbCartProductRef,
+  CartId: string,
+  supabase: SupabaseClient
+): Promise<DbCartOpResult> => {
     console.log("Adding to db cart")
-    console.log("product",product.product_id)
+    const pid = getProductIdFromInput(product as any);
+    if (!pid) {
+        return { success: false, error: null, message: "Missing product_id" };
+    }
+    console.log("product",pid)
     console.log("supabase",supabase)
-    const productExistsInCart = await supabase.from("cart_items").select("*").eq("cart_id",CartId).eq("product_id",product.product_id)
+    const productExistsInCart = await supabase.from("cart_items").select("*").eq("cart_id",CartId).eq("product_id",pid)
     console.log("Existence of product in cart",productExistsInCart)
     if(productExistsInCart.data && productExistsInCart.data.length > 0){
         console.log("product exists in cart")
         console.log("quantity before updating",productExistsInCart.data[0].quantity)
         const {data,error} = await supabase.from("cart_items").update({
             quantity:productExistsInCart.data[0].quantity + 1,
-        }).eq("cart_id",CartId).eq("product_id",product.product_id)
+        }).eq("cart_id",CartId).eq("product_id",pid)
         if(error){
             console.log("error",error)
             return {success:false,error:error,message:"Failed to update cart item"}
@@ -196,12 +232,9 @@ export const addToDbCart = async(product:CartProduct,CartId:string,supabase:Supa
             const updatedCartItems = await getCartData(CartId,supabase)
             if(updatedCartItems.success){
                 console.log("updatedCartItems from function ",updatedCartItems.data)
-                return updatedCartItems.data;
+                return updatedCartItems.data as DbCart;
             }
-            else{
-                // console.log("error",updatedCartItems.error)
-                // return {success:false,error:updatedCartItems.error,message:"Failed to get cart data"}
-            }
+            return { success: false, error: null, message: "Failed to get cart data" };
         }
     }
     else{
@@ -210,7 +243,7 @@ export const addToDbCart = async(product:CartProduct,CartId:string,supabase:Supa
         console.log("cartID",CartId)
         const {data,error} = await supabase.from("cart_items").insert({
             cart_id:CartId,
-            product_id:product.product_id,
+            product_id:pid,
             quantity:1,
         })
         if(error){
@@ -222,12 +255,9 @@ export const addToDbCart = async(product:CartProduct,CartId:string,supabase:Supa
             const updatedCartItems = await getCartData(CartId,supabase)
             if(updatedCartItems.success){
                 console.log("updatedCartItems from function ",updatedCartItems.data)
-                return updatedCartItems.data;
+                return updatedCartItems.data as DbCart;
             }
-            else{
-                // console.log("error",updatedCartItems.error)
-                // return {success:false,error:updatedCartItems.error,message:"Failed to get cart data"}
-            }
+            return { success: false, error: null, message: "Failed to get cart data" };
         }
     }
     
@@ -236,27 +266,41 @@ export const addToDbCart = async(product:CartProduct,CartId:string,supabase:Supa
 /**
  * Returns the current quantity of a product in the cart (works for both DB cart item shape and local cart item shape)
  */
-export const getCartQuantityForProduct = (cartItems: any[] | null | undefined, productId: string): number => {
-    if (!Array.isArray(cartItems) || !productId) return 0;
-    let qty = 0;
-    for (const item of cartItems) {
-        const pid =
-            item?.product_id ||
-            item?.products?.product_id ||
-            item?.product?.product_id ||
-            item?.products?.id ||
-            item?.product?.id;
-        if (pid === productId) {
-            qty += Number(item?.quantity ?? 1) || 0;
-        }
+export const getCartQuantityForProduct = (
+  cartItems: AnyCart | null | undefined,
+  productId: string
+): number => {
+  if (!Array.isArray(cartItems) || !productId) return 0;
+  let qty = 0;
+  for (const item of cartItems) {
+    // DB cart item: has cart_id + product_id on the item itself
+    if ((item as any)?.cart_id) {
+      if ((item as DbCartItem).product_id === productId) {
+        qty += Number((item as DbCartItem).quantity ?? 1) || 0;
+      }
+      continue;
     }
-    return qty;
+
+    // Local cart item: product_id lives on item.products
+    const local = item as LocalCartItem;
+    if (local?.products?.product_id === productId) {
+      qty += Number(local?.quantity ?? 1) || 0;
+    }
+  }
+  return qty;
 };
 
 
-export const removeFromDbCart = async(product:CartProduct,CartId:string,supabase:SupabaseClient)=>{
+export const removeFromDbCart = async (
+  itemOrProduct: DbCartItem | CartProduct,
+  CartId: string,
+  supabase: SupabaseClient
+): Promise<DbCartOpResult> => {
     console.log("Removing from db cart")
-    const pid = product?.product_id || product?.product_id || product?.product_id || product?.product_id;
+    const pid = getProductIdFromInput(itemOrProduct as any);
+    if (!pid) {
+        return { success: false, error: null, message: "Missing product_id" };
+    }
     console.log("product_id",pid)
     const {data,error} = await supabase.from("cart_items").delete().eq("cart_id",CartId).eq("product_id",pid)
     if(error){
@@ -268,43 +312,49 @@ export const removeFromDbCart = async(product:CartProduct,CartId:string,supabase
         const updatedCartItems = await getCartData(CartId,supabase)
         if(updatedCartItems.success){
             console.log("updatedCartItems from function ",updatedCartItems.data)
-            return updatedCartItems.data;
+            return updatedCartItems.data as DbCart;
         }
-        else{
-            // console.log("error",updatedCartItems.error)
-            // return {success:false,error:updatedCartItems.error,message:"Failed to get cart data"}
-        }
+        return { success: false, error: null, message: "Failed to get cart data" };
     }
 }
 
-export const decreaseQuantityFromDbCart = async(product:CartProduct,CartId:string,supabase:SupabaseClient)=>{
-    console.log("Decreasing quantity from db cart")
-    const pid = product?.product_id || product?.product_id || product?.product_id || product?.product_id;
-    console.log("product_id",pid)
-    const {data,error} = await supabase.from("cart_items").update({
-        quantity: product?.stock_quantity ? product?.stock_quantity - 1 : 0,
-    }).eq("cart_id",CartId).eq("product_id",pid)
-    console.log("data",data)
-    if(error){
-        console.log("error",error)
-        return {success:false,error:error,message:"Failed to decrease quantity from cart"}
-    }
-    else{
-        console.log("cart item quantity decreased",data)
-        const updatedCartItems = await getCartData(CartId,supabase)
-        if(updatedCartItems.success){
-            console.log("updatedCartItems from function ",updatedCartItems.data)
-            return updatedCartItems.data;
-        }
-        else{
-            // console.log("error",updatedCartItems.error)
-            // return {success:false,error:updatedCartItems.error,message:"Failed to get cart data"}
-        }
-    }
-}
+export const decreaseQuantityFromDbCart = async (
+  item: DbCartItem,
+  CartId: string,
+  supabase: SupabaseClient
+): Promise<DbCartOpResult> => {
+  console.log("Decreasing quantity from db cart");
+  const pid = item?.product_id;
+  if (!pid) return { success: false, error: null, message: "Missing product_id" };
+  if (Number(item.quantity) <= 1) {
+    const updatedCartItems = await getCartData(CartId, supabase);
+    return updatedCartItems.success
+      ? (updatedCartItems.data as DbCart)
+      : { success: false, error: null, message: "Quantity is already 1" };
+  }
+
+  const nextQty = Math.max(Number(item.quantity) - 1, 1);
+  const { data, error } = await supabase
+    .from("cart_items")
+    .update({ quantity: nextQty })
+    .eq("cart_id", CartId)
+    .eq("product_id", pid);
+  console.log("data", data);
+
+  if (error) {
+    console.log("error", error);
+    return { success: false, error: error, message: "Failed to decrease quantity from cart" };
+  }
+
+  const updatedCartItems = await getCartData(CartId, supabase);
+  if (updatedCartItems.success) {
+    return updatedCartItems.data as DbCart;
+  }
+  return { success: false, error: null, message: "Failed to get updated cart" };
+};
 
 // Calculate cart count from cart items array
-export const calculateCartCount = (cartItems: CartLineItems | any[]): number => {
+export const calculateCartCount = (cartItems: AnyCart | any[]): number => {
     if (!Array.isArray(cartItems) || cartItems.length === 0) return 0;
     return cartItems.reduce((sum: number, item: any) => sum + (item.quantity ?? 1), 0);
 }
