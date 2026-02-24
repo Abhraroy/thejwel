@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   images: {
     // In dev, disable Next's image optimizer to avoid noisy "upstream image response timed out"
     // logs when remote image hosts are slow/unreachable. Production stays optimized.
-    unoptimized: process.env.NODE_ENV !== "production",
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
