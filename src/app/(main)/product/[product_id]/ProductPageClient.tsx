@@ -82,7 +82,7 @@ export default function ProductPageClient({
   return (
     <div className="min-h-screen bg-theme-cream flex flex-col">
       <ProductDisplay productDetails={productDetails} />
-      {reviews?.length > 0 && productId ? <ProductReview reviews={reviews} /> : null}
+      {productId ? <ProductReview reviews={reviews ?? []} /> : null}
     </div>
   );
 }

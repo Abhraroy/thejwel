@@ -1,9 +1,81 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
+import {
+  createCoupon,
+  getAllCoupons,
+  updateCouponState,
+} from "@/app/(admin)/admin/actions/coupons";
+import type { Coupon, CouponDiscountType } from "@/types/TypeInterface";
 
 const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB
+
+type CouponFormData = {
+  coupon_code: string;
+  description: string;
+  discount_type: CouponDiscountType;
+  discount_value: string;
+  min_purchase_amount: string;
+  max_discount_amount: string;
+  usage_limit: string;
+  valid_from: string;
+  valid_until: string;
+  is_active: boolean;
+};
+
+function pad2(value: number) {
+  return value.toString().padStart(2, "0");
+}
+
+function toDateTimeLocalValue(value: Date) {
+  const year = value.getFullYear();
+  const month = pad2(value.getMonth() + 1);
+  const day = pad2(value.getDate());
+  const hours = pad2(value.getHours());
+  const minutes = pad2(value.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function buildInitialCouponForm(): CouponFormData {
+  const now = new Date();
+  const weekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  return {
+    coupon_code: "",
+    description: "",
+    discount_type: "percentage",
+    discount_value: "",
+    min_purchase_amount: "0",
+    max_discount_amount: "",
+    usage_limit: "",
+    valid_from: toDateTimeLocalValue(now),
+    valid_until: toDateTimeLocalValue(weekLater),
+    is_active: true,
+  };
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
+}
+
+function getCouponStatus(coupon: Coupon) {
+  const now = new Date();
+  const startsAt = new Date(coupon.valid_from);
+  const endsAt = new Date(coupon.valid_until);
+
+  if (!coupon.is_active) {
+    return { label: "Inactive", tone: "bg-gray-100 text-gray-700" };
+  }
+  if (!Number.isNaN(startsAt.getTime()) && now < startsAt) {
+    return { label: "Scheduled", tone: "bg-indigo-100 text-indigo-700" };
+  }
+  if (!Number.isNaN(endsAt.getTime()) && now > endsAt) {
+    return { label: "Expired", tone: "bg-amber-100 text-amber-700" };
+  }
+  return { label: "Live", tone: "bg-emerald-100 text-emerald-700" };
+}
 
 export default function ResourcesPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -30,6 +102,15 @@ export default function ResourcesPage() {
     null
   );
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [couponForm, setCouponForm] = useState<CouponFormData>(
+    buildInitialCouponForm()
+  );
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
+  const [isCouponSaving, setIsCouponSaving] = useState(false);
+  const [couponList, setCouponList] = useState<Coupon[]>([]);
+  const [isCouponLoading, setIsCouponLoading] = useState(true);
+  const [toggleLoadingId, setToggleLoadingId] = useState<string | null>(null);
 
   const fileMeta = useMemo(() => {
     if (!file) return null;
@@ -39,6 +120,24 @@ export default function ResourcesPage() {
       sizeMb: (file.size / (1024 * 1024)).toFixed(2),
     };
   }, [file]);
+
+  const refreshCoupons = async () => {
+    setIsCouponLoading(true);
+    setCouponError(null);
+    const result = await getAllCoupons();
+    if (!result.success) {
+      setCouponError(result.error || "Unable to load coupons");
+      setCouponList([]);
+      setIsCouponLoading(false);
+      return;
+    }
+    setCouponList(result.data ?? []);
+    setIsCouponLoading(false);
+  };
+
+  useEffect(() => {
+    refreshCoupons();
+  }, []);
 
   const resetSelection = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -127,14 +226,15 @@ export default function ResourcesPage() {
       const supabase = createSupabaseClient();
       let { error } = await supabase.from("image_resources").insert({
         section_name: sectionName.trim(),
-        imagelink: data.url,
+        image_link: data.url,
       });
 
-      // Fallback if the column is named `sectionname` instead of `section_name`
+      // Fallback for older naming in legacy environments.
       if (
         error &&
         typeof error.message === "string" &&
-        error.message.toLowerCase().includes('column "section_name"')
+        (error.message.toLowerCase().includes('column "image_link"') ||
+          error.message.toLowerCase().includes('column "section_name"'))
       ) {
         const retry = await supabase.from("image_resources").insert({
           sectionname: sectionName.trim(),
@@ -168,28 +268,114 @@ export default function ResourcesPage() {
     }
   };
 
-  return (
-    <div className="p-4 sm:p-6">
-      <div className="max-w-3xl">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Resources
-        </h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Upload site resource images (banners, hero images, marketing assets,
-          etc.).
-        </p>
+  const handleCouponInput = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked;
+      setCouponForm((prev) => ({ ...prev, [name]: checked }));
+      return;
+    }
+    setCouponForm((prev) => ({ ...prev, [name]: value }));
+  };
 
-        <div className="mt-6 bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  const resetCouponForm = () => {
+    setCouponForm(buildInitialCouponForm());
+  };
+
+  const handleCreateCoupon = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setCouponError(null);
+    setCouponSuccess(null);
+
+    if (!couponForm.coupon_code.trim()) {
+      setCouponError("Coupon code is required");
+      return;
+    }
+
+    setIsCouponSaving(true);
+    const result = await createCoupon({
+      coupon_code: couponForm.coupon_code,
+      description: couponForm.description || undefined,
+      discount_type: couponForm.discount_type,
+      discount_value: Number(couponForm.discount_value || 0),
+      min_purchase_amount: Number(couponForm.min_purchase_amount || 0),
+      max_discount_amount:
+        couponForm.max_discount_amount === ""
+          ? null
+          : Number(couponForm.max_discount_amount),
+      usage_limit:
+        couponForm.usage_limit === "" ? null : Number(couponForm.usage_limit),
+      valid_from: new Date(couponForm.valid_from).toISOString(),
+      valid_until: new Date(couponForm.valid_until).toISOString(),
+      is_active: couponForm.is_active,
+    });
+
+    if (!result.success) {
+      setCouponError(result.error || "Failed to create coupon");
+      setIsCouponSaving(false);
+      return;
+    }
+
+    setCouponSuccess("Coupon created successfully.");
+    resetCouponForm();
+    await refreshCoupons();
+    setIsCouponSaving(false);
+  };
+
+  const handleToggleCoupon = async (coupon: Coupon) => {
+    setCouponError(null);
+    setCouponSuccess(null);
+    setToggleLoadingId(coupon.coupon_id);
+    const result = await updateCouponState(coupon.coupon_id, !coupon.is_active);
+    if (!result.success) {
+      setCouponError(result.error || "Failed to update coupon state");
+      setToggleLoadingId(null);
+      return;
+    }
+    setCouponSuccess(
+      `Coupon ${coupon.coupon_code} is now ${
+        coupon.is_active ? "inactive" : "active"
+      }.`
+    );
+    await refreshCoupons();
+    setToggleLoadingId(null);
+  };
+
+  return (
+    <div className="p-4 sm:p-6 lg:p-8 bg-linear-to-b from-slate-50 to-white min-h-full">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-sm shadow-sm p-5 sm:p-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+          Resources
+          </h1>
+          <p className="text-sm text-slate-600 mt-1">
+            Manage media resources and coupons from a single advanced admin
+            layout.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <section className="xl:col-span-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-900">
+                Upload Resource Image
+              </h2>
+              <span className="rounded-full bg-rose-50 text-rose-700 text-xs px-3 py-1 font-medium">
+                Media
+              </span>
+            </div>
+
             <div className="space-y-3">
-              <label className="block text-sm font-semibold text-gray-800">
+              <label className="block text-sm font-semibold text-slate-800">
                 Section name
               </label>
               <select
                 ref={sectionInputRef}
                 value={sectionName}
                 onChange={(e) => setSectionName(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-rose-200 bg-white"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-rose-200 bg-white"
               >
                 {sectionNameOptions.map((opt) => (
                   <option key={opt.value || "empty"} value={opt.value}>
@@ -197,24 +383,21 @@ export default function ResourcesPage() {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500">
-                This text will be saved to Supabase as <span className="font-semibold">section_name</span>.
+              <p className="text-xs text-slate-500">
+                Saved in Supabase under `section_name`.
               </p>
 
-              <label className="block text-sm font-semibold text-gray-800 mt-4">
+              <label className="block text-sm font-semibold text-slate-800 mt-4">
                 Folder (optional)
               </label>
               <input
                 value={folder}
                 onChange={(e) => setFolder(e.target.value)}
                 placeholder="e.g. resources/home"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-rose-200"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-rose-200"
               />
-              <p className="text-xs text-gray-500">
-                This is passed to Cloudflare as the upload folder.
-              </p>
 
-              <label className="block text-sm font-semibold text-gray-800 mt-4">
+              <label className="block text-sm font-semibold text-slate-800 mt-4">
                 Image
               </label>
               <input
@@ -224,10 +407,10 @@ export default function ResourcesPage() {
                 onChange={handleFileChange}
                 className="w-full text-sm"
               />
-              <p className="text-xs text-gray-500">Max size: 8MB.</p>
+              <p className="text-xs text-slate-500">Max size: 8MB.</p>
 
               {fileMeta && (
-                <div className="text-xs text-gray-600">
+                <div className="text-xs text-slate-600 rounded-lg bg-slate-50 border border-slate-200 p-3">
                   <div>
                     <span className="font-semibold">Selected:</span>{" "}
                     {fileMeta.name}
@@ -254,7 +437,7 @@ export default function ResourcesPage() {
                 <button
                   type="button"
                   onClick={resetSelection}
-                  className="px-4 py-2 rounded-lg border border-gray-200 text-gray-800 text-sm font-semibold hover:bg-gray-50"
+                  className="px-4 py-2 rounded-lg border border-slate-200 text-slate-800 text-sm font-semibold hover:bg-slate-50"
                 >
                   Clear
                 </button>
@@ -267,9 +450,9 @@ export default function ResourcesPage() {
               )}
             </div>
 
-            <div className="space-y-3">
-              <div className="text-sm font-semibold text-gray-800">Preview</div>
-              <div className="border border-gray-200 rounded-xl bg-gray-50 overflow-hidden aspect-16/10 flex items-center justify-center">
+            <div className="space-y-3 mt-5">
+              <div className="text-sm font-semibold text-slate-800">Preview</div>
+              <div className="border border-slate-200 rounded-xl bg-slate-50 overflow-hidden aspect-16/10 flex items-center justify-center">
                 {previewUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -278,26 +461,26 @@ export default function ResourcesPage() {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-slate-500">
                     Select an image to preview
                   </div>
                 )}
               </div>
 
               {uploadedUrl && (
-                <div className="mt-4 border border-gray-200 rounded-xl p-4 bg-white">
-                  <div className="text-sm font-semibold text-gray-900">
+                <div className="border border-slate-200 rounded-xl p-4 bg-white">
+                  <div className="text-sm font-semibold text-slate-900">
                     Uploaded
                   </div>
-                  <div className="mt-2 text-xs text-gray-600 break-all">
+                  <div className="mt-2 text-xs text-slate-600 break-all">
                     <span className="font-semibold">Section:</span>{" "}
                     {sectionName.trim()}
                   </div>
-                  <div className="mt-2 text-xs text-gray-600 break-all">
+                  <div className="mt-2 text-xs text-slate-600 break-all">
                     <span className="font-semibold">URL:</span> {uploadedUrl}
                   </div>
                   {uploadedKey && (
-                    <div className="mt-1 text-xs text-gray-600 break-all">
+                    <div className="mt-1 text-xs text-slate-600 break-all">
                       <span className="font-semibold">Key:</span> {uploadedKey}
                     </div>
                   )}
@@ -331,7 +514,7 @@ export default function ResourcesPage() {
                     <button
                       type="button"
                       onClick={copyUrl}
-                      className="px-3 py-1.5 rounded-md border border-gray-200 text-gray-800 text-sm font-semibold hover:bg-gray-50"
+                      className="px-3 py-1.5 rounded-md border border-slate-200 text-slate-800 text-sm font-semibold hover:bg-slate-50"
                     >
                       {copied ? "Copied!" : "Copy URL"}
                     </button>
@@ -339,7 +522,7 @@ export default function ResourcesPage() {
                       href={uploadedUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="px-3 py-1.5 rounded-md border border-gray-200 text-gray-800 text-sm font-semibold hover:bg-gray-50"
+                      className="px-3 py-1.5 rounded-md border border-slate-200 text-slate-800 text-sm font-semibold hover:bg-slate-50"
                     >
                       Open
                     </a>
@@ -347,7 +530,282 @@ export default function ResourcesPage() {
                 </div>
               )}
             </div>
-          </div>
+          </section>
+
+          <section className="xl:col-span-7 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-900">
+                Coupon Management
+              </h2>
+              <span className="rounded-full bg-indigo-50 text-indigo-700 text-xs px-3 py-1 font-medium">
+                Coupons
+              </span>
+            </div>
+
+            <form onSubmit={handleCreateCoupon} className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Coupon code
+                  </label>
+                  <input
+                    name="coupon_code"
+                    value={couponForm.coupon_code}
+                    onChange={handleCouponInput}
+                    placeholder="e.g. FESTIVE10"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Discount type
+                  </label>
+                  <select
+                    name="discount_type"
+                    value={couponForm.discount_type}
+                    onChange={handleCouponInput}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
+                  >
+                    <option value="percentage">Percentage</option>
+                    <option value="fixed">Fixed</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Discount value
+                  </label>
+                  <input
+                    name="discount_value"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={couponForm.discount_value}
+                    onChange={handleCouponInput}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Min purchase amount
+                  </label>
+                  <input
+                    name="min_purchase_amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={couponForm.min_purchase_amount}
+                    onChange={handleCouponInput}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Max discount amount (optional)
+                  </label>
+                  <input
+                    name="max_discount_amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={couponForm.max_discount_amount}
+                    onChange={handleCouponInput}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Usage limit (optional)
+                  </label>
+                  <input
+                    name="usage_limit"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={couponForm.usage_limit}
+                    onChange={handleCouponInput}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Valid from
+                  </label>
+                  <input
+                    name="valid_from"
+                    type="datetime-local"
+                    value={couponForm.valid_from}
+                    onChange={handleCouponInput}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Valid until
+                  </label>
+                  <input
+                    name="valid_until"
+                    type="datetime-local"
+                    value={couponForm.valid_until}
+                    onChange={handleCouponInput}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  rows={3}
+                  value={couponForm.description}
+                  onChange={handleCouponInput}
+                  placeholder="Optional coupon description"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
+                />
+              </div>
+
+              <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                <input
+                  type="checkbox"
+                  name="is_active"
+                  checked={couponForm.is_active}
+                  onChange={handleCouponInput}
+                  className="h-4 w-4 accent-indigo-600"
+                />
+                Active after creation
+              </label>
+
+              {couponError && (
+                <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
+                  {couponError}
+                </div>
+              )}
+              {couponSuccess && (
+                <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                  {couponSuccess}
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="submit"
+                  disabled={isCouponSaving}
+                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCouponSaving ? "Creating..." : "Create Coupon"}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetCouponForm}
+                  className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50"
+                >
+                  Reset
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-6 border-t border-slate-200 pt-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-base font-semibold text-slate-900">
+                  Existing Coupons
+                </h3>
+                <button
+                  type="button"
+                  onClick={refreshCoupons}
+                  className="px-3 py-1.5 rounded-md border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50"
+                >
+                  Refresh
+                </button>
+              </div>
+
+              {isCouponLoading ? (
+                <div className="mt-3 text-sm text-slate-500">Loading coupons...</div>
+              ) : couponList.length === 0 ? (
+                <div className="mt-3 text-sm text-slate-500">
+                  No coupons available yet.
+                </div>
+              ) : (
+                <div className="mt-3 grid grid-cols-1 gap-3 max-h-130 overflow-auto pr-1">
+                  {couponList.map((coupon) => {
+                    const status = getCouponStatus(coupon);
+                    return (
+                      <article
+                        key={coupon.coupon_id}
+                        className="border border-slate-200 rounded-xl p-4 bg-slate-50/60"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="text-sm sm:text-base font-semibold text-slate-900">
+                                {coupon.coupon_code}
+                              </h4>
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded-full ${status.tone}`}
+                              >
+                                {status.label}
+                              </span>
+                            </div>
+                            {coupon.description ? (
+                              <p className="text-xs text-slate-600 mt-1">
+                                {coupon.description}
+                              </p>
+                            ) : null}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleCoupon(coupon)}
+                            disabled={toggleLoadingId === coupon.coupon_id}
+                            className="px-3 py-1.5 rounded-md border border-slate-300 text-slate-800 text-xs font-semibold hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {toggleLoadingId === coupon.coupon_id
+                              ? "Updating..."
+                              : coupon.is_active
+                              ? "Deactivate"
+                              : "Activate"}
+                          </button>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-700">
+                          <div>
+                            <span className="font-semibold">Discount:</span>{" "}
+                            {coupon.discount_value}{" "}
+                            {coupon.discount_type === "percentage" ? "%" : "fixed"}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Min purchase:</span>{" "}
+                            {coupon.min_purchase_amount ?? 0}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Max discount:</span>{" "}
+                            {coupon.max_discount_amount ?? "N/A"}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Usage:</span>{" "}
+                            {coupon.usage_count ?? 0}
+                            {coupon.usage_limit ? ` / ${coupon.usage_limit}` : ""}
+                          </div>
+                          <div>
+                            <span className="font-semibold">From:</span>{" "}
+                            {formatDate(coupon.valid_from)}
+                          </div>
+                          <div>
+                            <span className="font-semibold">Until:</span>{" "}
+                            {formatDate(coupon.valid_until)}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 import PhonePe from "./PhonePe";
 import axios from "axios";
-import { getAuthToken } from "@/app/utils/Phonepe";
 import { useState, useEffect } from "react";
 import { useStore } from "@/zustandStore/zustandStore";
+import { useRouter } from "next/navigation";
 import {
   MdOutlineKeyboardArrowDown,
   MdOutlineKeyboardArrowUp,
@@ -10,12 +10,30 @@ import {
 import PhoneNumberInput from "../AuthUI/PhoneNumberInput";
 import OtpInput from "../AuthUI/OtpInput";
 import AddressForm from "../Address/AddressForm";
+import CashOnDeliveryConfirmation from "./CashOnDeliveryConfirmation";
 import { createClient } from "@/lib/supabase/client";
 import type { AnyCart } from "@/types/CartTypes";
 
+type MarketingCoupon = {
+  coupon_code: string;
+  description?: string | null;
+  discount_type?: "percentage" | "fixed" | null;
+  discount_value: number;
+  min_purchase_amount?: number | null;
+  max_discount_amount?: number | null;
+};
+
 export default function PaymentGatewayComponent() {
+  const router = useRouter();
   const [transacToken, setTransacToken] = useState<string | null>(null);
-  const { setInitiatingCheckout, cartItems, AuthenticatedState, AuthUserId } = useStore();
+  const {
+    setInitiatingCheckout,
+    cartItems,
+    AuthenticatedState,
+    AuthUserId,
+    setPaymentConcluded,
+    setShowPaymentConcluded,
+  } = useStore();
   const [showPhoneNumberInput, setShowPhoneNumberInput] = useState(true);
   const [showOrderdetails, setShowOrderdetails] = useState(false);
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -23,6 +41,9 @@ export default function PaymentGatewayComponent() {
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
+  const [showCodConfirmation, setShowCodConfirmation] = useState(false);
+  const [isPlacingCodOrder, setIsPlacingCodOrder] = useState(false);
+  const [codError, setCodError] = useState<string | null>(null);
   const [userFirstName, setUserFirstName] = useState<string>("");
   const [userLastName, setUserLastName] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
@@ -30,7 +51,59 @@ export default function PaymentGatewayComponent() {
   const [existingLastName, setExistingLastName] = useState<string | null>(null);
   const [existingEmail, setExistingEmail] = useState<string | null>(null);
   const [loadingUserData, setLoadingUserData] = useState(false);
+  const [prepaidCoupon, setPrepaidCoupon] = useState<MarketingCoupon | null>(null);
+  const [isFetchingCoupon, setIsFetchingCoupon] = useState(false);
+  const [isCouponApplied, setIsCouponApplied] = useState(false);
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const supabase = createClient();
+  const cartItemCount = (cartItems as AnyCart).reduce(
+    (sum, item: any) => sum + (Number(item?.quantity ?? 1) || 0),
+    0
+  );
+  const orderTotal = (cartItems as AnyCart)
+    .reduce((sum: number, item: any) => {
+      const product = item?.products ?? item?.product ?? item;
+      const price = Number(product?.final_price ?? product?.price ?? 0);
+      const qty = Number(item?.quantity ?? 1) || 0;
+      return sum + price * qty;
+    }, 0)
+    .toFixed(2);
+  const orderTotalNumber = Number(orderTotal);
+  const couponMinPurchaseAmount = Number(prepaidCoupon?.min_purchase_amount ?? 0);
+  const prepaidOfferText = prepaidCoupon
+    ? prepaidCoupon.discount_type === "fixed"
+      ? `₹${Number(prepaidCoupon.discount_value ?? 0).toFixed(2)} off`
+      : `${Number(prepaidCoupon.discount_value ?? 0)}% off`
+    : "";
+  const isCouponEligible = !prepaidCoupon || orderTotalNumber >= couponMinPurchaseAmount;
+  const prepaidCouponDiscount = (() => {
+    if (!isCouponApplied || !prepaidCoupon) return 0;
+    const discountType = prepaidCoupon.discount_type;
+    const discountValue = Number(prepaidCoupon.discount_value ?? 0);
+    let computedDiscount =
+      discountType === "fixed"
+        ? discountValue
+        : (orderTotalNumber * discountValue) / 100;
+    const maxDiscount = Number(prepaidCoupon.max_discount_amount ?? 0);
+    if (maxDiscount > 0) {
+      computedDiscount = Math.min(computedDiscount, maxDiscount);
+    }
+    return Number(Math.max(0, Math.min(computedDiscount, orderTotalNumber)).toFixed(2));
+  })();
+  const prepaidPayableAmount = Math.max(
+    0,
+    Math.round(orderTotalNumber - prepaidCouponDiscount)
+  );
+  const selectedAddressDetails = addresses.find(
+    (address) => address.address_id === selectedAddress
+  );
+  const isCheckoutDisabled =
+    isLoadingPayment ||
+    !AuthenticatedState ||
+    (AuthenticatedState && !selectedAddress && addresses.length > 0) ||
+    (AuthenticatedState && !existingFirstName && !userFirstName.trim()) ||
+    (AuthenticatedState && !existingLastName && !userLastName.trim()) ||
+    (AuthenticatedState && !existingEmail && !userEmail.trim());
 
   // Fetch user data and addresses when authenticated
   useEffect(() => {
@@ -85,41 +158,81 @@ export default function PaymentGatewayComponent() {
     fetchUserDataAndAddresses();
   }, [AuthenticatedState, AuthUserId]);
 
+  useEffect(() => {
+    const fetchPrepaidCoupon = async () => {
+      if (!AuthenticatedState) {
+        setPrepaidCoupon(null);
+        setIsCouponApplied(false);
+        setCouponMessage(null);
+        return;
+      }
+
+      setIsFetchingCoupon(true);
+      setCouponMessage(null);
+      try {
+        const res = await axios.get("/api/payment/coupon");
+        setPrepaidCoupon(res.data?.coupon ?? null);
+        setIsCouponApplied(false);
+      } catch (error: any) {
+        setPrepaidCoupon(null);
+        setIsCouponApplied(false);
+        if (error?.response?.status !== 404) {
+          setCouponMessage("Could not load prepaid coupon right now.");
+        }
+      } finally {
+        setIsFetchingCoupon(false);
+      }
+    };
+
+    fetchPrepaidCoupon();
+  }, [AuthenticatedState]);
+
+  useEffect(() => {
+    if (isCouponApplied && !isCouponEligible) {
+      setIsCouponApplied(false);
+      if (prepaidCoupon) {
+        setCouponMessage(
+          `Minimum purchase should be ₹${couponMinPurchaseAmount.toFixed(2)} for this coupon.`
+        );
+      }
+    }
+  }, [isCouponApplied, isCouponEligible, prepaidCoupon, couponMinPurchaseAmount]);
+
+  const saveUserDetailsIfNeeded = async () => {
+    if (AuthUserId && (!existingFirstName || !existingLastName || !existingEmail)) {
+      const updateData: { first_name?: string; last_name?: string; email?: string } = {};
+      if (!existingFirstName && userFirstName.trim()) {
+        updateData.first_name = userFirstName.trim();
+      }
+      if (!existingLastName && userLastName.trim()) {
+        updateData.last_name = userLastName.trim();
+      }
+      if (!existingEmail && userEmail.trim()) {
+        updateData.email = userEmail.trim();
+      }
+      if (Object.keys(updateData).length > 0) {
+        const { error: updateError } = await supabase
+          .from("users")
+          .update(updateData)
+          .eq("user_id", AuthUserId);
+        if (updateError) {
+          console.error("Error updating user details:", updateError);
+        } else {
+          if (updateData.first_name) setExistingFirstName(updateData.first_name);
+          if (updateData.last_name) setExistingLastName(updateData.last_name);
+          if (updateData.email) setExistingEmail(updateData.email);
+        }
+      }
+    }
+  };
+
   const getAuthToken = async () => {
     setIsLoadingPayment(true);
     try {
-      // Save name and email if they were entered
-      if (AuthUserId && (!existingFirstName || !existingLastName || !existingEmail)) {
-        const updateData: { first_name?: string; last_name?: string; email?: string } = {};
-        if (!existingFirstName && userFirstName.trim()) {
-          updateData.first_name = userFirstName.trim();
-        }
-        if (!existingLastName && userLastName.trim()) {
-          updateData.last_name = userLastName.trim();
-        }
-        if (!existingEmail && userEmail.trim()) {
-          updateData.email = userEmail.trim();
-        }
-        
-        if (Object.keys(updateData).length > 0) {
-          const { error: updateError } = await supabase
-            .from("users")
-            .update(updateData)
-            .eq("user_id", AuthUserId);
-          
-          if (updateError) {
-            console.error("Error updating user details:", updateError);
-          } else {
-            // Update local state
-            if (updateData.first_name) setExistingFirstName(updateData.first_name);
-            if (updateData.last_name) setExistingLastName(updateData.last_name);
-            if (updateData.email) setExistingEmail(updateData.email);
-          }
-        }
-      }
-
+      await saveUserDetailsIfNeeded();
       const res = await axios.post("/api/payment/auth", {
         address_id: selectedAddress,
+        coupon_code: isCouponApplied ? prepaidCoupon?.coupon_code : null,
       }, {
         headers: {
           "Content-Type": "application/json",
@@ -134,6 +247,18 @@ export default function PaymentGatewayComponent() {
     } finally {
       setIsLoadingPayment(false);
     }
+  };
+
+  const handleApplyCoupon = () => {
+    if (!prepaidCoupon) return;
+    if (!isCouponEligible) {
+      setCouponMessage(
+        `Minimum purchase should be ₹${couponMinPurchaseAmount.toFixed(2)} for this coupon.`
+      );
+      return;
+    }
+    setIsCouponApplied(true);
+    setCouponMessage(`Coupon ${prepaidCoupon.coupon_code} applied successfully.`);
   };
 
   const handleAddressSuccess = () => {
@@ -162,6 +287,9 @@ export default function PaymentGatewayComponent() {
     setTransacToken(null);
     setShowPhoneNumberInput(true);
     setShowOrderdetails(false);
+    setShowCodConfirmation(false);
+    setIsPlacingCodOrder(false);
+    setCodError(null);
     setAddresses([]);
     setSelectedAddress(null);
     setShowAddressForm(false);
@@ -174,6 +302,31 @@ export default function PaymentGatewayComponent() {
     setExistingEmail(null);
     setLoadingUserData(false);
     setInitiatingCheckout(false); // Close the modal
+  };
+
+  const handleConfirmCashOnDelivery = async () => {
+    setCodError(null);
+    if (!selectedAddress) return;
+    setIsPlacingCodOrder(true);
+    try {
+      await saveUserDetailsIfNeeded();
+      const res = await axios.post("/api/payment/cod", {
+        address_id: selectedAddress,
+      });
+      if (res.status === 200) {
+        setPaymentConcluded(true);
+        setShowPaymentConcluded(true);
+        resetPaymentState();
+        router.push("/account/orders");
+      }
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        "Could not place COD order. Please try again.";
+      setCodError(message);
+    } finally {
+      setIsPlacingCodOrder(false);
+    }
   };
 
   return (
@@ -215,6 +368,18 @@ export default function PaymentGatewayComponent() {
           </div>
         </div>
 
+        {showCodConfirmation ? (
+          <CashOnDeliveryConfirmation
+            cartItems={cartItems as AnyCart}
+            selectedAddressDetails={selectedAddressDetails}
+            orderTotal={orderTotal}
+            onBack={() => setShowCodConfirmation(false)}
+            onConfirm={handleConfirmCashOnDelivery}
+            isLoadingConfirm={isPlacingCodOrder}
+            errorMessage={codError}
+          />
+        ) : (
+          <>
         {/* Content Area - Scrollable */}
         <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="w-full space-y-4">
@@ -241,26 +406,20 @@ export default function PaymentGatewayComponent() {
                       />
                     </svg>
                     {cartItems && cartItems.length > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center">
+                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
                         {(cartItems as AnyCart).reduce((sum, item: any) => sum + (Number(item?.quantity ?? 1) || 0), 0)}
                       </span>
                     )}
                   </div>
                   <div className="text-left">
-                    <span className="text-gray-900 text-sm font-semibold block">
+                    <span className="text-gray-900 text-base font-bold block">
                       Order Summary
                     </span>
-                    <span className="text-gray-600 text-xs">
-                      {(cartItems as AnyCart).reduce((sum, item: any) => sum + (Number(item?.quantity ?? 1) || 0), 0)}{" "}
-                      items • ₹
-                      {(cartItems as AnyCart)
-                        .reduce((sum: number, item: any) => {
-                          const product = item?.products ?? item?.product ?? item;
-                          const price = Number(product?.final_price ?? product?.price ?? 0);
-                          const qty = Number(item?.quantity ?? 1) || 0;
-                          return sum + price * qty;
-                        }, 0)
-                        .toFixed(2)}
+                    <span className="text-gray-700 text-sm font-medium">
+                      {cartItemCount} items • ₹{orderTotal}
+                      {isCouponApplied && prepaidCoupon && (
+                        <span className="text-green-700"> • Prepaid ₹{prepaidPayableAmount}</span>
+                      )}
                     </span>
                   </div>
                 </div>
@@ -271,10 +430,10 @@ export default function PaymentGatewayComponent() {
                 )}
               </button>
               {showOrderdetails && (
-                <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
-                  <div className="flex justify-between text-xs">
+                <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                  <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal:</span>
-                    <span className="text-gray-900 font-medium">
+                    <span className="text-gray-900 font-semibold">
                       ₹
                       {(cartItems as AnyCart)
                         .reduce((sum: number, item: any) => {
@@ -286,9 +445,9 @@ export default function PaymentGatewayComponent() {
                         .toFixed(2)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xs">
+                  <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Discount:</span>
-                    <span className="text-green-600 font-medium">
+                    <span className="text-green-600 font-semibold">
                       -₹
                       {(
                         (cartItems as AnyCart).reduce((sum: number, item: any) => {
@@ -320,6 +479,24 @@ export default function PaymentGatewayComponent() {
                         .toFixed(2)}
                     </span>
                   </div>
+                  {isCouponApplied && prepaidCoupon && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">
+                          Prepaid coupon ({prepaidCoupon.coupon_code}):
+                        </span>
+                        <span className="text-green-600 font-semibold">
+                          -₹{prepaidCouponDiscount.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between pt-1.5 border-t border-gray-200">
+                        <span className="text-sm font-bold text-gray-900">Prepaid Payable:</span>
+                        <span className="text-base font-bold text-green-700">
+                          ₹{prepaidPayableAmount}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -341,10 +518,50 @@ export default function PaymentGatewayComponent() {
               </div>
             ) : (
               <>
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 p-4">
+                {isFetchingCoupon ? (
+                  <p className="text-sm text-gray-700 font-medium">Checking prepaid offers...</p>
+                ) : prepaidCoupon ? (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-base font-bold text-green-900">
+                        {prepaidOfferText} on all prepaid deliveries. Use coupon{" "}
+                        <span className="bg-white border border-green-300 rounded px-1.5 py-0.5 font-bold">
+                          {prepaidCoupon.coupon_code}
+                        </span>
+                      </p>
+                      {couponMessage && (
+                        <p
+                          className={`text-sm mt-1 font-medium ${
+                            isCouponApplied ? "text-green-700" : "text-rose-600"
+                          }`}
+                        >
+                          {couponMessage}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={isCouponApplied || !isCouponEligible}
+                      className="px-3 py-1.5 rounded-md text-sm font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isCouponApplied ? "Applied" : "Apply"}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-700 font-medium">
+                    No prepaid coupon available right now.
+                  </p>
+                )}
+                {!isFetchingCoupon && !prepaidCoupon && couponMessage && (
+                  <p className="text-sm mt-1 font-medium text-rose-600">{couponMessage}</p>
+                )}
+              </div>
               {/* Customer Details Section - Name & Email */}
               {(!existingFirstName || !existingLastName || !existingEmail) && (
                 <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
-                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
@@ -373,7 +590,7 @@ export default function PaymentGatewayComponent() {
                         <div className="grid grid-cols-2 gap-2">
                           {!existingFirstName && (
                             <div>
-                              <label htmlFor="customer-first-name" className="block text-xs font-medium text-gray-700 mb-1">
+                              <label htmlFor="customer-first-name" className="block text-sm font-semibold text-gray-700 mb-1">
                                 First Name <span className="text-red-500">*</span>
                               </label>
                               <input
@@ -382,13 +599,13 @@ export default function PaymentGatewayComponent() {
                                 value={userFirstName}
                                 onChange={(e) => setUserFirstName(e.target.value)}
                                 placeholder="First name"
-                                className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors placeholder:text-gray-400"
+                                className="w-full px-3 py-2.5 text-base font-medium border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors placeholder:text-gray-400"
                               />
                             </div>
                           )}
                           {!existingLastName && (
                             <div>
-                              <label htmlFor="customer-last-name" className="block text-xs font-medium text-gray-700 mb-1">
+                              <label htmlFor="customer-last-name" className="block text-sm font-semibold text-gray-700 mb-1">
                                 Last Name <span className="text-red-500">*</span>
                               </label>
                               <input
@@ -397,7 +614,7 @@ export default function PaymentGatewayComponent() {
                                 value={userLastName}
                                 onChange={(e) => setUserLastName(e.target.value)}
                                 placeholder="Last name"
-                                className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors placeholder:text-gray-400"
+                                className="w-full px-3 py-2.5 text-base font-medium border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors placeholder:text-gray-400"
                               />
                             </div>
                           )}
@@ -407,7 +624,7 @@ export default function PaymentGatewayComponent() {
                       {/* Email Field */}
                       {!existingEmail && (
                         <div>
-                          <label htmlFor="customer-email" className="block text-xs font-medium text-gray-700 mb-1">
+                          <label htmlFor="customer-email" className="block text-sm font-semibold text-gray-700 mb-1">
                             Email Address <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -416,12 +633,12 @@ export default function PaymentGatewayComponent() {
                             value={userEmail}
                             onChange={(e) => setUserEmail(e.target.value)}
                             placeholder="Enter your email address"
-                            className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors placeholder:text-gray-400"
+                            className="w-full px-3 py-2.5 text-base font-medium border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors placeholder:text-gray-400"
                           />
                         </div>
                       )}
                       
-                      <p className="text-[10px] text-gray-500">
+                      <p className="text-xs font-medium text-gray-600">
                         This information will be used for order confirmation and updates.
                       </p>
                     </div>
@@ -430,7 +647,7 @@ export default function PaymentGatewayComponent() {
               )}
               <div className="bg-white rounded-lg border border-black p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
@@ -454,7 +671,7 @@ export default function PaymentGatewayComponent() {
                   </h3>
                   <button
                     onClick={() => setShowAddressForm(true)}
-                    className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-md transition-colors"
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-md transition-colors"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -500,22 +717,22 @@ export default function PaymentGatewayComponent() {
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 mb-1">
-                              <span className="text-xs font-semibold text-gray-900 capitalize">
+                              <span className="text-sm font-bold text-gray-900 capitalize">
                                 {address.address_type}
                               </span>
                               {address.is_default && (
-                                <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-medium rounded-full">
+                                <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
                                   Default
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-700 leading-relaxed break-words">
+                            <p className="text-sm text-gray-800 font-medium leading-relaxed break-words">
                               {address.street_address}
                             </p>
-                            <p className="text-xs text-gray-600 mt-0.5">
+                            <p className="text-sm text-gray-700 mt-0.5">
                               {address.city}, {address.state} - {address.postal_code}
                             </p>
-                            <p className="text-xs text-gray-600">{address.country}</p>
+                            <p className="text-sm text-gray-700">{address.country}</p>
                           </div>
                         </div>
                       </label>
@@ -542,10 +759,10 @@ export default function PaymentGatewayComponent() {
                         d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
                       />
                     </svg>
-                    <p className="text-gray-600 text-xs mb-3">No addresses saved</p>
+                    <p className="text-gray-700 text-sm font-medium mb-3">No addresses saved</p>
                     <button
                       onClick={() => setShowAddressForm(true)}
-                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-md transition-colors"
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-md transition-colors"
                     >
                       Add Address
                     </button>
@@ -563,17 +780,11 @@ export default function PaymentGatewayComponent() {
             <>
               <button
                 onClick={() => {
+                  setShowCodConfirmation(false);
                   getAuthToken();
                 }}
-                className="w-full px-4 py-2.5 bg-[#DECAF2] text-[#360000] font-semibold rounded-lg transition-all duration-200 text-sm shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
-                disabled={
-                  isLoadingPayment || 
-                  !AuthenticatedState || 
-                  (AuthenticatedState && !selectedAddress && addresses.length > 0) ||
-                  (AuthenticatedState && !existingFirstName && !userFirstName.trim()) ||
-                  (AuthenticatedState && !existingLastName && !userLastName.trim()) ||
-                  (AuthenticatedState && !existingEmail && !userEmail.trim())
-                }
+                className="w-full px-4 py-2.5 bg-[#DECAF2] text-[#360000] font-bold rounded-lg transition-all duration-200 text-base shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+                disabled={isCheckoutDisabled}
               >
                 {isLoadingPayment ? (
                   <>
@@ -584,11 +795,25 @@ export default function PaymentGatewayComponent() {
                     <span>Processing...</span>
                   </>
                 ) : AuthenticatedState ? (
-                  "Proceed to Payment"
+                  isCouponApplied
+                    ? `Proceed to Payment • ₹${prepaidPayableAmount}`
+                    : `Proceed to Payment • ₹${orderTotalNumber.toFixed(2)}`
                 ) : (
                   "Login to Continue"
                 )}
               </button>
+              {AuthenticatedState && (
+                <button
+                  onClick={() => {
+                    setCodError(null);
+                    setShowCodConfirmation(true);
+                  }}
+                  className="w-full mt-2 px-4 py-2.5 border border-[#360000]/30 bg-[#CAF2FF] text-[#360000] font-bold rounded-lg transition-all duration-200 text-base shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                  disabled={isCheckoutDisabled}
+                >
+                  Cash on Delivery
+                </button>
+              )}
               {AuthenticatedState && !isLoadingPayment && (
                 (() => {
                   const missingFields = [];
@@ -601,7 +826,7 @@ export default function PaymentGatewayComponent() {
                   if (missingFields.length === 0) return null;
                   
                   return (
-                    <p className="text-xs text-[#360000] mt-2 text-center font-medium">
+                    <p className="text-sm text-[#360000] mt-2 text-center font-semibold">
                       Please enter your {missingFields.join(" and ")}
                     </p>
                   );
@@ -612,6 +837,8 @@ export default function PaymentGatewayComponent() {
             <PhonePe redirectUrl={transacToken ?? ""} onPaymentInitiated={resetPaymentState} />
           )}
         </div>
+        </>
+        )}
       </div>
 
       {/* Address Form Modal */}

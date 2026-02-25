@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import adminsupabase from "@/lib/supabase/admin";
 import axios from "axios";
 import { redis } from "@/app/utils/Redis";
+import { createRapidShypOrderForOrder } from "@/app/utils/rapidShyp";
 export async function GET(request: NextRequest) {
   const userSupabase = await createClient();
   const { data, error } = await userSupabase.auth.getUser();
@@ -14,10 +15,10 @@ export async function GET(request: NextRequest) {
   }
   const { data: userData } = await adminsupabase
     .from("users")
-    .select("*")
+    .select("user_id")
     .eq("phone_number", "+" + data.user?.phone)
     .single();
-  if (!userData) {
+  if (!userData?.user_id) {
     return NextResponse.json({ message: "User is not found" }, { status: 404 });
   }
   const searchParams = request.nextUrl.searchParams;
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
       .eq("order_number", orderStatusResponse.data.orderId)
       .single();
 
-    if (!existingOrder.error && existingOrder.data?.payment_status === "completed") {
+    if (!existingOrder.error && existingOrder.data?.payment_status === "confirm") {
       return NextResponse.json(
         {
           message: "Order already completed",
@@ -75,7 +76,8 @@ export async function GET(request: NextRequest) {
     const { data: orderData, error } = await adminsupabase
       .from("orders")
       .update({
-        payment_status: "completed",
+        payment_status: "confirm",
+        order_status: "processing",
         transaction_id:
           orderStatusResponse.data.paymentDetails[0].transactionId,
       })
@@ -146,94 +148,7 @@ export async function GET(request: NextRequest) {
       console.error("Stock update error:", stockError);
     }
 
-    // Parse address_text into separate variables
-    // Format: "street_address, address_line1, address_line2, city, state - postal_code"
-    const addressText = updatedOrderData?.address_text || "";
-    const addressParts = addressText
-      .split(", ")
-      .map((part: string) => part.trim());
-
-    // Last part contains "state - postal_code"
-    const lastPart = addressParts[addressParts.length - 1] || "";
-    const statePostalMatch = lastPart.match(/^(.+?)\s*-\s*(\d+)$/);
-
-    const parsedAddress = {
-      streetAddress:
-        addressParts[0] && addressParts[0] !== "null" ? addressParts[0] : "",
-      addressLine1:
-        addressParts[1] && addressParts[1] !== "null" ? addressParts[1] : "",
-      addressLine2:
-        addressParts[2] && addressParts[2] !== "null" ? addressParts[2] : "",
-      city:
-        addressParts[3] && addressParts[3] !== "null" ? addressParts[3] : "",
-      state: statePostalMatch ? statePostalMatch[1].trim() : "",
-      postalCode: statePostalMatch ? statePostalMatch[2].trim() : "",
-    };
-
-    // Create order items payload
-    const orderItemsPayload =
-      updatedOrderData?.order_items?.map((item: any) => ({
-        itemName: item.products?.product_name || "",
-        sku: item.products?.sku || item.product_id,
-        units: item.quantity || 1,
-        unitPrice: item.unit_price || item.products?.final_price || 0,
-        productWeight: item.products?.weight_grams || 0,
-        imageURL: item.products?.thumbnail_image || "",
-        tax: 0,
-      })) || [];
-
-    console.log(
-      "orderItemsPayload:",
-      JSON.stringify(orderItemsPayload, null, 2)
-    );
-
-    const rapidShypPayload = {
-      orderId: updatedOrderData?.order_number,
-      orderDate: updatedOrderData?.order_date?.split("T")[0],
-      storeName: "DEFAULT",
-      billingIsShipping: true,
-      shippingAddress: {
-        firstName: userData?.first_name || "",
-        lastName: userData?.last_name || "",
-        streetAddress: parsedAddress.streetAddress,
-        addressLine1: parsedAddress.addressLine1,
-        addressLine2: parsedAddress.addressLine2,
-        city: parsedAddress.city,
-        state: parsedAddress.state,
-        postalCode: parsedAddress.postalCode,
-        country: "India",
-        email: userData?.email || "",
-        phone: userData?.phone_number || "",
-      },
-      orderItems: orderItemsPayload,
-      paymentMethod: "PREPAID",
-      totalOrderValue: updatedOrderData?.total_amount,
-    };
-    console.log("rapidShypPayload", JSON.stringify(rapidShypPayload, null, 2));
-
-    try {
-      const rapidShypResponse = await axios.post(
-        "https://api.rapidshyp.com/rapidshyp/apis/v1/create_order",
-        rapidShypPayload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "rapidshyp-token": `${process.env.RAPIDSHYP_API_KEY}`,
-          },
-        }
-      );
-      console.log("rapidShypResponse", rapidShypResponse.data);
-    } catch (rapidShypError: any) {
-      // Log the full error response from RapidShyp
-      console.error("RapidShyp API Error:", {
-        status: rapidShypError.response?.status,
-        statusText: rapidShypError.response?.statusText,
-        data: JSON.stringify(rapidShypError.response?.data, null, 2),
-        message: rapidShypError.message,
-      });
-      // Don't fail the whole request, just log the error
-      // The payment was successful, shipping order creation failed
-    }
+    await createRapidShypOrderForOrder(updatedOrderData.order_id, "PREPAID");
 
     return NextResponse.json(
       {

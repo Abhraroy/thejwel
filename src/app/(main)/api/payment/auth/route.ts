@@ -5,133 +5,122 @@ import { createClient } from "@/lib/supabase/server";
 import adminsupabase from "@/lib/supabase/admin";
 import { getAuthToken } from "@/app/utils/Phonepe";
 import { redis } from "@/app/utils/Redis";
-let cachedToken = {
-  access_token: null,
-  expires_at: null,
-};
+import {
+  createOrderWithItems,
+  prepareCheckoutContext,
+} from "@/app/utils/orderCheckout";
 
 export async function POST(request: NextRequest) {
   const userSupabase = await createClient();
-  let totalAmount = 0;
-  let amountInPaise = 0;
-  let user_id = null;
-  let cart_id = null;
-  let lastAddedProductTime = null;
-  let address_id = null;
-  let cartData = null;
-  let address_data = null;
-  let address_text = null;
+  let addressId: string | null = null;
+  let couponCode: string | null = null;
 
-  // Get address_id from request body
   try {
     const body = await request.json();
-    if (!body?.address_id) {
-      return NextResponse.json(
-        { message: "Shipping address is required" },
-        { status: 400 }
-      );
-    }
-    address_id = body.address_id || null;
-    console.log("Address ID received:", address_id);
-    address_data = await adminsupabase
-      .from("addresses")
-      .select("*")
-      .eq("address_id", address_id)
-      .single();
-    console.log("address_data", address_data?.data);
-    if (address_data?.data) {
-      address_text = `${address_data?.data?.street_address}, ${address_data?.data?.address_line1}, ${address_data?.data?.address_line2}, ${address_data?.data?.city}, ${address_data?.data?.state} - ${address_data?.data?.postal_code}`;
-    }
-  } catch (error) {
-    console.log("No address_id in request body or invalid JSON");
+    addressId = body?.address_id ?? null;
+    couponCode =
+      typeof body?.coupon_code === "string" ? body.coupon_code.trim() : null;
+  } catch {
     return NextResponse.json(
       { message: "No address_id in request body or invalid JSON" },
       { status: 400 }
     );
   }
+
+  if (!addressId) {
+    return NextResponse.json(
+      { message: "Shipping address is required" },
+      { status: 400 }
+    );
+  }
+
   const {
     data: { user },
   } = await userSupabase.auth.getUser();
-  if (!user) {
+  if (!user?.phone) {
     return NextResponse.json(
       { message: "User is not authenticated found" },
       { status: 404 }
     );
   }
-  if (user) {
-    const userData = await adminsupabase
-      .from("users")
-      .select("*, cart(*)")
-      .eq("phone_number", "+" + user.phone)
-      .single();
-    console.log("userData", userData);
-    if (userData.error) {
+
+  const contextRes = await prepareCheckoutContext("+" + user.phone, addressId);
+  if (!contextRes.success) {
+    return NextResponse.json(
+      { message: contextRes.message },
+      { status: contextRes.status }
+    );
+  }
+  const context = contextRes.data;
+  let discountedTotalAmount = context.totalAmount;
+  let discountedAmountInPaise = context.amountInPaise;
+
+  if (couponCode) {
+    const nowIso = new Date().toISOString();
+    const couponRes = await adminsupabase
+      .from("coupons")
+      .select(
+        "coupon_code, discount_type, discount_value, min_purchase_amount, max_discount_amount, usage_limit, usage_count, is_active, valid_from, valid_until"
+      )
+      .eq("coupon_code", couponCode)
+      .eq("is_active", true)
+      .lte("valid_from", nowIso)
+      .gte("valid_until", nowIso)
+      .maybeSingle();
+
+    if (couponRes.error || !couponRes.data) {
       return NextResponse.json(
-        { message: "User is not found" },
-        { status: 404 }
+        { message: "Coupon is invalid or expired" },
+        { status: 400 }
       );
     }
-    if (!userData.error && userData.data) {
-      const userDataResult = userData.data as any;
-      if (userDataResult.cart) {
-        user_id = userDataResult.user_id;
-        cart_id = userDataResult.cart?.cart_id;
-        if (cart_id) {
-          cartData = await adminsupabase
-            .from("cart_items")
-            .select(
-              `
-                product_id,
-                quantity,
-                added_at,
-                products(
-                final_price
-                )
-              `
-            )
-            .eq("cart_id", cart_id)
-            .order("added_at", { ascending: false });
-          console.log("cartData", cartData);
-          console.log("cartdata products", cartData?.data?.[0]?.products);
-          if (!cartData?.data || cartData.data.length === 0) {
-            return NextResponse.json(
-              { message: "Cart is empty" },
-              { status: 400 }
-            );
-          }
 
-          lastAddedProductTime = cartData?.data?.[0]?.added_at;
-          if (cartData && cartData.error) {
-            console.error("Error fetching cart data:", cartData.error);
-          }
-          if (cartData && cartData.data && cartData.data.length > 0) {
-            totalAmount = cartData.data.reduce((sum: number, item: any) => {
-              if (item.products && item.products.final_price) {
-                return sum + item.products.final_price * item.quantity;
-              }
-              return sum;
-            }, 0);
-            console.log("totalAmount", totalAmount);
-            if (totalAmount <= 0) {
-              return NextResponse.json(
-                { message: "Invalid order amount" },
-                { status: 400 }
-              );
-            }
-            amountInPaise = Math.round(Number(totalAmount.toFixed(2)) * 100);
-          }
-        }
-      }
+    const coupon = couponRes.data;
+    const usageLimit = Number(coupon.usage_limit ?? 0);
+    const usageCount = Number(coupon.usage_count ?? 0);
+    if (usageLimit > 0 && usageCount >= usageLimit) {
+      return NextResponse.json(
+        { message: "Coupon usage limit reached" },
+        { status: 400 }
+      );
     }
+
+    const minPurchaseAmount = Number(coupon.min_purchase_amount ?? 0);
+    if (context.totalAmount < minPurchaseAmount) {
+      return NextResponse.json(
+        { message: `Minimum purchase should be ₹${minPurchaseAmount}` },
+        { status: 400 }
+      );
+    }
+
+    const discountValue = Number(coupon.discount_value ?? 0);
+    let computedDiscount = 0;
+    if (coupon.discount_type === "percentage") {
+      computedDiscount = (context.totalAmount * discountValue) / 100;
+    } else if (coupon.discount_type === "fixed") {
+      computedDiscount = discountValue;
+    }
+
+    const maxDiscountAmount = Number(coupon.max_discount_amount ?? 0);
+    if (maxDiscountAmount > 0) {
+      computedDiscount = Math.min(computedDiscount, maxDiscountAmount);
+    }
+
+    computedDiscount = Math.max(0, Math.min(computedDiscount, context.totalAmount));
+    discountedTotalAmount = Math.max(
+      0,
+      Math.round(context.totalAmount - computedDiscount)
+    );
+    discountedAmountInPaise = discountedTotalAmount * 100;
   }
 
+  const payableContext = {
+    ...context,
+    totalAmount: discountedTotalAmount,
+    amountInPaise: discountedAmountInPaise,
+  };
   const merchantOrderId = uuidv4();
 
-  
-
-  const sandbox = "https://api-preprod.phonepe.com/apis/pg-sandbox";
-
- 
   const authToken = await getAuthToken();
   if (!authToken) {
     return NextResponse.json(
@@ -139,89 +128,38 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-  redis.set(merchantOrderId, authToken, {
-    ex: 1200,
-  });
-    const payment_requestHeaders = {
+
+  redis.set(merchantOrderId, authToken, { ex: 1200 });
+  const paymentRequestHeaders = {
     "Content-Type": "application/json",
     Authorization: `O-Bearer ${authToken}`,
   };
 
- 
+  const orderRes = await createOrderWithItems(payableContext, {
+    merchantOrderId,
+    paymentStatus: "pending",
+    orderStatus: "pending",
+  });
 
-  const orderData = {
-    user_id: user_id,
-    merchant_order_id: merchantOrderId,
-    order_status: "pending",
-    payment_status: "pending",
-    total_amount: amountInPaise / 100,
-    shipping_address_id: address_id,
-    address_text: address_text,
-  };
-  if (
-    !cartData ||
-    cartData.error ||
-    !cartData.data ||
-    cartData.data.length === 0
-  ) {
-    console.log("Error in cart data, no order created");
+  if (!orderRes.success) {
     return NextResponse.json(
-      { message: "Error in cart data, no order created" },
-      { status: 400 }
+      { message: orderRes.message },
+      { status: orderRes.status }
     );
   }
 
-  const { data, error } = await adminsupabase
-    .from("orders")
-    .insert(orderData)
-    .select("*")
-    .single();
-  if (error) {
-    console.log("error", error);
-    return NextResponse.json(
-      { message: "Error creating order" },
-      { status: 500 }
-    );
-  }
-
-
-
-
-  // Create order items for each cart item
-  const orderItemsPayload = cartData.data.map((item: any) => ({
-    order_id: data.order_id,
-    product_id: item.product_id,
-    quantity: item.quantity,
-    unit_price: item.products?.final_price || 0,
-    total_price: (item.products?.final_price || 0) * item.quantity,
-  }));
-
-  console.log("orderItemsPayload", orderItemsPayload);
-  
-  const { error: orderItemsError } = await adminsupabase
-    .from("order_items")
-    .insert(orderItemsPayload);
-  
-  if (orderItemsError) {
-    return NextResponse.json(
-      { message: "Failed to create order items" },
-      { status: 500 }
-    );
-  }
-
-
-  const payment_requestBody = {
-    amount: amountInPaise,
+  const paymentRequestBody = {
+    amount: payableContext.amountInPaise,
     expireAfter: 1200,
     metaInfo: {
-      udf1: user_id,
+      udf1: payableContext.user.user_id,
       udf2: merchantOrderId,
-      udf3: totalAmount,
-      udf4: lastAddedProductTime || "additional-information-4",
-      udf5: cart_id || "additional-information-5",
-      udf6: address_id || "additional-information-6",
-      udf7: address_text || null,
-      udf8: "additional-information-8",
+      udf3: payableContext.totalAmount,
+      udf4: payableContext.lastAddedProductTime || "additional-information-4",
+      udf5: payableContext.cartId || "additional-information-5",
+      udf6: payableContext.addressId || "additional-information-6",
+      udf7: payableContext.addressText || null,
+      udf8: couponCode || "additional-information-8",
       udf9: "additional-information-9",
       udf10: "additional-information-10",
       udf11: "additional-information-11",
@@ -238,22 +176,13 @@ export async function POST(request: NextRequest) {
           "https://following-blessed-fold-edgar.trycloudflare.com/redirect",
       },
     },
-
-    merchantOrderId: merchantOrderId,
+    merchantOrderId,
     paymentModeConfig: {
       enabledPaymentModes: [
-        {
-          type: "UPI_INTENT",
-        },
-        {
-          type: "UPI_COLLECT",
-        },
-        {
-          type: "UPI_QR",
-        },
-        {
-          type: "NET_BANKING",
-        },
+        { type: "UPI_INTENT" },
+        { type: "UPI_COLLECT" },
+        { type: "UPI_QR" },
+        { type: "NET_BANKING" },
         {
           type: "CARD",
           cardTypes: ["DEBIT_CARD", "CREDIT_CARD"],
@@ -261,45 +190,32 @@ export async function POST(request: NextRequest) {
       ],
     },
   };
-  
 
+  try {
+    const paymentRes = await axios.post(
+      "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay",
+      paymentRequestBody,
+      { headers: paymentRequestHeaders }
+    );
 
-  console.log(
-    "Order Payload Sent:",
-    JSON.stringify(payment_requestBody, null, 2)
-  );
-  console.log(
-    "Order Headers Sent:",
-    JSON.stringify(payment_requestHeaders, null, 2)
-  );
+    if (paymentRes.data?.orderId) {
+      await adminsupabase
+        .from("orders")
+        .update({
+          order_number: paymentRes.data.orderId,
+          payment_status: "pending",
+        })
+        .eq("order_id", orderRes.order.order_id);
+    }
 
-  try{
-  const payment_res = await axios.post(
-    sandbox + "/checkout/v2/pay",
-    payment_requestBody,
-    { headers: payment_requestHeaders }
-  );
-  console.log("payment_res", payment_res.data);
-  if (payment_res.data && payment_res.data.orderId) {
-    const payment_res_phonepay = await adminsupabase
-      .from("orders")
-      .update({
-        order_number: payment_res.data.orderId,
-        payment_status: "pending",
-      })
-      .eq("order_id", data.order_id);
-  } else {
-    console.log("No orderId in response, skipping order update");
-  }
-  return NextResponse.json(
-    { data: payment_res.data, merchantOrderId: merchantOrderId },
-    { status: 200 }
-  );
-  } catch (error) {
-    console.log("error", error);
     return NextResponse.json(
-      { message: "Error creating payment", error: error },
-      { status: 500, }
+      { data: paymentRes.data, merchantOrderId },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { message: "Error creating payment", error },
+      { status: 500 }
     );
   }
 }

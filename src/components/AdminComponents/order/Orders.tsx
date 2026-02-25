@@ -1,7 +1,10 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { updateOrdersStatus } from "@/app/(admin)/admin/actions/order";
+import {
+  updateOrdersStatus,
+  updatePaymentStatus,
+} from "@/app/(admin)/admin/actions/order";
 import { toast } from "react-toastify";
 
 type OrderStatus =
@@ -14,6 +17,7 @@ type OrderStatus =
 
 interface Order {
   order_id: string;
+  order_number?: string | null;
   merchant_order_id?: string | null;
   user_id: string | null;
   order_date: string;
@@ -21,6 +25,7 @@ interface Order {
   delivered_date?: string | null;
   total_amount: number;
   order_status: OrderStatus;
+  payment_status?: string | null;
   shipping_address_id?: string | null;
   shipping?: {
     full_name?: string;
@@ -66,11 +71,12 @@ const statusColors: Record<OrderStatus, string> = {
 };
 
 const allowedStatuses: OrderStatus[] = [
-  "pending",
+  "processing",
   "shipped",
   "delivered",
-  "cancelled",
 ];
+const allowedPaymentStatuses = ["pending(cod)", "pending", "confirm"] as const;
+type PaymentStatus = (typeof allowedPaymentStatuses)[number];
 
 
 
@@ -161,9 +167,11 @@ export default function Orders({ initialOrders }: OrdersProps) {
   };
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+    setUpdatingId(`${orderId}:order`);
     const { success, data, message } = await updateOrdersStatus(orderId, newStatus);
     if (!success) {
       toast.error(message);
+      setUpdatingId(null);
       return;
     }
     toast.success(message);
@@ -171,6 +179,28 @@ export default function Orders({ initialOrders }: OrdersProps) {
       prev.map((order) =>
         order.order_id === orderId
           ? { ...order, order_status: newStatus }
+          : order
+      )
+    );
+    setUpdatingId(null);
+  };
+
+  const handlePaymentStatusChange = async (
+    orderId: string,
+    newStatus: PaymentStatus
+  ) => {
+    setUpdatingId(`${orderId}:payment`);
+    const { success, message } = await updatePaymentStatus(orderId, newStatus);
+    if (!success) {
+      toast.error(message);
+      setUpdatingId(null);
+      return;
+    }
+    toast.success(message);
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.order_id === orderId
+          ? { ...order, payment_status: newStatus }
           : order
       )
     );
@@ -201,10 +231,9 @@ export default function Orders({ initialOrders }: OrdersProps) {
             className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <option value="all">All statuses</option>
-            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
             <option value="shipped">Shipped</option>
             <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
           </select>
         </div>
       </header>
@@ -265,6 +294,10 @@ export default function Orders({ initialOrders }: OrdersProps) {
                   const statusOptions = allowedStatuses.includes(order.order_status)
                     ? allowedStatuses
                     : [...allowedStatuses, order.order_status];
+                  const paymentStatus = (order.payment_status || "pending") as PaymentStatus;
+                  const paymentStatusOptions = allowedPaymentStatuses.includes(paymentStatus)
+                    ? allowedPaymentStatuses
+                    : [...allowedPaymentStatuses, paymentStatus] as const;
                   return (
                     <Fragment key={order.order_id}>
                       <tr
@@ -329,7 +362,7 @@ export default function Orders({ initialOrders }: OrdersProps) {
                               onChange={(e) =>
                                 handleStatusChange(order.order_id, e.target.value as OrderStatus)
                               }
-                              disabled={updatingId === order.order_id}
+                              disabled={updatingId === `${order.order_id}:order`}
                               className="text-xs font-semibold rounded-lg border border-gray-200 px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             >
                               {statusOptions.map((st) => (
@@ -346,9 +379,29 @@ export default function Orders({ initialOrders }: OrdersProps) {
                             >
                               {order.order_status}
                             </span>
-                            {updatingId === order.order_id && (
+                            <select
+                              value={paymentStatus}
+                              onChange={(e) =>
+                                handlePaymentStatusChange(
+                                  order.order_id,
+                                  e.target.value as PaymentStatus
+                                )
+                              }
+                              disabled={updatingId === `${order.order_id}:payment`}
+                              className="text-xs font-semibold rounded-lg border border-gray-200 px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                            >
+                              {paymentStatusOptions.map((st) => (
+                                <option key={st} value={st}>
+                                  {st}
+                                </option>
+                              ))}
+                            </select>
+                            {updatingId?.startsWith(order.order_id) && (
                               <span className="text-[11px] text-gray-500">Updating...</span>
                             )}
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-violet-100 text-violet-700">
+                              {paymentStatus}
+                            </span>
                           </div>
                         </Td>
                         <Td className="font-semibold text-gray-900">

@@ -30,9 +30,9 @@ export default function PhonePe({ redirectUrl, onPaymentInitiated }: PhonePeProp
 
       if (response === "USER_CANCEL") {
         console.log("User cancelled payment");
-        // Payment was cancelled/failed
+        // User aborted gateway flow; do not show a failed/cancelled error toast.
         store.setPaymentConcluded(false);
-        store.setShowPaymentConcluded(true);
+        store.setShowPaymentConcluded(false);
         store.setInitiatingCheckout(false);
         return;
       }

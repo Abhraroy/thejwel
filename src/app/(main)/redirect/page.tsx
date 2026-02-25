@@ -331,10 +331,10 @@ export default function RedirectPage() {
         <p className="text-center text-xs text-gray-500 mt-6">
           Having issues?{" "}
           <a
-            href="mailto:support@example.com"
+            href="mailto:support@thejwel.in"
             className="text-gray-700 font-medium hover:underline"
           >
-            Contact Support
+            support@thejwel.in
           </a>
         </p>
       </div>

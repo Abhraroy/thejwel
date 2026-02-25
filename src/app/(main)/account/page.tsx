@@ -611,6 +611,11 @@ export default function AccountPage() {
                       order?.order_number?.slice(-8) ??
                       order?.order_id?.slice(0, 8) ??
                       "N/A";
+                    const isCodOrder = (order?.order_number || "").startsWith("COD-");
+                    const paymentLabel =
+                      isCodOrder && order?.payment_status === "pending(cod)"
+                        ? "Pending (COD)"
+                        : (order?.payment_status || "pending").toUpperCase();
                     const shippingAddress = order?.shipping_address;
                     const isExpanded = expandedOrderId === order?.order_id;
                     const orderItems =
@@ -674,6 +679,9 @@ export default function AccountPage() {
                               >
                                 {order?.order_status?.toUpperCase() ??
                                   "PENDING"}
+                              </span>
+                              <span className="px-2.5 py-1 rounded-full text-xs font-medium w-fit bg-violet-100 text-violet-700">
+                                {paymentLabel}
                               </span>
                             </div>
                             <div className="space-y-1 text-sm text-gray-600">

@@ -133,10 +133,10 @@ export default function PaymentStatusShowComponent() {
                             <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-3.5 mb-5 border border-gray-100">
                                 <p className="text-xs text-gray-500 mb-1 font-medium">Contact Support</p>
                                 <a
-                                    href="tel:+1234567890"
+                                    href="tel:+919875512028"
                                     className="text-base sm:text-lg font-semibold text-amber-600 hover:text-amber-700 transition-colors inline-block"
                                 >
-                                    +1 (234) 567-890
+                                    +91 9875512028
                                 </a>
                             </div>
 

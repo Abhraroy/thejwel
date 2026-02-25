@@ -1,6 +1,7 @@
 "use server";
 
 import supabase from "@/lib/supabase/admin";
+import { createRapidShypOrderForOrder } from "@/app/utils/rapidShyp";
 
 
 
@@ -11,6 +12,7 @@ type OrderStatus =
   | "delivered"
   | "cancelled"
   | "returned";
+type PaymentStatus = "pending(cod)" | "pending" | "confirm";
   interface Order {
     order_id: string;
     merchant_order_id?: string | null;
@@ -68,8 +70,19 @@ const statusDateField: Partial<Record<OrderStatus, keyof Order>> = {
 
 export async function updateOrdersStatus(orderId: string, status: string) {
     try {
+        const { data: existingOrder, error: existingOrderError } = await supabase
+            .from("orders")
+            .select("order_id, order_status, order_number, payment_status")
+            .eq("order_id", orderId)
+            .single();
+
+        if (existingOrderError || !existingOrder) {
+            return { success: false, data: null, message: "Order not found" };
+        }
+
         const dateField = statusDateField[status as OrderStatus];
-        if (!dateField) {
+        const isValidStatus = ["processing", "shipped", "delivered"].includes(status);
+        if (!isValidStatus) {
             return { success: false, data: null, message: "Invalid status" };
         }
         const timestamp = dateField ? new Date().toISOString() : undefined;
@@ -85,9 +98,46 @@ export async function updateOrdersStatus(orderId: string, status: string) {
             console.error("Error updating order status:", error);
             return { success: false, data: null, message: error.message };
         }
+
+        // COD shipment is created only once: when status transitions into "processing".
+        const isCodOrder = (existingOrder.order_number || "").startsWith("COD-");
+        const movedToProcessing =
+            existingOrder.order_status !== "processing" && status === "processing";
+        if (isCodOrder && movedToProcessing) {
+            await createRapidShypOrderForOrder(orderId, "COD");
+        }
+
         return { success: true, data: data, message: "Order status updated successfully" };
     } catch (error) {
         console.error("Error updating order status:", error);
         return { success: false, data: null, message: error instanceof Error ? error.message : "Failed to update order status" };
+    }
+}
+
+export async function updatePaymentStatus(orderId: string, paymentStatus: string) {
+    try {
+        const validStatuses: PaymentStatus[] = ["pending(cod)", "pending", "confirm"];
+        if (!validStatuses.includes(paymentStatus as PaymentStatus)) {
+            return { success: false, data: null, message: "Invalid payment status" };
+        }
+
+        const { data, error } = await supabase
+            .from("orders")
+            .update({ payment_status: paymentStatus })
+            .eq("order_id", orderId);
+
+        if (error) {
+            console.error("Error updating payment status:", error);
+            return { success: false, data: null, message: error.message };
+        }
+
+        return { success: true, data, message: "Payment status updated successfully" };
+    } catch (error) {
+        console.error("Error updating payment status:", error);
+        return {
+            success: false,
+            data: null,
+            message: error instanceof Error ? error.message : "Failed to update payment status",
+        };
     }
 }
