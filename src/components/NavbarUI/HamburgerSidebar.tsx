@@ -59,7 +59,7 @@ export default function HamburgerSidebar({
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-4 border-b border-white/30">
-            <h2 className="text-2xl font-extrabold text-[#360000] font-josefin-sans tracking-wider">Menu</h2>
+            <h2 className="text-2xl text-[#360000] font-josefin-sans tracking-wider">Menu</h2>
             <button
               onClick={onClose}
               className="p-2 text-white hover:text-[#FFCDC9] transition-colors"

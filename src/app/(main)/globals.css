@@ -231,6 +231,11 @@ html,body {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Josefin Sans: weight 100 by default, overridden to 600 only in logo section */
+.font-josefin-sans {
+  font-weight: 100;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

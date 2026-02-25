@@ -126,7 +126,7 @@ export default function ImageGalleryCarousel({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-10 md:mb-14">
-          <h2 className="text-3xl md:text-4xl lg:text-6xl font-bold text-[#360000] mb-3 font-josefin-sans tracking-wider">
+          <h2 className="text-3xl md:text-4xl lg:text-6xl text-[#360000] mb-3 font-josefin-sans tracking-wider">
             Our Gallery
           </h2>
           <p className="text-[#360000] text-sm md:text-base max-w-2xl mx-auto font-open-sans tracking-wider">
@@ -211,7 +211,7 @@ export default function ImageGalleryCarousel({
                           <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 md:p-6 z-10">
                             <div className="flex items-end justify-between gap-3">
                               <div>
-                                <h3 className="text-white text-lg sm:text-xl md:text-2xl font-semibold font-josefin-sans tracking-wider">
+                                <h3 className="text-white text-lg sm:text-xl md:text-2xl font-josefin-sans tracking-wider">
                                   {image.title ?? image.alt}
                                 </h3>
                                 <p className="mt-1 text-white/80 text-xs sm:text-sm font-open-sans tracking-wide">

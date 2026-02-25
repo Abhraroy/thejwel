@@ -194,7 +194,7 @@ export default function SocialMedia() {
               <span className="h-1 w-1 rounded-full bg-[#360000]/60" />
               Stay close
             </p>
-            <h2 className="mt-5 text-3xl md:text-5xl font-semibold text-[#360000] font-josefin-sans">
+            <h2 className="mt-5 text-3xl md:text-5xl text-[#360000] font-josefin-sans">
               Connect with us everywhere
             </h2>
             <p className="mt-4 text-sm md:text-base text-[#360000]/70 max-w-2xl mx-auto">

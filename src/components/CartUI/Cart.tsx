@@ -186,7 +186,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
         <div className="flex flex-col h-full">
           {/* Cart Header */}
           <div className="flex items-center justify-between p-3 sm:p-4 md:p-6 border-b border-white/20 bg-[#DECAF2] sticky top-0 z-10">
-            <h2 className="text-2xl sm:text-xl md:text-2xl font-bold text-[#360000] font-josefin-sans tracking-wider">
+            <h2 className="text-2xl sm:text-xl md:text-2xl text-[#360000] font-josefin-sans tracking-wider">
               Shopping Cart
             </h2>
             <button

@@ -67,7 +67,7 @@ export default function CategoryClient({ category, subcategories, products }: Ca
             <div className="flex items-center justify-between gap-4">
               {/* Heading */}
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#360000] font-josefin-sans tracking-wider">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl text-[#360000] font-josefin-sans tracking-wider">
                   {category?.category_name || "Category"}
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">

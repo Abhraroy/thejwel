@@ -175,7 +175,7 @@ export default function Footer({ className = "" }: FooterProps) {
                 width={100}
                 height={100}
               />
-              <span className="text-2xl md:text-3xl font-bold text-[#360000] font-josefin-sans tracking-tight">
+              <span className="text-2xl md:text-3xl text-[#360000] font-josefin-sans tracking-tight">
                 THE JWEL
               </span>
             </Link>
@@ -246,10 +246,10 @@ export default function Footer({ className = "" }: FooterProps) {
               <div className="flex items-start gap-3">
                 <PhoneIcon className="w-5 h-5 text-theme-black flex-shrink-0 mt-0.5" />
                 <a
-                  href="tel:+919826000000"
+                  href="tel:+919875512028"
                   className="text-sm text-theme-black hover:text-[#0A0239] transition-colors duration-200"
                 >
-                  +91 9826000000
+                  +91 9875512028
                 </a>
               </div>
               <div className="flex items-start gap-3">
@@ -264,9 +264,9 @@ export default function Footer({ className = "" }: FooterProps) {
               <div className="flex items-start gap-3">
                 <LocationIcon className="w-5 h-5 text-theme-black flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  123 Jewelry Street,
+                    15/8/2 Mondalpara lane,
                   <br />
-                  New York, NY 10001
+                  Kolkata, West Bengal, India 700090
                 </p>
               </div>
             </div>

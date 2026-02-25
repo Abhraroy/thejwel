@@ -11,7 +11,7 @@ export default function CategorySection({
   return (
     <section className={`w-full py-8 md:py-12  `} >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-6 md:mb-8 text-center font-josefin-sans tracking-wider">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl text-gray-900 mb-6 md:mb-8 text-center font-josefin-sans tracking-wider">
           Shop by Category
         </h2>
         

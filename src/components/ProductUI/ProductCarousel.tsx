@@ -48,7 +48,7 @@ export default function ProductCarousel({
       <div className="flex items-center justify-center mb-5 md:mb-8 px-4 sm:px-6 lg:px-8">
         {tagSlug ? (
           <Link href={`/Tags/${tagSlug}`} className="group">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#360000] relative inline-block font-josefin-sans tracking-wider group-hover:text-[#360000]/80 transition-colors">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#360000] relative inline-block font-josefin-sans tracking-wider group-hover:text-[#360000]/80 transition-colors">
               {sectionHeading}
               <span className="absolute -bottom-2 left-0 right-0 h-0.5"></span>
               <span className="absolute -bottom-2 left-0 h-0.5 bg-[#360000] w-0 group-hover:w-full transition-all duration-500 ease-out"></span>
@@ -58,7 +58,7 @@ export default function ProductCarousel({
             </p>
           </Link>
         ) : (
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#360000] relative inline-block font-josefin-sans tracking-wider">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#360000] relative inline-block font-josefin-sans tracking-wider">
             {sectionHeading}
             <span className="absolute -bottom-2 left-0 right-0 h-0.5 bg-[#360000]"></span>
           </h2>

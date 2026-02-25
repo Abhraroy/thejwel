@@ -9,7 +9,7 @@ export default function OccasionSection() {
         <div className="text-center mb-8 md:mb-12">
           <h2 className="text-4xl md:text-6xl text-gray-900 mb-3
           font-josefin-sans 
-          tracking-wider font-bold
+          tracking-wider
           ">
           What's The Occasion?
           </h2>

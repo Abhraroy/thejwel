@@ -59,7 +59,7 @@ const playfair_display = Playfair_Display({
 const josefin_sans = Josefin_Sans({
   variable: "--font-josefin-sans",
   subsets: ["latin"],
-  weight: ["100"],
+  weight: ["700","100","200","300","400","500","600"],
 });
 
 const open_sans = Open_Sans({

@@ -460,11 +460,11 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
                 priority
               />
               <div className="flex flex-col items-start justify-start">
-                <span className="text-xl sm:text-2xl md:text-2xl lg:text-3xl font-extrabold text-[#360000] tracking-tight
+                <span className="text-xl sm:text-2xl md:text-2xl lg:text-3xl font-semibold text-[#360000] tracking-tight
                 font-josefin-sans">
                   The JWEL
                 </span>
-                <span className="text-[0.6rem] md:text-[0.7rem] lg:text-base text-[#360000] tracking-tight font-open-sans">
+                <span className="text-[0.6rem] md:text-[0.7rem] lg:text-base text-[#360000] tracking-tight  font-open-sans">
                   BEYOND THE JEWELLERY
                 </span>
               </div>
