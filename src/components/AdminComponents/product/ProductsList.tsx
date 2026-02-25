@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { deleteProduct, saveProductImageUrls, deleteProductImage } from "../../../app/(admin)/admin/actions/Product";
@@ -87,6 +87,9 @@ export default function ProductsList({ products, isDarkTheme }: ProductsListProp
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [skuQuery, setSkuQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("");
+  const [collectionFilter, setCollectionFilter] = useState<string>("");
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [viewerImages, setViewerImages] = useState<{ id: string; url: string }[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -94,18 +97,59 @@ export default function ProductsList({ products, isDarkTheme }: ProductsListProp
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
   const normalizedSkuQuery = skuQuery.trim().toLowerCase();
-  const filteredProducts = normalizedSkuQuery
-    ? products.filter((p) =>
-        String(p?.sku ?? "")
-          .toLowerCase()
-          .includes(normalizedSkuQuery)
-      )
-    : products;
 
-  // When search changes, reset back to page 1 so results don't "disappear" on later pages
+  // Derive unique categories, subcategories, and collections from products
+  const uniqueCategories = useMemo(() => {
+    const map = new Map<string, string>();
+    products.forEach((p) => {
+      const cat = p?.categories;
+      if (cat?.category_id && cat?.category_name) {
+        map.set(cat.category_id, cat.category_name);
+      }
+    });
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [products]);
+
+  const uniqueSubcategories = useMemo(() => {
+    const map = new Map<string, string>();
+    products.forEach((p) => {
+      const sub = p?.sub_categories;
+      if (sub?.subcategory_id && sub?.subcategory_name) {
+        map.set(sub.subcategory_id, sub.subcategory_name);
+      }
+    });
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [products]);
+
+  const uniqueCollections = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      const col = (p?.collection ?? "").trim();
+      if (col) set.add(col);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      const matchesSku =
+        !normalizedSkuQuery ||
+        String(p?.sku ?? "").toLowerCase().includes(normalizedSkuQuery);
+      const matchesCategory =
+        !categoryFilter || p?.category_id === categoryFilter;
+      const matchesSubcategory =
+        !subcategoryFilter || p?.subcategory_id === subcategoryFilter;
+      const matchesCollection =
+        !collectionFilter ||
+        (p?.collection ?? "").trim() === collectionFilter;
+      return matchesSku && matchesCategory && matchesSubcategory && matchesCollection;
+    });
+  }, [products, normalizedSkuQuery, categoryFilter, subcategoryFilter, collectionFilter]);
+
+  // When search or filters change, reset back to page 1
   useEffect(() => {
     setCurrentPage(1);
-  }, [normalizedSkuQuery]);
+  }, [normalizedSkuQuery, categoryFilter, subcategoryFilter, collectionFilter]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -310,35 +354,87 @@ export default function ProductsList({ products, isDarkTheme }: ProductsListProp
 
   return (
     <>
-      {/* SKU Search */}
-      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-2 w-full sm:max-w-md">
+      {/* Search & Filters */}
+      <div className="mb-4 flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <input
             value={skuQuery}
             onChange={(e) => setSkuQuery(e.target.value)}
             placeholder="Search by SKU (e.g., NKL-GOLD-001)"
-            className={`w-full px-4 py-2 rounded-lg border transition-colors ${
+            className={`min-w-[180px] flex-1 max-w-[240px] px-4 py-2 rounded-lg border transition-colors ${
               isDarkTheme
                 ? "bg-gray-900 border-gray-700 text-white placeholder-gray-500"
                 : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
             } focus:outline-none focus:ring-2 focus:ring-[#E94E8B]`}
           />
-          {skuQuery.trim().length > 0 && (
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className={`min-w-[120px] px-4 py-2 rounded-lg border transition-colors ${
+              isDarkTheme
+                ? "bg-gray-900 border-gray-700 text-white"
+                : "bg-white border-gray-300 text-gray-900"
+            } focus:outline-none focus:ring-2 focus:ring-[#E94E8B]`}
+          >
+            <option value="">All Categories</option>
+            {uniqueCategories.map(([id, name]) => (
+              <option key={id} value={id}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={subcategoryFilter}
+            onChange={(e) => setSubcategoryFilter(e.target.value)}
+            className={`min-w-[140px] px-4 py-2 rounded-lg border transition-colors ${
+              isDarkTheme
+                ? "bg-gray-900 border-gray-700 text-white"
+                : "bg-white border-gray-300 text-gray-900"
+            } focus:outline-none focus:ring-2 focus:ring-[#E94E8B]`}
+          >
+            <option value="">All Subcategories</option>
+            {uniqueSubcategories.map(([id, name]) => (
+              <option key={id} value={id}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={collectionFilter}
+            onChange={(e) => setCollectionFilter(e.target.value)}
+            className={`min-w-[140px] px-4 py-2 rounded-lg border transition-colors ${
+              isDarkTheme
+                ? "bg-gray-900 border-gray-700 text-white"
+                : "bg-white border-gray-300 text-gray-900"
+            } focus:outline-none focus:ring-2 focus:ring-[#E94E8B]`}
+          >
+            <option value="">All Collections</option>
+            {uniqueCollections.map((col) => (
+              <option key={col} value={col}>
+                {col}
+              </option>
+            ))}
+          </select>
+          {(skuQuery.trim() || categoryFilter || subcategoryFilter || collectionFilter) && (
             <button
               type="button"
-              onClick={() => setSkuQuery("")}
+              onClick={() => {
+                setSkuQuery("");
+                setCategoryFilter("");
+                setSubcategoryFilter("");
+                setCollectionFilter("");
+              }}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isDarkTheme
                   ? "bg-gray-800 hover:bg-gray-700 text-gray-200"
                   : "bg-gray-100 hover:bg-gray-200 text-gray-700"
               }`}
-              title="Clear search"
+              title="Clear all filters"
             >
-              Clear
+              Clear all
             </button>
           )}
         </div>
-
         <div
           className={`text-sm ${
             isDarkTheme ? "text-gray-400" : "text-gray-600"

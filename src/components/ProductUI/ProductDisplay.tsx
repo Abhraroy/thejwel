@@ -11,6 +11,21 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 
+/** Parses the single description string into labeled sections (Description, Occasion, Material, Stone Type, Care Label). */
+function parseDescriptionSections(description: string): Array<{ label: string; content: string }> {
+  if (!description?.trim()) return [];
+  const sections: Array<{ label: string; content: string }> = [];
+  const regex = /(Description|Occasion|Material\s*&\s*Care|Material|Stone\s+Type|Care\s+Label)(?:\s*:\s*|\s+)/gi;
+  const parts = description.split(regex);
+  for (let i = 1; i < parts.length; i += 2) {
+    const label = parts[i]?.trim() ?? "";
+    const content = parts[i + 1]?.trim() ?? "";
+    if (label && content) sections.push({ label, content });
+  }
+  if (sections.length === 0) sections.push({ label: "", content: description.trim() });
+  return sections;
+}
+
 interface ProductData {
   name: string;
   price: number;
@@ -541,12 +556,22 @@ export default function ProductDisplay({
                 <h3 className="mb-3 text-lg font-bold text-gray-900 uppercase tracking-wide">
                   Description
                 </h3>
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                  <p className="text-sm leading-relaxed text-gray-700">
-                    {shouldTruncate && !isDescriptionExpanded
-                      ? truncatedDescription
-                      : productDetails[0]?.description}
-                  </p>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-4">
+                  {shouldTruncate && !isDescriptionExpanded ? (
+                    <p className="text-sm leading-relaxed text-gray-700">{truncatedDescription}</p>
+                  ) : (
+                    parseDescriptionSections(productDetails[0]?.description ?? "").map((section, idx) => (
+                      <p key={idx} className="text-sm leading-relaxed text-gray-700">
+                        {section.label ? (
+                          <>
+                            <strong>{section.label}:</strong> {section.content}
+                          </>
+                        ) : (
+                          section.content
+                        )}
+                      </p>
+                    ))
+                  )}
                 </div>
                 {shouldTruncate && (
                   <button
@@ -898,11 +923,23 @@ export default function ProductDisplay({
                 <h3 className="mb-2 text-base font-semibold text-gray-900">
                   Description
                 </h3>
-                <p className="text-sm leading-relaxed text-gray-600">
-                  {shouldTruncate && !isDescriptionExpanded
-                    ? truncatedDescription
-                    : product?.description}
-                </p>
+                <div className="space-y-3">
+                  {shouldTruncate && !isDescriptionExpanded ? (
+                    <p className="text-sm leading-relaxed text-gray-600">{truncatedDescription}</p>
+                  ) : (
+                    parseDescriptionSections(product?.description ?? "").map((section, idx) => (
+                      <p key={idx} className="text-sm leading-relaxed text-gray-600">
+                        {section.label ? (
+                          <>
+                            <strong>{section.label}:</strong> {section.content}
+                          </>
+                        ) : (
+                          section.content
+                        )}
+                      </p>
+                    ))
+                  )}
+                </div>
                 {shouldTruncate && (
                   <button
                     onClick={() =>
@@ -1221,12 +1258,22 @@ export default function ProductDisplay({
                 <h3 className="text-xl font-bold text-gray-900 uppercase tracking-wide mb-4">
                   Description
                 </h3>
-                <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                  <p className="text-base leading-relaxed text-gray-700">
-                    {shouldTruncate && !isDescriptionExpanded
-                      ? truncatedDescription
-                      : productDetails[0]?.description}
-                  </p>
+                <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 space-y-4">
+                  {shouldTruncate && !isDescriptionExpanded ? (
+                    <p className="text-base leading-relaxed text-gray-700">{truncatedDescription}</p>
+                  ) : (
+                    parseDescriptionSections(productDetails[0]?.description ?? "").map((section, idx) => (
+                      <p key={idx} className="text-base leading-relaxed text-gray-700">
+                        {section.label ? (
+                          <>
+                            <strong>{section.label}:</strong> {section.content}
+                          </>
+                        ) : (
+                          section.content
+                        )}
+                      </p>
+                    ))
+                  )}
                 </div>
                 {shouldTruncate && (
                   <button
