@@ -460,7 +460,7 @@ export default function AccountPage() {
                 {/* Phone Field */}
                 <div className="flex flex-col gap-2 sm:gap-4 pb-4 border-b border-gray-100">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-theme-sage/20 rounded-lg text-theme-olive flex-shrink-0">
+                    <div className="p-2 bg-theme-sage/20 rounded-lg text-[#360000] flex-shrink-0">
                       <PhoneIcon />
                     </div>
                     <div className="flex-1">

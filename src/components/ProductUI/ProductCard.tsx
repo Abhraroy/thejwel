@@ -261,7 +261,7 @@ export default function ProductCard({
             strokeWidth={2.5}
             stroke="currentColor"
             className={`w-4 h-4 md:w-5 md:h-5 ${
-              isWishlistActive ? "text-theme-olive fill-theme-olive" : "text-theme-sage"
+              isWishlistActive ? "text-[#360000] fill-theme-olive" : "text-[#360000]"
             }`}
           >
             <path
@@ -302,7 +302,7 @@ export default function ProductCard({
               )}
             </div>
             {showBasePrice && (
-              <span className={`font-semibold text-theme-olive bg-theme-sage/20 rounded whitespace-nowrap ${
+              <span className={`font-semibold text-[#360000] bg-theme-sage/20 rounded whitespace-nowrap ${
                 size === 'small' 
                   ? 'text-[9px] md:text-xs px-1.5 py-0.5' 
                   : 'text-[10px] md:text-sm px-1.5 md:px-2 py-0.5'

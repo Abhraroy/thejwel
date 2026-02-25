@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useCallback, useMemo, useState } from "react";
+import { useRef, useMemo, useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, EffectCoverflow } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
+import "swiper/css";
+import "swiper/css/effect-coverflow";
 
 interface GalleryImage {
   src: string;
@@ -52,51 +56,58 @@ export default function ImageGalleryCarousel({
   autoPlayInterval = 4000,
   className = "",
 }: ImageGalleryCarouselProps) {
-  const shouldReduceMotion = useReducedMotion();
-  const safeImages = useMemo(() => (Array.isArray(images) ? images.filter(Boolean) : []), [images]);
+  const safeImages = useMemo(
+    () => (Array.isArray(images) ? images.filter(Boolean) : []),
+    [images]
+  );
   const slideCount = safeImages.length;
 
+  const swiperRef = useRef<SwiperType | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const [direction, setDirection] = useState<"left" | "right">("right");
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [progressPercent, setProgressPercent] = useState(0);
 
-  const goToNext = useCallback(() => {
-    if (slideCount <= 1) return;
-    setDirection("right");
-    setCurrentIndex((prev) => (prev + 1) % slideCount);
-  }, [slideCount]);
+  const goToPrev = useCallback(() => swiperRef.current?.slidePrev(), []);
+  const goToNext = useCallback(() => swiperRef.current?.slideNext(), []);
+  const goToSlide = useCallback(
+    (idx: number) => swiperRef.current?.slideToLoop(idx),
+    []
+  );
 
-  const goToPrev = useCallback(() => {
-    if (slideCount <= 1) return;
-    setDirection("left");
-    setCurrentIndex((prev) => (prev - 1 + slideCount) % slideCount);
-  }, [slideCount]);
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+    swiperRef.current?.autoplay?.stop();
+  }, []);
 
-  const goToSlide = useCallback((index: number) => {
-    if (slideCount === 0) return;
-    setDirection(index > currentIndex ? "right" : "left");
-    setCurrentIndex(((index % slideCount) + slideCount) % slideCount);
-  }, [currentIndex, slideCount]);
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+    swiperRef.current?.autoplay?.start();
+  }, []);
 
-  // Auto-play
+  // Autoplay progress bar
   useEffect(() => {
-    if (!autoPlay || isHovered || slideCount <= 1) return;
+    if (!autoPlay || isHovered || slideCount <= 1) {
+      setProgressPercent(0);
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      return;
+    }
 
-    const interval = setInterval(goToNext, autoPlayInterval);
-    return () => clearInterval(interval);
-  }, [autoPlay, autoPlayInterval, isHovered, goToNext, slideCount]);
+    setProgressPercent(0);
+    const step = 50;
+    const increment = (step / autoPlayInterval) * 100;
 
-  // Get visible slides (prev, current, next)
-  const getSlideIndex = useCallback((offset: number) => {
-    if (slideCount === 0) return 0;
-    return (currentIndex + offset + slideCount) % slideCount;
-  }, [currentIndex, slideCount]);
+    progressTimerRef.current = setInterval(() => {
+      setProgressPercent((prev) => {
+        if (prev >= 100) return 100;
+        return prev + increment;
+      });
+    }, step);
 
-  // Keep index in range if images prop changes
-  useEffect(() => {
-    if (slideCount === 0) return;
-    setCurrentIndex((prev) => prev % slideCount);
-  }, [slideCount]);
+    return () => {
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+    };
+  }, [autoPlay, isHovered, slideCount, autoPlayInterval, currentIndex]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -115,8 +126,7 @@ export default function ImageGalleryCarousel({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-10 md:mb-14">
-          <h2 className="text-3xl md:text-4xl lg:text-6xl font-bold text-[#360000] mb-3 font-josefin-sans tracking-wider
-          ">
+          <h2 className="text-3xl md:text-4xl lg:text-6xl font-bold text-[#360000] mb-3 font-josefin-sans tracking-wider">
             Our Gallery
           </h2>
           <p className="text-[#360000] text-sm md:text-base max-w-2xl mx-auto font-open-sans tracking-wider">
@@ -127,8 +137,8 @@ export default function ImageGalleryCarousel({
         {/* Carousel Container */}
         <div
           className="relative"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           role="region"
           aria-roledescription="carousel"
           aria-label="Image gallery"
@@ -142,121 +152,70 @@ export default function ImageGalleryCarousel({
           {/* Main Carousel */}
           <div className="relative overflow-visible">
             <div className="relative mx-auto h-85 sm:h-110 md:h-135 lg:h-150 max-w-6xl">
-              {/* Slides Container */}
-              <div className="absolute inset-0 flex items-center justify-center">
-              {[-1, 0, 1].map((offset) => {
-                const slideIndex = getSlideIndex(offset);
-                const image = safeImages[slideIndex];
-                const isActive = offset === 0;
-                const position: "left" | "active" | "right" =
-                  offset === 0 ? "active" : offset === -1 ? "left" : "right";
-
-                const baseCard =
-                  "absolute select-none will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#360000]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";
-                const sizeClass = isActive
-                  ? "w-[270px] h-[360px] sm:w-[340px] sm:h-[450px] md:w-[420px] md:h-[540px] lg:w-[470px] lg:h-[610px]"
-                  : "w-[220px] h-[290px] sm:w-[270px] sm:h-[355px] md:w-[330px] md:h-[430px] lg:w-[370px] lg:h-[485px]";
-
-                const variants = {
-                  active: {
-                    x: 0,
-                    scale: 1,
-                    opacity: 1,
-                    filter: "blur(0px)",
-                    zIndex: 30,
-                  },
-                  left: {
-                    x: "-58%",
-                    scale: 0.88,
-                    opacity: 0.55,
-                    filter: "blur(1.5px)",
-                    zIndex: 20,
-                  },
-                  right: {
-                    x: "58%",
-                    scale: 0.88,
-                    opacity: 0.55,
-                    filter: "blur(1.5px)",
-                    zIndex: 20,
-                  },
-                } as const;
-
-                return (
-                  <motion.button
-                    key={`${slideIndex}-${offset}`}
-                    type="button"
-                    className={`${baseCard} ${sizeClass} cursor-pointer`}
-                    onClick={() => (!isActive ? goToSlide(slideIndex) : undefined)}
-                    animate={position}
-                    initial={false}
-                    variants={variants}
-                    transition={
-                      shouldReduceMotion
-                        ? { duration: 0 }
-                        : { type: "spring", stiffness: 260, damping: 28, mass: 0.9 }
-                    }
-                    whileHover={
-                      shouldReduceMotion
-                        ? undefined
-                        : isActive
-                          ? { scale: 1.01 }
-                          : { scale: 0.92, opacity: 0.7, filter: "blur(1px)" }
-                    }
-                    drag={isActive && !shouldReduceMotion ? "x" : false}
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.22}
-                    onDragEnd={(_, info) => {
-                      if (!isActive) return;
-                      const threshold = 70;
-                      if (info.offset.x > threshold) goToPrev();
-                      if (info.offset.x < -threshold) goToNext();
-                    }}
-                    aria-label={
-                      isActive ? `Current slide: ${image.title ?? image.alt}` : `Go to slide: ${image.title ?? image.alt}`
-                    }
+              <Swiper
+                modules={[Autoplay, EffectCoverflow]}
+                onSwiper={(swiper) => { swiperRef.current = swiper; }}
+                onSlideChange={(swiper) => {
+                  setCurrentIndex(swiper.realIndex);
+                  setProgressPercent(0);
+                }}
+                effect="coverflow"
+                coverflowEffect={{
+                  rotate: 0,
+                  stretch: 80,
+                  depth: 200,
+                  modifier: 1,
+                  slideShadows: false,
+                }}
+                centeredSlides
+                slidesPerView="auto"
+                loop={slideCount > 2}
+                speed={500}
+                autoplay={
+                  autoPlay && slideCount > 1
+                    ? { delay: autoPlayInterval, disableOnInteraction: false }
+                    : false
+                }
+                className="h-full w-full gallery-swiper"
+              >
+                {safeImages.map((image, index) => (
+                  <SwiperSlide
+                    key={`${image.src}-${index}`}
+                    className="gallery-slide"
                   >
-                    <div className="relative h-full w-full overflow-hidden rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
-                      {/* subtle border/glass */}
-                      <div aria-hidden className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/15" />
+                    {({ isActive }: { isActive: boolean }) => (
+                      <div className="relative h-full w-full overflow-hidden rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
+                        <div
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/15 z-10"
+                        />
 
-                      <Image
-                        src={image.src}
-                        alt={image.alt}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 270px, (max-width: 768px) 340px, (max-width: 1024px) 420px, 470px"
-                        priority={isActive}
-                      />
+                        <Image
+                          src={image.src}
+                          alt={image.alt}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 270px, (max-width: 768px) 340px, (max-width: 1024px) 420px, 470px"
+                          priority={isActive}
+                        />
 
-                      {/* Overlay */}
-                      <div
-                        className={`absolute inset-0 bg-linear-to-t from-black/70 via-black/15 to-transparent ${
-                          isActive ? "opacity-100" : "opacity-70"
-                        } transition-opacity duration-500`}
-                      />
+                        {/* Overlay */}
+                        <div
+                          className={`absolute inset-0 bg-linear-to-t from-black/70 via-black/15 to-transparent ${
+                            isActive ? "opacity-100" : "opacity-70"
+                          } transition-opacity duration-500`}
+                        />
 
-                      {/* Active title + hint */}
-                      <AnimatePresence mode="wait">
+                        {/* Active title */}
                         {isActive && (image.title || image.alt) && (
-                          <motion.div
-                            key={slideIndex}
-                            initial={
-                              shouldReduceMotion
-                                ? { opacity: 1 }
-                                : { opacity: 0, y: 14, x: direction === "right" ? 10 : -10 }
-                            }
-                            animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, x: 0 }}
-                            exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
-                            transition={{ duration: 0.28, ease: "easeOut" }}
-                            className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 md:p-6"
-                          >
+                          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 md:p-6 z-10">
                             <div className="flex items-end justify-between gap-3">
                               <div>
                                 <h3 className="text-white text-lg sm:text-xl md:text-2xl font-semibold font-josefin-sans tracking-wider">
                                   {image.title ?? image.alt}
                                 </h3>
                                 <p className="mt-1 text-white/80 text-xs sm:text-sm font-open-sans tracking-wide">
-                                  Drag to swipe or use arrow keys
+                                  Swipe or use arrow keys
                                 </p>
                               </div>
                               <div className="hidden sm:flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/15 backdrop-blur-md">
@@ -265,58 +224,44 @@ export default function ImageGalleryCarousel({
                                 </span>
                               </div>
                             </div>
-                          </motion.div>
+                          </div>
                         )}
-                      </AnimatePresence>
-                    </div>
-                  </motion.button>
-                );
-              })}
-              </div>
+                      </div>
+                    )}
+                  </SwiperSlide>
+                ))}
+              </Swiper>
 
               {/* Navigation Arrows */}
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-2 sm:px-4">
-                <motion.button
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-2 sm:px-4 z-20">
+                <button
                   type="button"
                   onClick={goToPrev}
                   disabled={slideCount <= 1}
-                  className="pointer-events-auto group relative grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full
-                    bg-black/35 hover:bg-black/55 backdrop-blur-md ring-1 ring-white/20 shadow-lg
-                    transition disabled:opacity-40 disabled:hover:bg-black/35"
-                  whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
+                  className="pointer-events-auto group relative grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full bg-black/35 hover:bg-black/55 backdrop-blur-md ring-1 ring-white/20 shadow-lg transition disabled:opacity-40 disabled:hover:bg-black/35"
                   aria-label="Previous slide"
                 >
                   <ChevronLeft className="h-5 w-5 md:h-6 md:w-6 text-white transition-transform group-hover:-translate-x-0.5" />
-                </motion.button>
+                </button>
 
-                <motion.button
+                <button
                   type="button"
                   onClick={goToNext}
                   disabled={slideCount <= 1}
-                  className="pointer-events-auto group relative grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full
-                    bg-black/35 hover:bg-black/55 backdrop-blur-md ring-1 ring-white/20 shadow-lg
-                    transition disabled:opacity-40 disabled:hover:bg-black/35"
-                  whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
+                  className="pointer-events-auto group relative grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full bg-black/35 hover:bg-black/55 backdrop-blur-md ring-1 ring-white/20 shadow-lg transition disabled:opacity-40 disabled:hover:bg-black/35"
                   aria-label="Next slide"
                 >
                   <ChevronRight className="h-5 w-5 md:h-6 md:w-6 text-white transition-transform group-hover:translate-x-0.5" />
-                </motion.button>
+                </button>
               </div>
 
               {/* Autoplay progress */}
               {autoPlay && slideCount > 1 && (
-                <div className="absolute left-1/2 top-4 w-[min(520px,90%)] -translate-x-1/2">
+                <div className="absolute left-1/2 top-4 w-[min(520px,90%)] -translate-x-1/2 z-20">
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/15 ring-1 ring-white/15 backdrop-blur-md">
-                    <motion.div
-                      key={`${currentIndex}-${isHovered}`}
-                      className="h-full rounded-full bg-white/70"
-                      initial={{ width: "0%" }}
-                      animate={{ width: isHovered ? "0%" : "100%" }}
-                      transition={
-                        shouldReduceMotion
-                          ? { duration: 0 }
-                          : { duration: isHovered ? 0 : autoPlayInterval / 1000, ease: "linear" }
-                      }
+                    <div
+                      className="h-full rounded-full bg-white/70 transition-[width] duration-100 ease-linear"
+                      style={{ width: `${isHovered ? 0 : progressPercent}%` }}
                     />
                   </div>
                 </div>
@@ -334,31 +279,55 @@ export default function ImageGalleryCarousel({
                     key={`${img.src}-${index}`}
                     type="button"
                     onClick={() => goToSlide(index)}
-                    className="relative h-2.5 w-2.5 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#360000]/40"
+                    className={`relative h-2.5 rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#360000]/40 ${
+                      isActive
+                        ? "w-6 bg-[#360000]"
+                        : "w-2.5 bg-[#360000]/35 hover:bg-[#360000]/55"
+                    }`}
                     aria-label={`Go to slide ${index + 1}`}
                     aria-current={isActive ? "true" : "false"}
-                  >
-                    <span
-                      className={`absolute inset-0 rounded-full transition-colors duration-300 ${
-                        isActive ? "bg-[#360000]" : "bg-[#360000]/35 hover:bg-[#360000]/55"
-                      }`}
-                    />
-                    {isActive && !shouldReduceMotion && (
-                      <motion.span
-                        className="absolute -inset-1 rounded-full ring-2 ring-[#360000]/25"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.25, ease: "easeOut" }}
-                      />
-                    )}
-                  </button>
+                  />
                 );
               })}
             </div>
           </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        .gallery-swiper .swiper-wrapper {
+          align-items: center;
+        }
+        .gallery-slide {
+          width: 270px;
+          height: 360px;
+          transition: opacity 0.4s ease, filter 0.4s ease;
+          opacity: 0.55;
+          filter: blur(1.5px);
+        }
+        @media (min-width: 640px) {
+          .gallery-slide {
+            width: 340px;
+            height: 450px;
+          }
+        }
+        @media (min-width: 768px) {
+          .gallery-slide {
+            width: 420px;
+            height: 540px;
+          }
+        }
+        @media (min-width: 1024px) {
+          .gallery-slide {
+            width: 470px;
+            height: 610px;
+          }
+        }
+        .gallery-slide.swiper-slide-active {
+          opacity: 1;
+          filter: blur(0px);
+        }
+      `}</style>
     </section>
   );
 }
-

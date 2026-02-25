@@ -442,7 +442,7 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
           {/* Hamburger Menu - Mobile Only */}
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="md:hidden p-2 text-theme-olive hover:text-theme-sage transition-colors"
+            className="md:hidden p-2 text-[#360000] hover:text-[#360000] transition-colors"
             aria-label="Open menu"
           >
             <MenuIcon className="w-6 h-6" />
@@ -618,7 +618,7 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
                 />
                 <button
                   type="submit"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-olive hover:text-theme-olive/80 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#360000] hover:text-[#360000]/80 transition-colors"
                   aria-label="Search"
                 >
                   <SearchIcon className="w-5 h-5" />

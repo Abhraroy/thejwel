@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useStore } from "@/zustandStore/zustandStore";
 import { createClient } from "@/lib/supabase/client";
 import { addToLocalCart, addToDbCart } from "@/utilityFunctions/CartFunctions";
 import { toast } from "react-toastify";
 import { getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";
+import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperType } from "swiper";
+import "swiper/css";
 
 interface ProductData {
   name: string;
@@ -142,120 +145,27 @@ export default function ProductDisplay({
     if (isViewerZoomed) setIsViewerZoomed(false);
   }, [selectedImage, isViewerZoomed]);
 
-  // Touch swipe (mobile) for fullscreen viewer
-  const touchStartXRef = useRef<number | null>(null);
-  const touchEndXRef = useRef<number | null>(null);
-  const SWIPE_THRESHOLD_PX = 50;
+  // Swiper refs for all product image carousels
+  const mobileSwiperRef = useRef<SwiperType | null>(null);
+  const tabletSwiperRef = useRef<SwiperType | null>(null);
+  const viewerSwiperRef = useRef<SwiperType | null>(null);
 
-  // Smooth swipe carousel (mobile + tablet): native momentum scroll + snap + sync to selectedImage
-  const mobileCarouselRef = useRef<HTMLDivElement>(null);
-  const tabletCarouselRef = useRef<HTMLDivElement>(null);
-  const viewerCarouselRef = useRef<HTMLDivElement>(null);
-  const carouselScrollRafRef = useRef<number | null>(null);
-  const ignoreViewerScrollSyncUntilRef = useRef<number>(0);
-
-  const scrollCarouselToIndex = (
-    el: HTMLDivElement | null,
-    idx: number,
-    behavior: ScrollBehavior = "smooth"
-  ) => {
-    if (!el) return;
-    const width = el.clientWidth;
-    if (!width || width <= 0) return;
-    el.scrollTo({ left: width * idx, behavior });
-  };
-
-  const syncSelectedFromCarousel = (el: HTMLDivElement | null) => {
-    if (!el) return;
-    const width = el.clientWidth;
-    if (!width || width <= 0) return;
-    const idx = Math.round(el.scrollLeft / width);
-    const maxIdx = Math.max(0, (carouselImages?.length ?? 1) - 1);
-    const clamped = Math.max(0, Math.min(idx, maxIdx));
-    if (clamped !== selectedImage) setSelectedImage(clamped);
-  };
-
-  const onCarouselScroll =
-    (ref: React.RefObject<HTMLDivElement | null>) =>
-    (_e: React.UIEvent<HTMLDivElement>) => {
-      if (carouselScrollRafRef.current) {
-        cancelAnimationFrame(carouselScrollRafRef.current);
-      }
-      carouselScrollRafRef.current = requestAnimationFrame(() => {
-        syncSelectedFromCarousel(ref.current);
-      });
-    };
-
-  // When the user clicks a thumbnail in fullscreen, we want an immediate jump to that image
-  // (no "start swiping" needed) and we must avoid the in-flight scroll event snapping the
-  // selection back to the previous slide.
-  const setFullscreenImageIndex = (idx: number, behavior: ScrollBehavior = "auto") => {
-    const maxIdx = Math.max(0, (carouselImages?.length ?? 1) - 1);
-    const clamped = Math.max(0, Math.min(idx, maxIdx));
-
-    ignoreViewerScrollSyncUntilRef.current = Date.now() + 350;
-    setSelectedImage(clamped);
-
-    requestAnimationFrame(() => {
-      scrollCarouselToIndex(viewerCarouselRef.current, clamped, behavior);
-    });
-  };
-
-  const onViewerCarouselScroll = (_e: React.UIEvent<HTMLDivElement>) => {
-    if (Date.now() < ignoreViewerScrollSyncUntilRef.current) return;
-    if (carouselScrollRafRef.current) cancelAnimationFrame(carouselScrollRafRef.current);
-    carouselScrollRafRef.current = requestAnimationFrame(() => {
-      syncSelectedFromCarousel(viewerCarouselRef.current);
-    });
-  };
-
-  // When thumbnails / arrows / other UI changes selectedImage, smoothly scroll carousel to match.
-  useEffect(() => {
-    const refs = [mobileCarouselRef, tabletCarouselRef, viewerCarouselRef];
-    refs.forEach((ref) => {
-      const el = ref.current;
-      if (!el) return;
-      const width = el.clientWidth;
-      if (!width || width <= 0) return; // don't try to scroll hidden (display:none) carousels
-      const targetLeft = width * selectedImage;
-      if (Math.abs(el.scrollLeft - targetLeft) < 2) return;
-      el.scrollTo({ left: targetLeft, behavior: "smooth" });
-    });
-  }, [selectedImage, carouselImages?.length]);
-
-  // On opening the fullscreen viewer, immediately align the viewer carousel to the current selected image.
-  // Without this, it often opens at index 0 because `selectedImage` didn't change during open.
-  useEffect(() => {
-    if (!productImageView) return;
-    const el = viewerCarouselRef.current;
-    if (!el) return;
-
-    const align = () => {
-      scrollCarouselToIndex(el, selectedImage, "auto");
-    };
-
-    // Double rAF to ensure layout has settled after the overlay mounts.
-    requestAnimationFrame(() => requestAnimationFrame(align));
-  }, [productImageView, selectedImage, carouselImages?.length]);
-
-  // Keep snap alignment on resize (viewport width changes)
-  useEffect(() => {
-    const onResize = () => {
-      [mobileCarouselRef.current, tabletCarouselRef.current, viewerCarouselRef.current].forEach((el) => {
-        if (!el) return;
-        const width = el.clientWidth || 1;
-        el.scrollTo({ left: width * selectedImage, behavior: "auto" });
-      });
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [selectedImage]);
-
-  useEffect(() => {
-    return () => {
-      if (carouselScrollRafRef.current) cancelAnimationFrame(carouselScrollRafRef.current);
-    };
+  const onInlineSlideChange = useCallback((swiper: SwiperType) => {
+    setSelectedImage(swiper.activeIndex);
   }, []);
+
+  const setFullscreenImageIndex = useCallback((idx: number) => {
+    const maxIdx = Math.max(0, (carouselImages?.length ?? 1) - 1);
+    const clamped = Math.max(0, Math.min(idx, maxIdx));
+    setSelectedImage(clamped);
+    viewerSwiperRef.current?.slideTo(clamped, 0);
+  }, [carouselImages?.length]);
+
+  // Sync all Swiper instances when selectedImage changes (e.g. thumbnail click)
+  useEffect(() => {
+    mobileSwiperRef.current?.slideTo(selectedImage);
+    tabletSwiperRef.current?.slideTo(selectedImage);
+  }, [selectedImage]);
 
   
 
@@ -384,29 +294,31 @@ export default function ProductDisplay({
             ">
               {/* Main Image */}
               <div className="relative aspect-square w-full max-w-[90vw] overflow-hidden rounded-2xl bg-gray-100">
-                <div
-                  ref={mobileCarouselRef}
-                  onScroll={onCarouselScroll(mobileCarouselRef)}
-                  className="flex h-full w-full overflow-x-auto overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain"
-                  style={{ WebkitOverflowScrolling: "touch" }}
+                <Swiper
+                  onSwiper={(s) => { mobileSwiperRef.current = s; }}
+                  onSlideChange={onInlineSlideChange}
+                  initialSlide={selectedImage}
+                  slidesPerView={1}
+                  speed={300}
+                  threshold={10}
+                  className="h-full w-full"
                 >
                   {carouselImages.map((img: any, idx: number) => (
-                    <div
-                      key={img?.image_id ?? idx}
-                      className="relative h-full basis-full shrink-0 snap-center"
-                    >
-                      <Image
-                        src={img?.image_url ?? "/placeholder.png"}
-                        alt={`${productDetails?.[0]?.product_name ?? "Product"} ${idx + 1}`}
-                        fill
-                        className="object-cover cursor-pointer"
-                        priority={idx === 0}
-                        onClick={() => setProductImageView(true)}
-                        sizes="100vw"
-                      />
-                    </div>
+                    <SwiperSlide key={img?.image_id ?? idx}>
+                      <div className="relative h-full w-full">
+                        <Image
+                          src={img?.image_url ?? "/placeholder.png"}
+                          alt={`${productDetails?.[0]?.product_name ?? "Product"} ${idx + 1}`}
+                          fill
+                          className="object-cover cursor-pointer"
+                          priority={idx === 0}
+                          onClick={() => setProductImageView(true)}
+                          sizes="100vw"
+                        />
+                      </div>
+                    </SwiperSlide>
                   ))}
-                </div>
+                </Swiper>
               </div>
               {/* Thumbnail Images */}
               <div className="flex w-full flex-row justify-center gap-2">
@@ -747,29 +659,31 @@ export default function ProductDisplay({
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
-                <div
-                  ref={tabletCarouselRef}
-                  onScroll={onCarouselScroll(tabletCarouselRef)}
-                  className="flex h-full w-full overflow-x-auto overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain"
-                  style={{ WebkitOverflowScrolling: "touch" }}
+                <Swiper
+                  onSwiper={(s) => { tabletSwiperRef.current = s; }}
+                  onSlideChange={onInlineSlideChange}
+                  initialSlide={selectedImage}
+                  slidesPerView={1}
+                  speed={300}
+                  threshold={10}
+                  className="h-full w-full"
                 >
                   {carouselImages.map((img: any, idx: number) => (
-                    <div
-                      key={img?.image_id ?? idx}
-                      className="relative h-full basis-full shrink-0 snap-center"
-                    >
-                      <Image
-                        src={img?.image_url ?? "/placeholder.png"}
-                        alt={`${product?.product_name ?? "Product"} ${idx + 1}`}
-                        fill
-                        className="object-cover"
-                        priority={idx === 0}
-                        onClick={() => setProductImageView(true)}
-                        sizes="50vw"
-                      />
-                    </div>
+                    <SwiperSlide key={img?.image_id ?? idx}>
+                      <div className="relative h-full w-full">
+                        <Image
+                          src={img?.image_url ?? "/placeholder.png"}
+                          alt={`${product?.product_name ?? "Product"} ${idx + 1}`}
+                          fill
+                          className="object-cover"
+                          priority={idx === 0}
+                          onClick={() => setProductImageView(true)}
+                          sizes="50vw"
+                        />
+                      </div>
+                    </SwiperSlide>
                   ))}
-                </div>
+                </Swiper>
               </div>
             </div>
             {/* Zoom Layer - Outside container to avoid clipping */}
@@ -1381,78 +1295,36 @@ export default function ProductDisplay({
             className="relative w-full h-full flex items-center justify-center p-0 sm:p-8 md:p-12 backdrop-blur-3xl bg-white/30 supports-[backdrop-filter]:bg-white/15"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Mobile/tablet: swipeable carousel */}
-            <div
-              ref={viewerCarouselRef}
-              onScroll={isViewerZoomed ? undefined : onViewerCarouselScroll}
-              className={`flex md:hidden h-full w-full overflow-y-hidden scrollbar-hide snap-x snap-mandatory scroll-smooth overscroll-x-contain ${
-                isViewerZoomed ? "overflow-x-hidden" : "overflow-x-auto"
-              }`}
-              style={{
-                WebkitOverflowScrolling: "touch",
-                touchAction: isViewerZoomed ? "none" : "pan-x",
-                overscrollBehaviorX: isViewerZoomed ? "none" : "contain",
-              }}
-            >
-              {carouselImages.map((img: any, idx: number) => (
-                <div
-                  key={img?.image_id ?? idx}
-                  className="h-full basis-full shrink-0 snap-center flex items-center justify-center"
-                >
-                  <div
-                    className="relative w-full h-full max-w-7xl max-h-[90vh]"
-                    style={{
-                      touchAction: isViewerZoomed && idx === selectedImage ? "none" : "auto",
-                      cursor: isViewerZoomed && idx === selectedImage ? "zoom-out" : "zoom-in",
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (idx !== selectedImage) {
-                        setFullscreenImageIndex(idx, "smooth");
-                        return;
-                      }
-                      if (isViewerZoomed) {
-                        setIsViewerZoomed(false);
-                        return;
-                      }
-                      setViewerZoomFromClientPoint(e.clientX, e.clientY, e.currentTarget);
-                      setIsViewerZoomed(true);
-                    }}
-                    onMouseMove={(e) => {
-                      if (!isViewerZoomed || idx !== selectedImage) return;
-                      setViewerZoomFromClientPoint(e.clientX, e.clientY, e.currentTarget);
-                    }}
-                    onTouchMove={(e) => {
-                      if (!isViewerZoomed || idx !== selectedImage) return;
-                      const t = e.touches?.[0];
-                      if (!t) return;
-                      e.preventDefault();
-                      setViewerZoomFromClientPoint(t.clientX, t.clientY, e.currentTarget);
-                    }}
-                  >
-                    {isViewerZoomed && idx === selectedImage ? (
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          backgroundImage: `url(${img?.image_url ?? "/placeholder.png"})`,
-                          backgroundSize: `${VIEWER_ZOOM_SCALE * 100}%`,
-                          backgroundPosition: `${viewerZoomPosition.x}% ${viewerZoomPosition.y}%`,
-                          backgroundRepeat: "no-repeat",
-                        }}
-                      />
-                    ) : (
+            {/* Mobile/tablet: Swiper carousel */}
+            <div className="md:hidden h-full w-full">
+              <Swiper
+                onSwiper={(swiper) => { viewerSwiperRef.current = swiper; }}
+                onSlideChange={onInlineSlideChange}
+                initialSlide={selectedImage}
+                spaceBetween={0}
+                slidesPerView={1}
+                threshold={10}
+                resistance
+                resistanceRatio={0.65}
+                speed={300}
+                className="h-full w-full"
+              >
+                {carouselImages.map((img: any, idx: number) => (
+                  <SwiperSlide key={img?.image_id ?? idx} className="flex items-center justify-center">
+                    <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
                       <Image
                         src={img?.image_url ?? "/placeholder.png"}
                         alt={img?.image_url || "Product image"}
                         fill
-                        className="object-contain"
+                        className="object-contain select-none"
                         priority={idx === 0}
                         sizes="100vw"
+                        draggable={false}
                       />
-                    )}
-                  </div>
-                </div>
-              ))}
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
 
             {/* Desktop: no swipe carousel; just swap the main image when thumbnail is clicked */}
@@ -1516,7 +1388,7 @@ export default function ProductDisplay({
                       key={img?.image_id ?? idx}
                       type="button"
                       onClick={() => {
-                        setFullscreenImageIndex(idx, "auto");
+                        setFullscreenImageIndex(idx);
                       }}
                       className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${
                         idx === selectedImage ? "border-[#E94E8B] scale-105" : "border-gray-200"

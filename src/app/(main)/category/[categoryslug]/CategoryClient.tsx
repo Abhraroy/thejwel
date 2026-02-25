@@ -244,7 +244,7 @@ export default function CategoryClient({ category, subcategories, products }: Ca
           {/* Load More Button */}
           {sortedProducts.length > 0 && (
             <div className="mt-12 text-center">
-              <button className="px-8 py-3 bg-white text-theme-olive font-semibold rounded-lg border-2 border-theme-sage/30 hover:border-theme-olive hover:text-theme-sage transition-all"
+              <button className="px-8 py-3 bg-white text-[#360000] font-semibold rounded-lg border-2 border-theme-sage/30 hover:border-theme-olive hover:text-[#360000] transition-all"
               >
                 Load More Products
               </button>

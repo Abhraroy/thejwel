@@ -295,7 +295,7 @@ export default function WishlistPage() {
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
                 stroke="currentColor"
-                className="w-12 h-12 text-theme-sage"
+                className="w-12 h-12 text-[#360000]"
               >
                 <path
                   strokeLinecap="round"
@@ -361,7 +361,7 @@ export default function WishlistPage() {
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
                 stroke="currentColor"
-                className="w-12 h-12 text-theme-sage"
+                className="w-12 h-12 text-[#360000]"
               >
                 <path
                   strokeLinecap="round"

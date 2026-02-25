@@ -249,7 +249,7 @@ export default function AddressForm({ userId, onClose, onSuccess }: AddressFormP
               id="is_default"
               checked={formData.is_default}
               onChange={handleInputChange}
-              className="w-4 h-4 text-theme-olive border-theme-sage/30 rounded focus:ring-theme-sage"
+              className="w-4 h-4 text-[#360000] border-theme-sage/30 rounded focus:ring-theme-sage"
             />
             <label htmlFor="is_default" className="ml-2 text-sm text-gray-700">
               Set as default address

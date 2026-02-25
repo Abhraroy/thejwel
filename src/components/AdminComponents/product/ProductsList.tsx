@@ -554,7 +554,7 @@ export default function ProductsList({ products, isDarkTheme }: ProductsListProp
                 >
                   <Link
                     href={`/admin/${product.product_id}`}
-                    className="text-theme-olive hover:text-theme-sage underline-offset-2 hover:underline font-semibold"
+                    className="text-[#360000] hover:text-[#360000] underline-offset-2 hover:underline font-semibold"
                   >
                     {product.product_name}
                   </Link>

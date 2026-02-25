@@ -1,23 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRef, useCallback } from 'react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+import type { Swiper as SwiperType } from 'swiper';
+import 'swiper/css';
+import 'swiper/css/pagination';
 
 interface CarouselProps {
   items?: React.ReactNode[];
-  autoSlideInterval?: number; // in milliseconds
+  autoSlideInterval?: number;
   className?: string;
-  /**
-   * Controls the slide/image height across breakpoints.
-   * Defaults to a responsive height that works well for hero/banner images.
-   */
   heightClassName?: string;
-  /**
-   * Applied to each slide wrapper. Useful when you want extra padding/overlays.
-   */
   slideClassName?: string;
 }
 
-export default function Carousel({ 
+export default function Carousel({
   items,
   autoSlideInterval = 6000,
   className = '',
@@ -25,73 +23,16 @@ export default function Carousel({
   slideClassName = '',
 }: CarouselProps) {
   const safeItems = Array.isArray(items) ? items : [];
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Use refs for touch tracking to avoid state timing issues
-  const touchStartX = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
-  const isSwiping = useRef<boolean>(false);
+  const swiperRef = useRef<SwiperType | null>(null);
 
-  // Minimum swipe distance (in px)
-  const minSwipeDistance = 50;
+  const handleMouseEnter = useCallback(() => {
+    swiperRef.current?.autoplay?.stop();
+  }, []);
 
-  const goToNext = useCallback(() => {
-    setCurrentIndex((prevIndex) =>
-      safeItems.length ? (prevIndex + 1) % safeItems.length : 0
-    );
-  }, [safeItems.length]);
+  const handleMouseLeave = useCallback(() => {
+    swiperRef.current?.autoplay?.start();
+  }, []);
 
-  const goToPrevious = useCallback(() => {
-    setCurrentIndex((prevIndex) =>
-      safeItems.length ? (prevIndex - 1 + safeItems.length) % safeItems.length : 0
-    );
-  }, [safeItems.length]);
-
-  // Touch handlers for swipe
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.targetTouches[0].clientX;
-    touchEndX.current = e.targetTouches[0].clientX;
-    isSwiping.current = true;
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (isSwiping.current) {
-      touchEndX.current = e.targetTouches[0].clientX;
-    }
-  };
-
-  const onTouchEnd = () => {
-    if (!isSwiping.current) return;
-    
-    const distance = touchStartX.current - touchEndX.current;
-    
-    if (distance > minSwipeDistance) {
-      // Swiped left - go to next
-      goToNext();
-    } else if (distance < -minSwipeDistance) {
-      // Swiped right - go to previous
-      goToPrevious();
-    }
-    
-    // Reset swipe state
-    isSwiping.current = false;
-    touchStartX.current = 0;
-    touchEndX.current = 0;
-  };
-
-  useEffect(() => {
-    if (safeItems.length <= 1 || isPaused) return;
-
-    const interval = setInterval(() => {
-      goToNext();
-    }, autoSlideInterval);
-
-    return () => clearInterval(interval);
-  }, [goToNext, autoSlideInterval, safeItems.length, isPaused]);
-
-  // Empty state when items prop is missing / empty
   if (safeItems.length === 0) {
     return (
       <div
@@ -109,107 +50,89 @@ export default function Carousel({
   }
 
   return (
-    <div 
-      ref={containerRef}
+    <div
       className={[
-        'relative w-full overflow-hidden',
+        'relative w-full overflow-hidden group',
         heightClassName,
-        // Ensure images inside slides have a consistent size on all screens
         '[&_img]:w-full [&_img]:h-full [&_img]:object-cover',
         className,
       ].join(' ')}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
-      {/* Carousel Container */}
-      <div className="relative w-full h-full">
-        <div
-          className="flex transition-transform duration-500 ease-in-out h-full"
-          style={{
-            transform: `translateX(-${currentIndex * 100}%)`,
-          }}
-        >
-          {safeItems.map((item, index) => (
-            <div
-              key={index}
-              className={[
-                'min-w-full w-full shrink-0 h-full',
-                // In case a slide uses Next/Image "fill", this keeps layout stable.
-                'relative',
-                slideClassName,
-              ].join(' ')}
-            >
-              {item}
-            </div>
-          ))}
-        </div>
-      </div>
+      <Swiper
+        modules={[Autoplay, Pagination, Navigation]}
+        onSwiper={(swiper) => { swiperRef.current = swiper; }}
+        autoplay={{ delay: autoSlideInterval, disableOnInteraction: false }}
+        loop={safeItems.length > 1}
+        speed={500}
+        pagination={{
+          clickable: true,
+          el: '.carousel-pagination',
+          bulletClass: 'carousel-bullet',
+          bulletActiveClass: 'carousel-bullet-active',
+        }}
+        className="h-full w-full"
+      >
+        {safeItems.map((item, index) => (
+          <SwiperSlide
+            key={index}
+            className={['h-full w-full relative', slideClassName].join(' ')}
+          >
+            {item}
+          </SwiperSlide>
+        ))}
+      </Swiper>
 
       {/* Previous Button */}
-      <button
-        onClick={goToPrevious}
-        className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-[#360000] rounded-full p-2 shadow-lg transition-all duration-200 z-10"
-        aria-label="Previous slide"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-          className="w-10 h-10"
+      {safeItems.length > 1 && (
+        <button
+          onClick={() => swiperRef.current?.slidePrev()}
+          className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-[#360000] rounded-full p-2 shadow-lg transition-all duration-200 z-10"
+          aria-label="Previous slide"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M15.75 19.5L8.25 12l7.5-7.5"
-          />
-        </svg>
-      </button>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-10 h-10">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+      )}
 
       {/* Next Button */}
-      <button
-        onClick={goToNext}
-        className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-[#360000] rounded-full p-2 shadow-lg transition-all duration-200 z-10"
-        aria-label="Next slide"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-          className="w-10 h-10"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M8.25 4.5l7.5 7.5-7.5 7.5"
-          />
-        </svg>
-      </button>
-
-      {/* Indicator Dots */}
       {safeItems.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-          {safeItems.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`h-2 rounded-full transition-all duration-200  ${
-                index === currentIndex
-                  ? 'bg-white w-8'
-                  : 'bg-white/50 w-2 hover:bg-white/75'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
+        <button
+          onClick={() => swiperRef.current?.slideNext()}
+          className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-[#360000] rounded-full p-2 shadow-lg transition-all duration-200 z-10"
+          aria-label="Next slide"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-10 h-10">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
       )}
+
+      {/* Dot Indicators */}
+      {safeItems.length > 1 && (
+        <div className="carousel-pagination absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10" />
+      )}
+
+      <style jsx global>{`
+        .carousel-bullet {
+          display: inline-block;
+          width: 0.5rem;
+          height: 0.5rem;
+          border-radius: 9999px;
+          background: rgba(255,255,255,0.5);
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .carousel-bullet:hover {
+          background: rgba(255,255,255,0.75);
+        }
+        .carousel-bullet-active {
+          width: 2rem;
+          background: white;
+        }
+      `}</style>
     </div>
   );
 }
-

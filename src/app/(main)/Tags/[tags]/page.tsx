@@ -145,7 +145,7 @@ export default function TagsPage() {
               <div className="shrink-0 relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2 px-3 md:px-4 py-2 text-sm font-medium text-theme-olive bg-white border border-theme-sage/30 rounded-lg hover:border-theme-olive hover:text-theme-sage transition-all"
+                  className="flex items-center gap-2 px-3 md:px-4 py-2 text-sm font-medium text-[#360000] bg-white border border-theme-sage/30 rounded-lg hover:border-theme-olive hover:text-[#360000] transition-all"
                 >
                   <span className="hidden md:inline">
                     {sortOptions.find((opt) => opt.value === selectedSort)
@@ -188,7 +188,7 @@ export default function TagsPage() {
                             className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                               selectedSort === option.value
                                 ? "bg-theme-sage text-white"
-                                : "text-theme-olive hover:bg-theme-cream"
+                                : "text-[#360000] hover:bg-theme-cream"
                             }`}
                           >
                             {option.label}
@@ -235,7 +235,7 @@ export default function TagsPage() {
           {/* Load More Button */}
           {sortedProducts.length > 0 && (
             <div className="mt-12 text-center">
-              <button className="px-8 py-3 bg-white text-theme-olive font-semibold rounded-lg border-2 border-theme-sage/30 hover:border-theme-olive hover:text-theme-sage transition-all">
+              <button className="px-8 py-3 bg-white text-[#360000] font-semibold rounded-lg border-2 border-theme-sage/30 hover:border-theme-olive hover:text-[#360000] transition-all">
                 Load More Products
               </button>
             </div>
