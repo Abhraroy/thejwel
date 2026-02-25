@@ -114,6 +114,53 @@ export async function updateOrdersStatus(orderId: string, status: string) {
     }
 }
 
+export async function approveCodOrder(orderId: string) {
+    try {
+        const { data: existingOrder, error: existingOrderError } = await supabase
+            .from("orders")
+            .select("order_id, order_status, order_number, payment_status")
+            .eq("order_id", orderId)
+            .single();
+
+        if (existingOrderError || !existingOrder) {
+            return { success: false, message: "Order not found" };
+        }
+
+        const isCodOrder = (existingOrder.order_number || "").startsWith("COD-");
+        const isPending = existingOrder.order_status === "pending";
+
+        if (!isCodOrder || !isPending) {
+            return {
+                success: false,
+                message: "Only COD orders in pending state can be approved",
+            };
+        }
+
+        const { error: updateError } = await supabase
+            .from("orders")
+            .update({
+                order_status: "processing",
+                payment_status: "confirm",
+            })
+            .eq("order_id", orderId);
+
+        if (updateError) {
+            console.error("Error approving COD order:", updateError);
+            return { success: false, message: updateError.message };
+        }
+
+        await createRapidShypOrderForOrder(orderId, "COD");
+
+        return { success: true, message: "COD order approved and RapidShyp updated" };
+    } catch (error) {
+        console.error("Error approving COD order:", error);
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : "Failed to approve COD order",
+        };
+    }
+}
+
 export async function updatePaymentStatus(orderId: string, paymentStatus: string) {
     try {
         const validStatuses: PaymentStatus[] = ["pending(cod)", "pending", "confirm"];
@@ -138,6 +185,63 @@ export async function updatePaymentStatus(orderId: string, paymentStatus: string
             success: false,
             data: null,
             message: error instanceof Error ? error.message : "Failed to update payment status",
+        };
+    }
+}
+
+export async function deleteOrder(orderId: string) {
+    try {
+        const { error: itemsError } = await supabase
+            .from("order_items")
+            .delete()
+            .eq("order_id", orderId);
+
+        if (itemsError) {
+            console.error("Error deleting order items:", itemsError);
+            return { success: false, message: itemsError.message };
+        }
+
+        const { error } = await supabase
+            .from("orders")
+            .delete()
+            .eq("order_id", orderId);
+
+        if (error) {
+            console.error("Error deleting order:", error);
+            return { success: false, message: error.message };
+        }
+
+        return { success: true, message: "Order deleted successfully" };
+    } catch (error) {
+        console.error("Error deleting order:", error);
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : "Failed to delete order",
+        };
+    }
+}
+
+export async function toggleLockOrder(orderId: string, lockState: boolean) {
+    try {
+        const { error } = await supabase
+            .from("orders")
+            .update({ lock_order: lockState })
+            .eq("order_id", orderId);
+
+        if (error) {
+            console.error("Error toggling order lock:", error);
+            return { success: false, message: error.message };
+        }
+
+        return {
+            success: true,
+            message: lockState ? "Order locked" : "Order unlocked",
+        };
+    } catch (error) {
+        console.error("Error toggling order lock:", error);
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : "Failed to toggle order lock",
         };
     }
 }

@@ -98,7 +98,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div
-      className={`min-h-screen flex ${
+      className={`h-screen flex overflow-hidden ${
         isDarkTheme ? "bg-black text-white" : "bg-gray-50 text-gray-900"
       }`}
       data-theme={isDarkTheme ? "dark" : "light"}

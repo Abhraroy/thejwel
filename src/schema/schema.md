@@ -102,6 +102,7 @@ CREATE TABLE public.orders (
   merchant_order_id character varying,
   transaction_id character varying,
   address_text text,
+  lock_order boolean null default false,
   CONSTRAINT orders_pkey PRIMARY KEY (order_id),
   CONSTRAINT orders_shipping_address_id_fkey FOREIGN KEY (shipping_address_id) REFERENCES public.addresses(address_id),
   CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)

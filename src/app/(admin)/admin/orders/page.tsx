@@ -18,5 +18,9 @@ export default async function OrdersPage() {
     );
   }
 
-  return <Orders initialOrders={ordersData ?? []} />;
+  return (
+    <div className="h-screen p-6 overflow-hidden">
+      <Orders initialOrders={ordersData ?? []} />
+    </div>
+  );
 }
