@@ -350,7 +350,7 @@ export default function ProductDisplay({
                     >
                       <Image
                         src={img.image_url}
-                        alt={`${img.image_url} ${index + 1}`}
+                        alt={`${productDetails?.[0]?.product_name ?? "Product"} thumbnail ${index + 1}`}
                         width={64}
                         height={64}
                         className="h-full w-full object-cover"
@@ -669,7 +669,7 @@ export default function ProductDisplay({
                   >
                     <Image
                       src={img.image_url}
-                      alt={`${img.image_url} ${index + 1}`}
+                      alt={`${product?.product_name ?? "Product"} thumbnail ${index + 1}`}
                       width={80}
                       height={80}
                       className="h-full w-full object-cover"
@@ -1014,7 +1014,7 @@ export default function ProductDisplay({
                     >
                       <Image
                         src={img.image_url}
-                        alt={`${img.image_url} ${index + 1}`}
+                        alt={`${productDetails?.[0]?.product_name ?? "Product"} thumbnail ${index + 1}`}
                         width={96}
                         height={96}
                         className="object-cover w-full h-full"
@@ -1032,7 +1032,7 @@ export default function ProductDisplay({
               >
                 <Image
                   src={productDetails[0]?.product_images[selectedImage]?.image_url}
-                  alt={productDetails[0]?.product_images[selectedImage]?.image_url}
+                  alt={`${productDetails?.[0]?.product_name ?? "Product"} image ${selectedImage + 1}`}
                   fill
                   className="object-cover cursor-pointer"
                   priority
@@ -1361,7 +1361,7 @@ export default function ProductDisplay({
                     <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
                       <Image
                         src={img?.image_url ?? "/placeholder.png"}
-                        alt={img?.image_url || "Product image"}
+                        alt={`${product?.product_name ?? "Product"} fullscreen image ${idx + 1}`}
                         fill
                         className="object-contain select-none"
                         priority={idx === 0}

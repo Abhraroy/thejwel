@@ -231,9 +231,13 @@ html,body {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* Josefin Sans: weight 100 by default, overridden to 600 only in logo section */
+/* Josefin Sans: weight 300 for section headings; weight 600 only in logo section.
+   !important ensures SEO-related font-bold/font-semibold on headings don't override. */
 .font-josefin-sans {
-  font-weight: 100;
+  font-weight: 300 !important;
+}
+.navbar-logo-section .font-josefin-sans {
+  font-weight: 600 !important;
 }
 
 @layer base {

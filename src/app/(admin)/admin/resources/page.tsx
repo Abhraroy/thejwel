@@ -7,9 +7,17 @@ const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB
 
 export default function ResourcesPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const sectionInputRef = useRef<HTMLInputElement | null>(null);
+  const sectionInputRef = useRef<HTMLSelectElement | null>(null);
 
   const [folder, setFolder] = useState<string>("resources");
+  const sectionNameOptions = [
+    { value: "", label: "Select section" },
+    { value: "homepage_hero", label: "Homepage Hero (carousel)" },
+    { value: "banner_summer", label: "Banner Summer" },
+    { value: "banner_festival", label: "Banner Festival" },
+    { value: "banner_seasonal", label: "Banner Seasonal" },
+    { value: "marketing_assets", label: "Marketing Assets" },
+  ];
   const [sectionName, setSectionName] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -83,7 +91,7 @@ export default function ResourcesPage() {
     }
 
     if (!sectionName.trim()) {
-      setError("Please enter a section name.");
+      setError("Please select a section.");
       sectionInputRef.current?.focus();
       return;
     }
@@ -177,13 +185,18 @@ export default function ResourcesPage() {
               <label className="block text-sm font-semibold text-gray-800">
                 Section name
               </label>
-              <input
+              <select
                 ref={sectionInputRef}
                 value={sectionName}
                 onChange={(e) => setSectionName(e.target.value)}
-                placeholder="e.g. homepage_hero, banner_summer, etc."
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-rose-200"
-              />
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-rose-200 bg-white"
+              >
+                {sectionNameOptions.map((opt) => (
+                  <option key={opt.value || "empty"} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
               <p className="text-xs text-gray-500">
                 This text will be saved to Supabase as <span className="font-semibold">section_name</span>.
               </p>
@@ -233,7 +246,7 @@ export default function ResourcesPage() {
                 <button
                   type="button"
                   onClick={uploadResourceImage}
-                  disabled={isUploading || !file}
+                  disabled={isUploading || !file || !sectionName.trim()}
                   className="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUploading ? "Uploading..." : "Upload"}

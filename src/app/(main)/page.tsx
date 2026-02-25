@@ -361,6 +361,15 @@
 
 import HomePage from "@/components/HomePage";
 import { createClient } from "@/lib/supabase/server";
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "The JWEL",
+  description:
+    "Shop premium American Diamond and traditional Temple Jewellery at THE JWEL, Kolkata. Discover rings, necklaces, bangles, and festive-ready designs.",
+  pathname: "/",
+});
 
 export default async function Home() {
   const supabase = await createClient();

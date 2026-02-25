@@ -17,7 +17,8 @@ import PaymentGatewayWrapper from "@/components/Payment/PaymentGatewayWrapper";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import Script from "next/script";
+import { getBaseUrl, toAbsoluteUrl } from "@/lib/seo/metadata";
+import JsonLd from "@/components/seo/JsonLd";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -69,8 +70,42 @@ const open_sans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "The JWEL",
+  metadataBase: new URL(getBaseUrl()),
+  title: {
+    default: "The JWEL",
+    template: "%s | The JWEL",
+  },
   description: "Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "The JWEL",
+    description:
+      "Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
+    url: toAbsoluteUrl("/"),
+    siteName: "THE JWEL",
+    type: "website",
+    images: [
+      {
+        url: toAbsoluteUrl("/faviconFolder/android-chrome-512x512.png"),
+        width: 1200,
+        height: 630,
+        alt: "THE JWEL",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The JWEL",
+    description:
+      "Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
+    images: [toAbsoluteUrl("/faviconFolder/android-chrome-512x512.png")],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: [
       {
@@ -126,6 +161,36 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${sacramento.variable} ${satisfy.variable} ${sevillana.variable} ${playfair_display.variable} ${josefin_sans.variable} ${adamina.variable} ${open_sans.variable} antialiased`}
       >
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "THE JWEL",
+            url: getBaseUrl(),
+            logo: toAbsoluteUrl("/logo/cropped-logo.svg"),
+            email: "support@thejwel.in",
+            telephone: "+91-9875512028",
+            sameAs: [
+              "https://facebook.com",
+              "https://instagram.com",
+              "https://twitter.com",
+              "https://youtube.com",
+            ],
+          }}
+        />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "THE JWEL",
+            url: getBaseUrl(),
+            potentialAction: {
+              "@type": "SearchAction",
+              target: `${getBaseUrl()}/search/{search_term_string}`,
+              "query-input": "required name=search_term_string",
+            },
+          }}
+        />
         <ParentNavbar />
         {children}
         <Footer />

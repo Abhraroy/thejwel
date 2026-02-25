@@ -1,5 +1,14 @@
 import type { NextConfig } from "next";
 
+const supabaseHost = (() => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!url) return null;
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return null;
+  }
+})();
 
 const nextConfig: NextConfig = {
   reactStrictMode: false,
@@ -10,14 +19,22 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    // In dev, disable Next's image optimizer to avoid noisy "upstream image response timed out"
-    // logs when remote image hosts are slow/unreachable. Production stays optimized.
-    unoptimized: true,
+    // Keep optimization enabled in production for better LCP/SEO.
+    unoptimized: process.env.NODE_ENV === "development",
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "*",
+        hostname: "thejwel.com",
       },
+      {
+        protocol: "https",
+        hostname: "battulaaljewels.com",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      ...(supabaseHost ? [{ protocol: "https" as const, hostname: supabaseHost }] : []),
     ],
   },
 };

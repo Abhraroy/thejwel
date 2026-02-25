@@ -449,7 +449,7 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
           </button>
 
           {/* Logo Section */}
-          <div className="shrink-0 ml-2 md:ml-0 flex-row flex ">
+          <div className="navbar-logo-section shrink-0 ml-2 md:ml-0 flex-row flex ">
             <a href="/" className="flex items-center gap-2 md:gap-3">
               <Image
                 src="/logo/cropped-logo.svg"
@@ -460,8 +460,7 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
                 priority
               />
               <div className="flex flex-col items-start justify-start">
-                <span className="text-xl sm:text-2xl md:text-2xl lg:text-3xl font-semibold text-[#360000] tracking-tight
-                font-josefin-sans">
+                <span className="text-xl sm:text-2xl md:text-2xl lg:text-3xl text-[#360000] tracking-tight font-josefin-sans">
                   The JWEL
                 </span>
                 <span className="text-[0.6rem] md:text-[0.7rem] lg:text-base text-[#360000] tracking-tight  font-open-sans">

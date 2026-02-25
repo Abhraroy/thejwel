@@ -46,13 +46,55 @@ function uniqStrings(values: Array<unknown>) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Always return at least the homepage
+  // Always return at least the homepage + core static pages.
   const entries: MetadataRoute.Sitemap = [
     {
       url: abs("/"),
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1,
+    },
+    {
+      url: abs("/about"),
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
+    {
+      url: abs("/contact"),
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
+    {
+      url: abs("/privacy"),
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: abs("/terms"),
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: abs("/returns"),
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.3,
+    },
+    {
+      url: abs("/shipping"),
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.3,
+    },
+    {
+      url: abs("/cookies"),
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.2,
     },
   ];
 

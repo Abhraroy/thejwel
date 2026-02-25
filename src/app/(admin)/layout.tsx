@@ -5,6 +5,7 @@ import {
 } from "next/font/google";
 import "../(main)/globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { buildPageMetadata, getBaseUrl } from "@/lib/seo/metadata";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,8 +18,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JWEL Admin",
-  description: "Admin panel for JWEL jewelry shop",
+  ...buildPageMetadata({
+    title: "JWEL Admin",
+    description: "Admin panel for JWEL jewelry shop",
+    pathname: "/admin",
+    noIndex: true,
+  }),
+  metadataBase: new URL(getBaseUrl()),
 };
 
 export default function AdminRootLayout({
