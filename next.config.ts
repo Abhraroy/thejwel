@@ -19,8 +19,9 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    // Keep optimization enabled in production for better LCP/SEO.
-    unoptimized: process.env.NODE_ENV === "development",
+    // Disable Next.js image optimization to avoid exceeding Vercel free tier.
+    // Images are served from Cloudflare R2 and other remote patterns.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
@@ -33,6 +34,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "pub-6da66eab69fe457ca97348b35f86f86b.r2.dev",
       },
       ...(supabaseHost ? [{ protocol: "https" as const, hostname: supabaseHost }] : []),
     ],
