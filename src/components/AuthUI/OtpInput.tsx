@@ -10,7 +10,7 @@ interface OtpInputProps {
   onClick?: () => void;
 }
 
-export default function OtpInput({ length = 6, onComplete, containerClassName = 'w-full bg-white border-b border-amber-200 sticky top-[70px] md:top-[80px] z-50 shadow-sm flex items-center justify-center transition-all ease-in-out duration-900', onClick }: OtpInputProps) {
+export default function OtpInput({ length = 6, onComplete, containerClassName = 'w-full bg-white border-b border-theme-sage/30 sticky top-[70px] md:top-[80px] z-50 shadow-sm flex items-center justify-center transition-all ease-in-out duration-900', onClick }: OtpInputProps) {
   const [otp, setOtp] = useState<string[]>(Array(length).fill(''));
   const [error, setError] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -171,7 +171,7 @@ export default function OtpInput({ length = 6, onComplete, containerClassName = 
                     inputMode="numeric"
                     pattern="[0-9]*"
                     maxLength={1}
-                    className='w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-lg sm:text-xl md:text-2xl font-semibold border-2 border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-gray-900 transition-all'
+                    className='w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-lg sm:text-xl md:text-2xl font-semibold border-2 border-theme-sage/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-sage focus:border-theme-sage text-gray-900 transition-all'
                   />
                 ))}
               </div>
@@ -183,7 +183,7 @@ export default function OtpInput({ length = 6, onComplete, containerClassName = 
             
             <button
               type="submit"
-              className='w-full sm:w-auto px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 whitespace-nowrap'
+              className='w-full sm:w-auto px-6 py-2.5 bg-theme-sage hover:bg-theme-olive text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-theme-sage focus:ring-offset-2 whitespace-nowrap'
             >
               Verify OTP
             </button>

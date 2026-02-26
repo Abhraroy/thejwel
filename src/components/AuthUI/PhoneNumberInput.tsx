@@ -7,7 +7,7 @@ interface PhoneNumberInputProps {
     onClick?: () => void;
 }
 
-export default function PhoneNumberInput({ containerClassName = 'w-full bg-white border-b border-amber-200 sticky top-[70px] md:top-[80px] z-50 shadow-sm flex items-center justify-center transition-all duration-300', onClick }: PhoneNumberInputProps) {
+export default function PhoneNumberInput({ containerClassName = 'w-full bg-white border-b border-theme-sage/30 sticky top-[70px] md:top-[80px] z-50 shadow-sm flex items-center justify-center transition-all duration-300', onClick }: PhoneNumberInputProps) {
     const { setOtpInputState, setMobnoInputState, setCustomerMobno } = useStore();
     const [phoneNumber, setPhoneNumber] = useState('');
     const [error, setError] = useState('');
@@ -118,7 +118,7 @@ export default function PhoneNumberInput({ containerClassName = 'w-full bg-white
                   placeholder='9876543210'
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  className='w-full pl-12 pr-4 py-2.5 border border-[#360000]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#360000] focus:border-transparent text-sm sm:text-base text-[#360000] placeholder-gray-400 transition-all'
+                  className='w-full pl-12 pr-4 py-2.5 border border-theme-sage/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-sage focus:border-transparent text-sm sm:text-base text-[#360000] placeholder-gray-400 transition-all'
                   maxLength={10}
                 />
               </div>
@@ -128,7 +128,7 @@ export default function PhoneNumberInput({ containerClassName = 'w-full bg-white
             </div>
             <button
               type="submit"
-              className='w-full sm:w-auto px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 whitespace-nowrap'
+              className='w-full sm:w-auto px-6 py-2.5 bg-theme-sage hover:bg-theme-olive text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-theme-sage focus:ring-offset-2 whitespace-nowrap'
             >
               Continue
             </button>

@@ -45,16 +45,16 @@ export default function PaymentStatusShowComponent() {
 
                 {/* Success Card */}
                 {paymentConcluded ? (
-                    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-green-50/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-theme-sage/40 backdrop-blur-sm">
                         {/* Animated Background Gradient */}
-                        <div className="h-1.5 bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-500"></div>
+                        <div className="h-1.5 bg-linear-to-r from-theme-sage via-theme-olive to-theme-sage"></div>
                         
                         <div className="p-7 sm:p-8 text-center">
                             {/* Success Icon */}
                             <div className="mb-5 flex justify-center">
                                 <div className="relative">
-                                    <div className="absolute inset-0 bg-emerald-100/60 rounded-full animate-ping opacity-40"></div>
-                                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200/50">
+                                    <div className="absolute inset-0 bg-theme-sage/30 rounded-full animate-ping opacity-40"></div>
+                                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-theme-sage via-theme-olive to-theme-sage rounded-2xl flex items-center justify-center shadow-lg shadow-theme-sage/40">
                                         <svg
                                             className="w-8 h-8 sm:w-10 sm:h-10 text-white"
                                             fill="none"
@@ -83,7 +83,7 @@ export default function PaymentStatusShowComponent() {
                             {/* Action Button */}
                             <button
                                 onClick={() => setShowPaymentConcluded(false)}
-                                className="inline-flex items-center justify-center px-6 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm font-semibold rounded-xl hover:from-emerald-600 hover:to-green-700 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg shadow-emerald-200/50"
+                                className="inline-flex items-center justify-center px-6 py-2.5 sm:py-3 bg-linear-to-r from-theme-sage to-theme-olive text-white text-sm font-semibold rounded-xl hover:from-theme-olive hover:to-theme-sage transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg shadow-theme-sage/40"
                             >
                                 Continue Shopping
                             </button>
@@ -91,16 +91,16 @@ export default function PaymentStatusShowComponent() {
                     </div>
                 ) : (
                     /* Error Card */
-                    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-red-50/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-theme-sage/40 backdrop-blur-sm">
                         {/* Animated Background Gradient */}
-                        <div className="h-1.5 bg-gradient-to-r from-rose-400 via-red-500 to-rose-500"></div>
+                        <div className="h-1.5 bg-linear-to-r from-theme-olive via-theme-sage to-theme-olive"></div>
                         
                         <div className="p-7 sm:p-8 text-center">
                             {/* Error Icon */}
                             <div className="mb-5 flex justify-center">
                                 <div className="relative">
-                                    <div className="absolute inset-0 bg-rose-100/60 rounded-full animate-pulse opacity-40"></div>
-                                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-rose-500 via-red-500 to-rose-600 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-200/50">
+                                    <div className="absolute inset-0 bg-theme-sage/20 rounded-full animate-pulse opacity-40"></div>
+                                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-theme-olive via-theme-sage to-theme-olive rounded-2xl flex items-center justify-center shadow-lg shadow-theme-sage/40">
                                         <svg
                                             className="w-8 h-8 sm:w-10 sm:h-10 text-white"
                                             fill="none"
@@ -130,11 +130,11 @@ export default function PaymentStatusShowComponent() {
                             </p>
 
                             {/* Contact Info */}
-                            <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-3.5 mb-5 border border-gray-100">
+                            <div className="bg-linear-to-br from-gray-50 to-gray-100/50 rounded-xl p-3.5 mb-5 border border-gray-100">
                                 <p className="text-xs text-gray-500 mb-1 font-medium">Contact Support</p>
                                 <a
                                     href="tel:+919875512028"
-                                    className="text-base sm:text-lg font-semibold text-amber-600 hover:text-amber-700 transition-colors inline-block"
+                                    className="text-base sm:text-lg font-semibold text-theme-olive hover:text-theme-sage transition-colors inline-block"
                                 >
                                     +91 9875512028
                                 </a>
@@ -143,7 +143,7 @@ export default function PaymentStatusShowComponent() {
                             {/* Action Button */}
                             <button
                                 onClick={() => setShowPaymentConcluded(false)}
-                                className="inline-flex items-center justify-center px-6 py-2.5 sm:py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white text-sm font-semibold rounded-xl hover:from-rose-600 hover:to-red-700 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg shadow-rose-200/50"
+                                className="inline-flex items-center justify-center px-6 py-2.5 sm:py-3 bg-linear-to-r from-theme-olive to-theme-sage text-white text-sm font-semibold rounded-xl hover:from-theme-sage hover:to-theme-olive transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md hover:shadow-lg shadow-theme-sage/40"
                             >
                                 Try Again
                             </button>

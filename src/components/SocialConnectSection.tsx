@@ -1,26 +1,32 @@
-import { FacebookIcon, InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/icons/SocialIcons";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaWhatsapp,
+  FaYoutube,
+  FaXTwitter,
+} from "react-icons/fa6";
 
 const socialLinks = [
   {
     name: "Facebook",
     href: "https://facebook.com",
-    Icon: FacebookIcon,
+    Icon: FaFacebookF,
   },
   {
     name: "Instagram",
     href: "https://instagram.com",
-    Icon: InstagramIcon,
+    Icon: FaInstagram,
   },
   {
     name: "Twitter",
     href: "https://twitter.com",
-    Icon: TwitterIcon,
+    Icon: FaXTwitter,
   },
   {
-    name: "YouTube",
-    href: "https://youtube.com",
-    Icon: YoutubeIcon,
-  },
+    name:"Whatsapp",
+    href: "https://wa.me/+919826000000",
+    Icon: FaWhatsapp,
+  }
 ];
 
 export default function SocialConnectSection() {

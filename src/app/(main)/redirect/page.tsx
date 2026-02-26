@@ -149,10 +149,10 @@ export default function RedirectPage() {
           subtitle: "Your order has been confirmed",
           description:
             "Thank you for your purchase! Your order is being processed and you will receive a confirmation email shortly.",
-          badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200",
+          badgeClass: "bg-theme-sage/15 text-theme-olive border-theme-sage/50",
           badgeText: "Completed",
-          bgGradient: "from-emerald-50 to-teal-50",
-          accentColor: "emerald",
+          bgGradient: "from-theme-cream to-theme-sage/20",
+          accentColor: "sage",
         };
       case "failed":
         return {
@@ -161,10 +161,10 @@ export default function RedirectPage() {
           subtitle: "Something went wrong",
           description:
             "We couldn't process your payment. Please try again or use a different payment method. Your cart items are still saved.",
-          badgeClass: "bg-red-100 text-red-700 border-red-200",
+          badgeClass: "bg-theme-sage/10 text-theme-olive border-theme-sage/40",
           badgeText: "Failed",
-          bgGradient: "from-red-50 to-rose-50",
-          accentColor: "red",
+          bgGradient: "from-theme-cream to-theme-sage/15",
+          accentColor: "sage",
         };
       default:
         return {
@@ -173,10 +173,10 @@ export default function RedirectPage() {
           subtitle: "Please wait...",
           description:
             "We're verifying your payment with our payment partner. This usually takes a few seconds. Please don't close this page.",
-          badgeClass: "bg-amber-100 text-amber-700 border-amber-200",
+          badgeClass: "bg-theme-sage/10 text-theme-olive border-theme-sage/40",
           badgeText: "Verifying",
-          bgGradient: "from-amber-50 to-yellow-50",
-          accentColor: "amber",
+          bgGradient: "from-theme-cream to-theme-sage/15",
+          accentColor: "sage",
         };
     }
   };
@@ -185,7 +185,7 @@ export default function RedirectPage() {
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br ${config.bgGradient} flex items-center justify-center px-4 py-8`}
+      className={`min-h-screen bg-linear-to-br ${config.bgGradient} flex items-center justify-center px-4 py-8`}
     >
       <div className="w-full max-w-lg">
         {/* Main Card */}
@@ -195,10 +195,10 @@ export default function RedirectPage() {
             <div
               className={`p-4 rounded-full ${
                 status === "completed"
-                  ? "bg-emerald-50"
+                  ? "bg-theme-sage/15"
                   : status === "failed"
-                  ? "bg-red-50"
-                  : "bg-amber-50"
+                  ? "bg-theme-sage/10"
+                  : "bg-theme-sage/10"
               }`}
             >
               {config.icon}
@@ -237,9 +237,9 @@ export default function RedirectPage() {
             {/* Progress dots for pending */}
             {status === "pending" && (
               <div className="mt-6 flex items-center justify-center gap-2">
-                <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                <div className="w-2 h-2 bg-theme-sage rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-2 h-2 bg-theme-sage rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-2 h-2 bg-theme-sage rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
               </div>
             )}
           </div>
@@ -251,7 +251,7 @@ export default function RedirectPage() {
                 <>
                   <Link
                     href="/account"
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 text-white px-5 py-3 text-sm font-semibold hover:bg-emerald-700 transition-all duration-200 shadow-lg shadow-emerald-200"
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-theme-sage text-white px-5 py-3 text-sm font-semibold hover:bg-theme-olive transition-all duration-200 shadow-lg shadow-theme-sage/40"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -286,7 +286,7 @@ export default function RedirectPage() {
                       // Retry payment logic could go here
                       router.push("/");
                     }}
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 text-white px-5 py-3 text-sm font-semibold hover:bg-red-700 transition-all duration-200 shadow-lg shadow-red-200"
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-theme-olive text-white px-5 py-3 text-sm font-semibold hover:bg-theme-sage transition-all duration-200 shadow-lg shadow-theme-sage/40"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -319,7 +319,7 @@ export default function RedirectPage() {
                     Please wait while we verify your payment...
                   </p>
                   <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 rounded-full animate-pulse w-2/3" />
+                    <div className="h-full bg-theme-sage rounded-full animate-pulse w-2/3" />
                   </div>
                 </div>
               )}
