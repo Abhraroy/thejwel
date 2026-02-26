@@ -1,13 +1,12 @@
 "use client";
 
 import ProductCarousel from "@/components/ProductUI/ProductCarousel";
-import ProductCarouselSkeleton from "@/components/ProductUI/ProductCaraouselSkeleton";
 import { Product } from "@/types/TypeInterface";
 
 interface Props {
   products: Product[];
-  onAddToCart: (id: string) => void;
-  onWishlistToggle: (id: string) => void;
+  onAddToCart?: (id: string) => void;
+  onWishlistToggle?: (id: string) => void;
 }
 
 export default function NewArrivalSection({

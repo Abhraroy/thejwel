@@ -239,6 +239,9 @@ html,body {
 .navbar-logo-section .font-josefin-sans {
   font-weight: 600 !important;
 }
+.footer-logo-section .font-josefin-sans {
+  font-weight: 600 !important;
+}
 
 @layer base {
   * {

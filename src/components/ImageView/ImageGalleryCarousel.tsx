@@ -184,7 +184,7 @@ export default function ImageGalleryCarousel({
                     className="gallery-slide"
                   >
                     {({ isActive }: { isActive: boolean }) => (
-                      <div className="relative h-full w-full overflow-hidden rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
+                      <div className="relative h-full w-full overflow-hidden rounded-3xl">
                         <div
                           aria-hidden
                           className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/15 z-10"
@@ -233,7 +233,7 @@ export default function ImageGalleryCarousel({
               </Swiper>
 
               {/* Navigation Arrows */}
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-2 sm:px-4 z-20">
+              <div className="pointer-events-none absolute inset-0 hidden lg:flex items-center justify-between px-2 sm:px-4 z-20">
                 <button
                   type="button"
                   onClick={goToPrev}
@@ -255,17 +255,6 @@ export default function ImageGalleryCarousel({
                 </button>
               </div>
 
-              {/* Autoplay progress */}
-              {autoPlay && slideCount > 1 && (
-                <div className="absolute left-1/2 top-4 w-[min(520px,90%)] -translate-x-1/2 z-20">
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/15 ring-1 ring-white/15 backdrop-blur-md">
-                    <div
-                      className="h-full rounded-full bg-white/70 transition-[width] duration-100 ease-linear"
-                      style={{ width: `${isHovered ? 0 : progressPercent}%` }}
-                    />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -302,7 +291,7 @@ export default function ImageGalleryCarousel({
           width: 270px;
           height: 360px;
           transition: opacity 0.4s ease, filter 0.4s ease;
-          opacity: 0.55;
+          opacity: 0;
           filter: blur(1.5px);
         }
         @media (min-width: 640px) {
@@ -322,6 +311,11 @@ export default function ImageGalleryCarousel({
             width: 470px;
             height: 610px;
           }
+        }
+        .gallery-slide.swiper-slide-prev,
+        .gallery-slide.swiper-slide-next {
+          opacity: 1;
+          filter: blur(0px);
         }
         .gallery-slide.swiper-slide-active {
           opacity: 1;
