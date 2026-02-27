@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Carousel from "@/components/Carousel";
 import CategorySection from "@/components/CategorySection";
 import Collection from "@/components/Collection";
@@ -68,18 +69,18 @@ export default function HomePage({
   bestSellers,
   newArrivals,
   featuredProducts,
-  heroImages,
+  heroItems,
 }: {
   categoriesProps: any;
   bestSellers: Product[];
   newArrivals: Product[];
   featuredProducts: Product[];
-  heroImages: string[];
+  heroItems: { imageLink: string; redirectRoute: string | null }[];
 }) {
-  const carouselItemsArray = heroImages.map((src, index) => (
-    <div key={index} className="w-full h-full relative flex items-center justify-center bg-theme-cream">
+  const carouselItemsArray = heroItems.map((item, index) => {
+    const image = (
       <Image
-        src={src}
+        src={item.imageLink}
         alt="Where Tradition Meets Modern Sparkle — TheJWEL Kolkata"
         fill={true}
         className="!object-contain md:!object-cover object-center"
@@ -87,8 +88,27 @@ export default function HomePage({
         fetchPriority={index === 0 ? "high" : "auto"}
         sizes="100vw"
       />
-    </div>
-  ));
+    );
+    const wrapperClass = "w-full h-full relative flex items-center justify-center bg-theme-cream" + (item.redirectRoute ? " cursor-pointer" : "");
+    return (
+      <div key={index} className={wrapperClass}>
+        {item.redirectRoute ? (
+          <Link
+            href={item.redirectRoute}
+            className="absolute inset-0 z-10 block"
+            {...(item.redirectRoute.startsWith("http") && {
+              target: "_blank",
+              rel: "noopener noreferrer",
+            })}
+          >
+            {image}
+          </Link>
+        ) : (
+          image
+        )}
+      </div>
+    );
+  });
 
   return (
     <div className="min-h-screen bg-theme-cream">

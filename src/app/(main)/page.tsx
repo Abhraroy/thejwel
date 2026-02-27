@@ -49,15 +49,17 @@ export default async function Home() {
   ]);
   
 
-  const heroImages = (heroImagesRes.data || []).map((item: { image_link: string }) => item.image_link);
-  console.log(heroImages);
+  const heroItems = (heroImagesRes.data || []).map((item: { image_link: string; redirect_route: string | null }) => ({
+    imageLink: item.image_link,
+    redirectRoute: item.redirect_route?.trim() || null,
+  }));
   return (
     <HomePage
       categoriesProps={catgoriesRes.data || []}
       bestSellers={bestSellersRes.data || []}
       newArrivals={newArrivalsRes.data || []}
       featuredProducts={featuredProductsRes.data || []}
-      heroImages={heroImages}
+      heroItems={heroItems}
     />
   )
 }
