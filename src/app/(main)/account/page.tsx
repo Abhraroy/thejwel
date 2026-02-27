@@ -163,7 +163,6 @@ export default function AccountPage() {
     setAuthUserId,
     setCartId,
     setCartItems,
-    setCartCount,
     setWishListItems,
     setInitiatingCheckout,
     setPaymentConcluded,
@@ -992,7 +991,6 @@ export default function AccountPage() {
                       setAuthUserId("");
                       setCartId("");
                       setCartItems([]);
-                      setCartCount(0);
                       setWishListItems([]);
                       setInitiatingCheckout(false);
                       setPaymentConcluded(false);

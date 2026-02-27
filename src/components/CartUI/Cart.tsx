@@ -3,7 +3,7 @@
 import { useStore } from "@/zustandStore/zustandStore";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { addToDbCart, addToLocalCart, decreaseQuantityFromDbCart, decreaseQuantityFromLocalCart, getCartData, removeFromDbCart, removeFromLocalCart, calculateCartCount, getLocalCartCount, getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";
+import { addToDbCart, addToLocalCart, decreaseQuantityFromDbCart, decreaseQuantityFromLocalCart, getCartData, removeFromDbCart, removeFromLocalCart, getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";
 import CartItem from "./CartItem";
 import { toast } from "react-toastify";
 import type { AnyCart, AnyCartItem, DbCartItem, LocalCartItem, LocalCart } from "@/types/CartTypes";
@@ -16,7 +16,7 @@ interface CartProps {
 }
 
 export default function Cart({ isOpen = false, onClose }: CartProps) {
-  const { AuthenticatedState, cartItems, setCartItems ,CartId,setInitiatingCheckout,initiatingCheckout, setCartCount } = useStore();
+  const { AuthenticatedState, cartItems, setCartItems, CartId, setInitiatingCheckout, initiatingCheckout } = useStore();
   const [subtotal, setSubtotal] = useState(0);
   const [loading, setLoading] = useState(true);
   // Sample cart items for UI demonstration
@@ -39,17 +39,11 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
        const updatedItem = await decreaseQuantityFromDbCart(item as DbCartItem,CartId,supabase)
        console.log("updatedItem",updatedItem)
         if (Array.isArray(updatedItem)) setCartItems(updatedItem);
-        // Update cart count for authenticated users
-        if (updatedItem && Array.isArray(updatedItem)) {
-          setCartCount(calculateCartCount(updatedItem));
-        }
     }
     else{
       if (!isLocalCartItem(item)) return;
       const updatedItem = await decreaseQuantityFromLocalCart(item as LocalCartItem)
       setCartItems(updatedItem);
-      // Update cart count for unauthenticated users
-      setCartCount(getLocalCartCount());
     }
   }
 
@@ -58,17 +52,11 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
       if (!isDbCartItem(item)) return;
       const updatedItem = await removeFromDbCart(item as DbCartItem,CartId,supabase)
       if (Array.isArray(updatedItem)) setCartItems(updatedItem);
-      // Update cart count for authenticated users
-      if (updatedItem && Array.isArray(updatedItem)) {
-        setCartCount(calculateCartCount(updatedItem));
-      }
     }
     else{
       if (!isLocalCartItem(item)) return;
       const updatedItem = await removeFromLocalCart(item as LocalCartItem)
       setCartItems(updatedItem);
-      // Update cart count for unauthenticated users
-      setCartCount(getLocalCartCount());
     }
   }
   
@@ -104,18 +92,11 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
       const payload = item.products ?? { product_id: productId as string };
       const updatedItem = await addToDbCart(payload,CartId,supabase)
       if (Array.isArray(updatedItem)) setCartItems(updatedItem);
-      // Update cart count for authenticated users
-      if (updatedItem && Array.isArray(updatedItem)) {
-        setCartCount(calculateCartCount(updatedItem));
-      }
     }
     else{
       if (!isLocalCartItem(item)) return;
-      console.log("User is not authenticated adding to local cart")
       const updatedItem = addToLocalCart(item.products as any)
       setCartItems(updatedItem);
-      // Update cart count for unauthenticated users
-      setCartCount(getLocalCartCount());
     }
   }
 
@@ -133,34 +114,21 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
       setLoading(true);
       if (!AuthenticatedState) {
         const localCartItems = localStorage.getItem("cartItems");
-        console.log("cart items from local storage", localCartItems);
-        if (cartItems) {
-          const tempCartItems: LocalCart = localCartItems ? JSON.parse(localCartItems) : [];
-          console.log("tempCartItems", typeof tempCartItems);
-          setCartItems(tempCartItems);
+        const tempCartItems: LocalCart = localCartItems ? JSON.parse(localCartItems) : [];
+        setCartItems(tempCartItems);
+        setLoading(false);
+      } else if (AuthenticatedState && CartId) {
+        const { success, data, message } = await getCartData(CartId, supabase);
+        if (success && data) {
+          setCartItems(data);
         }
         setLoading(false);
-      } else if (AuthenticatedState) {
-    
-        if(CartId){
-          console.log("cart found",CartId)
-          const {success,data,message} = await getCartData(CartId,supabase)
-          if(success){
-            console.log("data from cart",data)
-            if (data) setCartItems(data)
-          }
-          else{
-            console.log("error",message)
-          }
-          setLoading(false);
-      }else{
-        console.log("No cart found")
+      } else {
         setLoading(false);
       }
     };
-}
-    getCartItems()
-  }, [AuthenticatedState]);
+    getCartItems();
+  }, [AuthenticatedState, CartId]);
 
   useEffect(() => {
     console.log("cart items from cart", cartItems);

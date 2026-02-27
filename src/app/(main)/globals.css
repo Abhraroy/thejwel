@@ -63,6 +63,63 @@ html,body {
   scroll-behavior: smooth;
 }
 
+/* Slick global scrollbar - Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.65 0.08 150 / 0.5) transparent;
+}
+
+/* Slick global scrollbar - WebKit (Chrome, Safari, Edge) */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: oklch(0.65 0.08 150 / 0.4);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.55 0.1 150 / 0.7);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: oklch(0.5 0.1 150 / 0.85);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Dark mode scrollbar */
+.dark * {
+  scrollbar-color: oklch(0.55 0.02 150 / 0.5) transparent;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: oklch(0.55 0.02 150 / 0.45);
+  background-clip: padding-box;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.65 0.03 150 / 0.65);
+  background-clip: padding-box;
+}
+
+.dark *::-webkit-scrollbar-thumb:active {
+  background: oklch(0.7 0.04 150 / 0.8);
+  background-clip: padding-box;
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

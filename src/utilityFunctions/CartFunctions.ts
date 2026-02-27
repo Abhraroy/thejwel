@@ -359,6 +359,19 @@ export const calculateCartCount = (cartItems: AnyCart | any[]): number => {
     return cartItems.reduce((sum: number, item: any) => sum + (item.quantity ?? 1), 0);
 }
 
+// Get cart items from local storage
+export const getLocalCartItems = (): LocalCart => {
+    if (typeof window === 'undefined') return [];
+    const localCartItems = localStorage.getItem('cartItems');
+    if (!localCartItems) return [];
+    try {
+        const cartItems: LocalCart = JSON.parse(localCartItems);
+        return Array.isArray(cartItems) ? cartItems : [];
+    } catch {
+        return [];
+    }
+};
+
 // Get cart count from local storage
 export const getLocalCartCount = (): number => {
     if (typeof window === 'undefined') return 0;

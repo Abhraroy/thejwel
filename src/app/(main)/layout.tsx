@@ -12,6 +12,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import ParentNavbar from "@/components/NavbarUI/ParentNavbar";
+import CartBootstrapper from "@/components/CartBootstrapper";
 import SocialConnectSection from "@/components/SocialConnectSection";
 import Footer from "@/components/Footer";
 import PaymentGatewayWrapper from "@/components/Payment/PaymentGatewayWrapper";
@@ -193,6 +194,7 @@ export default function RootLayout({
           }}
         />
         <ParentNavbar />
+        <CartBootstrapper />
         {children}
         <SocialConnectSection />
         <Footer />

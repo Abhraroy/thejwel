@@ -7,7 +7,6 @@ import OccasionSection from "@/components/OccasionSection";
 import { Product } from "@/types/TypeInterface";
 import ProductCarouselSkeleton from "@/components/ProductUI/ProductCaraouselSkeleton";
 import HomePageClientShell from "./HomePageClientShell";
-import CartBootstrapper from "./CartBootstrapper";
 import InViewSection from "./InViewSection";
 import {
   DynamicBestSellers,
@@ -18,7 +17,7 @@ import {
 
 function CarouselSkeleton() {
   return (
-    <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] bg-gray-200 animate-pulse" />
+    <div className="w-full aspect-[16/9] md:aspect-auto md:h-[500px] lg:h-[600px] xl:h-[700px] bg-gray-200 animate-pulse" />
   );
 }
 
@@ -78,12 +77,12 @@ export default function HomePage({
   heroImages: string[];
 }) {
   const carouselItemsArray = heroImages.map((src, index) => (
-    <div key={index} className="w-full h-full relative">
+    <div key={index} className="w-full h-full relative flex items-center justify-center bg-theme-cream">
       <Image
         src={src}
         alt="Where Tradition Meets Modern Sparkle — TheJWEL Kolkata"
         fill={true}
-        className="object-cover"
+        className="!object-contain md:!object-cover object-center"
         priority={index === 0}
         fetchPriority={index === 0 ? "high" : "auto"}
         sizes="100vw"
@@ -94,13 +93,13 @@ export default function HomePage({
   return (
     <div className="min-h-screen bg-theme-cream">
       <HomePageClientShell categoriesProps={categoriesProps} />
-      <CartBootstrapper />
       <main className="w-full">
         <Suspense fallback={<CarouselSkeleton />}>
           <Carousel
             items={carouselItemsArray}
             autoSlideInterval={3000}
-            className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px]"
+            heightClassName="aspect-[16/9] md:aspect-auto md:h-[500px] lg:h-[600px] xl:h-[700px]"
+            className="w-full overflow-hidden flex items-center justify-center"
           />
         </Suspense>
 

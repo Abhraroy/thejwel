@@ -5,8 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useStore } from "@/zustandStore/zustandStore";
 import {
   createCart,
-  calculateCartCount,
-  getLocalCartCount,
+  getLocalCartItems,
 } from "@/utilityFunctions/CartFunctions";
 import type { LocalCart } from "@/types/CartTypes";
 
@@ -16,11 +15,14 @@ export default function CartBootstrapper() {
     setAuthUserId,
     setCartId,
     setCartItems,
-    setCartCount,
   } = useStore();
 
   useEffect(() => {
     const supabase = createClient();
+
+    // Hydrate cart from localStorage immediately (for unauthenticated users with local cart)
+    // This shows the correct count on first paint; auth check will overwrite with DB cart if logged in
+    setCartItems(getLocalCartItems());
 
     const mergeLocalCartItems = async (cartId: string): Promise<void> => {
       try {
@@ -99,7 +101,6 @@ export default function CartBootstrapper() {
 
         if (!error && cartData) {
           setCartItems(cartData.cart_items);
-          setCartCount(calculateCartCount(cartData.cart_items));
         }
 
         localStorage.removeItem("cartItems");
@@ -114,7 +115,7 @@ export default function CartBootstrapper() {
       if (error || !data?.user) {
         console.log("User not authenticated");
         setAuthenticatedState(false);
-        setCartCount(getLocalCartCount());
+        setCartItems(getLocalCartItems());
         return;
       }
       setAuthenticatedState(true);
@@ -146,7 +147,7 @@ export default function CartBootstrapper() {
         if (success && newCart?.cart_id) {
           console.log("Recovery cart created:", newCart.cart_id);
           setCartId(newCart.cart_id);
-          setCartCount(0);
+          setCartItems([]);
           await mergeLocalCartItems(newCart.cart_id);
         } else {
           console.error("Failed to create recovery cart:", createError);
@@ -155,18 +156,12 @@ export default function CartBootstrapper() {
         return;
       }
       setCartId(cartData?.cart_id);
-      setCartCount(calculateCartCount(cartData?.cart_items ?? []));
-      console.log("calling mergeLocalCartItems");
+      setCartItems(cartData?.cart_items ?? []);
       mergeLocalCartItems(cartData?.cart_id);
     };
 
-    const run = () => checkAuthentication();
-    if ("requestIdleCallback" in window) {
-      requestIdleCallback(run);
-    } else {
-      setTimeout(run, 1500);
-    }
-  }, [setAuthenticatedState, setAuthUserId, setCartId, setCartItems, setCartCount]);
+    checkAuthentication();
+  }, [setAuthenticatedState, setAuthUserId, setCartId, setCartItems]);
 
   return null;
 }

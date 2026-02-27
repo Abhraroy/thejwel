@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import {
   createCoupon,
   getAllCoupons,
   updateCouponState,
 } from "@/app/(admin)/admin/actions/coupons";
+import {
+  getAllImageResources,
+  deleteImageResource,
+  saveImageResource,
+  type ImageResourceRecord,
+} from "@/app/(admin)/admin/actions/resources";
 import type { Coupon, CouponDiscountType } from "@/types/TypeInterface";
 
 const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB
@@ -91,6 +96,7 @@ export default function ResourcesPage() {
     { value: "marketing_assets", label: "Marketing Assets" },
   ];
   const [sectionName, setSectionName] = useState<string>("");
+  const [redirectRoute, setRedirectRoute] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -111,6 +117,10 @@ export default function ResourcesPage() {
   const [couponList, setCouponList] = useState<Coupon[]>([]);
   const [isCouponLoading, setIsCouponLoading] = useState(true);
   const [toggleLoadingId, setToggleLoadingId] = useState<string | null>(null);
+  const [imageResources, setImageResources] = useState<ImageResourceRecord[]>([]);
+  const [isImageResourcesLoading, setIsImageResourcesLoading] = useState(true);
+  const [imageResourceError, setImageResourceError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fileMeta = useMemo(() => {
     if (!file) return null;
@@ -135,14 +145,29 @@ export default function ResourcesPage() {
     setIsCouponLoading(false);
   };
 
+  const refreshImageResources = async () => {
+    setIsImageResourcesLoading(true);
+    setImageResourceError(null);
+    const result = await getAllImageResources();
+    if (!result.success) {
+      setImageResourceError(result.error || "Unable to load image resources");
+      setImageResources([]);
+    } else {
+      setImageResources(result.data ?? []);
+    }
+    setIsImageResourcesLoading(false);
+  };
+
   useEffect(() => {
     refreshCoupons();
+    refreshImageResources();
   }, []);
 
   const resetSelection = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setFile(null);
     setPreviewUrl(null);
+    setRedirectRoute("");
     setError(null);
     setCopied(false);
     setSaveStatus(null);
@@ -184,8 +209,7 @@ export default function ResourcesPage() {
 
   const uploadResourceImage = async () => {
     if (!file) {
-      // If user clicks Upload without selecting a file, open the file picker.
-      fileInputRef.current?.click();
+      setError("Please choose an image before uploading.");
       return;
     }
 
@@ -222,32 +246,18 @@ export default function ResourcesPage() {
       setUploadedUrl(data.url);
       setUploadedKey(data.key ?? null);
 
-      // Save mapping in Supabase from the client side
-      const supabase = createSupabaseClient();
-      let { error } = await supabase.from("image_resources").insert({
-        section_name: sectionName.trim(),
+      const result = await saveImageResource({
         image_link: data.url,
+        section_name: sectionName.trim(),
+        redirect_route: redirectRoute.trim() || undefined,
       });
 
-      // Fallback for older naming in legacy environments.
-      if (
-        error &&
-        typeof error.message === "string" &&
-        (error.message.toLowerCase().includes('column "image_link"') ||
-          error.message.toLowerCase().includes('column "section_name"'))
-      ) {
-        const retry = await supabase.from("image_resources").insert({
-          sectionname: sectionName.trim(),
-          imagelink: data.url,
-        } as any);
-        error = retry.error;
-      }
-
-      if (error) {
+      if (!result.success) {
         setSaveStatus("not_saved");
-        setSaveError(error.message);
+        setSaveError(result.error ?? "Failed to save to database");
       } else {
         setSaveStatus("saved");
+        await refreshImageResources();
       }
     } catch (err) {
       console.error("Resource upload error:", err);
@@ -343,6 +353,18 @@ export default function ResourcesPage() {
     setToggleLoadingId(null);
   };
 
+  const handleDeleteImageResource = async (resource: ImageResourceRecord) => {
+    setImageResourceError(null);
+    setDeletingId(resource.id);
+    const result = await deleteImageResource(resource.id);
+    if (!result.success) {
+      setImageResourceError(result.error || "Failed to delete image");
+    } else {
+      await refreshImageResources();
+    }
+    setDeletingId(null);
+  };
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-linear-to-b from-slate-50 to-white min-h-full">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -388,6 +410,19 @@ export default function ResourcesPage() {
               </p>
 
               <label className="block text-sm font-semibold text-slate-800 mt-4">
+                Redirect route (optional)
+              </label>
+              <input
+                value={redirectRoute}
+                onChange={(e) => setRedirectRoute(e.target.value)}
+                placeholder="e.g. /products/sale"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-rose-200"
+              />
+              <p className="text-xs text-slate-500">
+                Saved in Supabase under `redirect_route`.
+              </p>
+
+              <label className="block text-sm font-semibold text-slate-800 mt-4">
                 Folder (optional)
               </label>
               <input
@@ -400,13 +435,25 @@ export default function ResourcesPage() {
               <label className="block text-sm font-semibold text-slate-800 mt-4">
                 Image
               </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="w-full text-sm"
-              />
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm font-semibold hover:bg-slate-50"
+                >
+                  Choose image
+                </button>
+                <span className="text-xs text-slate-500">
+                  {fileMeta ? fileMeta.name : "No file selected"}
+                </span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </div>
               <p className="text-xs text-slate-500">Max size: 8MB.</p>
 
               {fileMeta && (
@@ -476,6 +523,12 @@ export default function ResourcesPage() {
                     <span className="font-semibold">Section:</span>{" "}
                     {sectionName.trim()}
                   </div>
+                  {redirectRoute.trim() && (
+                    <div className="mt-2 text-xs text-slate-600 break-all">
+                      <span className="font-semibold">Redirect route:</span>{" "}
+                      {redirectRoute.trim()}
+                    </div>
+                  )}
                   <div className="mt-2 text-xs text-slate-600 break-all">
                     <span className="font-semibold">URL:</span> {uploadedUrl}
                   </div>
@@ -527,6 +580,80 @@ export default function ResourcesPage() {
                       Open
                     </a>
                   </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 border-t border-slate-200 pt-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-base font-semibold text-slate-900">
+                  Uploaded Image Resources
+                </h3>
+                <button
+                  type="button"
+                  onClick={refreshImageResources}
+                  disabled={isImageResourcesLoading}
+                  className="px-3 py-1.5 rounded-md border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Refresh
+                </button>
+              </div>
+
+              {imageResourceError && (
+                <div className="mt-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
+                  {imageResourceError}
+                </div>
+              )}
+
+              {isImageResourcesLoading ? (
+                <div className="mt-3 text-sm text-slate-500">
+                  Loading image resources...
+                </div>
+              ) : imageResources.length === 0 ? (
+                <div className="mt-3 text-sm text-slate-500">
+                  No image resources uploaded yet.
+                </div>
+              ) : (
+                <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-80 overflow-auto pr-1">
+                  {imageResources.map((resource) => (
+                    <article
+                      key={resource.id}
+                      className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/60"
+                    >
+                      <div className="aspect-video bg-slate-100 relative">
+                        {resource.image_link ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={resource.image_link}
+                            alt={resource.section_name || "Resource"}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+                            No image
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteImageResource(resource)}
+                          disabled={deletingId === resource.id}
+                          className="absolute top-2 right-2 px-2 py-1 rounded-md bg-red-600 text-white text-xs font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                        >
+                          {deletingId === resource.id ? "Deleting..." : "Delete"}
+                        </button>
+                      </div>
+                      <div className="p-2">
+                        <div className="text-xs font-semibold text-slate-800 truncate">
+                          {resource.section_name || "—"}
+                        </div>
+                        {resource.redirect_route && (
+                          <div className="text-xs text-slate-500 truncate mt-0.5">
+                            → {resource.redirect_route}
+                          </div>
+                        )}
+                      </div>
+                    </article>
+                  ))}
                 </div>
               )}
             </div>
