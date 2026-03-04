@@ -47,6 +47,7 @@ export interface OrderCreationOptions {
   paymentStatus?: string;
   orderStatus?: string;
   transactionId?: string | null;
+  couponCode?: string | null;
 }
 
 const formatAddressText = (address: CheckoutAddress) =>
@@ -192,7 +193,7 @@ export async function createOrderWithItems(
   | { success: true; order: any; orderItemsPayload: any[] }
   | { success: false; message: string; status: number }
 > {
-  const orderPayload = {
+  const orderPayload: Record<string, unknown> = {
     user_id: context.user.user_id,
     merchant_order_id: options.merchantOrderId || null,
     order_number: options.orderNumber || null,
@@ -203,6 +204,9 @@ export async function createOrderWithItems(
     address_text: context.addressText,
     transaction_id: options.transactionId || null,
   };
+  if (options.couponCode != null && options.couponCode !== "") {
+    orderPayload.coupon_code = options.couponCode;
+  }
 
   const orderRes = await adminsupabase
     .from("orders")

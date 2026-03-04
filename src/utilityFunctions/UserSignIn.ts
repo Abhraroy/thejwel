@@ -76,6 +76,7 @@ export const userSignIn = async (
 
     // 4️⃣ Hydrate Zustand (CLIENT SIDE ✅)
     const store = useStore.getState();
+    store.setAuthenticatedState(true);
     store.setAuthUserId(user.user_id);
     store.setCartId(cart_id ?? null);
     store.setWishlistId(wishlist_id ?? null);

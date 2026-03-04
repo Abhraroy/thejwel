@@ -66,6 +66,7 @@ CREATE TABLE public.coupons (
   valid_from timestamp without time zone NOT NULL,
   valid_until timestamp without time zone NOT NULL,
   is_active boolean DEFAULT true,
+  coupon_type text DEFAULT PREPAID
   CONSTRAINT coupons_pkey PRIMARY KEY (coupon_id)
 );
 create table public.image_resources (
@@ -103,6 +104,7 @@ CREATE TABLE public.orders (
   merchant_order_id character varying,
   transaction_id character varying,
   address_text text,
+  coupon_code character varying,
   lock_order boolean null default false,
   CONSTRAINT orders_pkey PRIMARY KEY (order_id),
   CONSTRAINT orders_shipping_address_id_fkey FOREIGN KEY (shipping_address_id) REFERENCES public.addresses(address_id),

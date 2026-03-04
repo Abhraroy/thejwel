@@ -60,9 +60,10 @@ export async function POST(request: NextRequest) {
     const couponRes = await adminsupabase
       .from("coupons")
       .select(
-        "coupon_code, discount_type, discount_value, min_purchase_amount, max_discount_amount, usage_limit, usage_count, is_active, valid_from, valid_until"
+        "coupon_code, coupon_type, discount_type, discount_value, min_purchase_amount, max_discount_amount, usage_limit, usage_count, is_active, valid_from, valid_until"
       )
       .eq("coupon_code", couponCode)
+      .eq("coupon_type", "PREPAID")
       .eq("is_active", true)
       .lte("valid_from", nowIso)
       .gte("valid_until", nowIso)
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     if (couponRes.error || !couponRes.data) {
       return NextResponse.json(
-        { message: "Coupon is invalid or expired" },
+        { message: "Coupon is invalid, expired, or not valid for prepaid payment" },
         { status: 400 }
       );
     }
@@ -139,6 +140,7 @@ export async function POST(request: NextRequest) {
     merchantOrderId,
     paymentStatus: "pending",
     orderStatus: "pending",
+    couponCode: couponCode || undefined,
   });
 
   if (!orderRes.success) {

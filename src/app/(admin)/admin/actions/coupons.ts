@@ -3,10 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import adminsupabase from "@/lib/supabase/admin";
-import type { Coupon, CouponDiscountType } from "@/types/TypeInterface";
+import type { Coupon, CouponDiscountType, CouponType } from "@/types/TypeInterface";
 
 type CouponPayload = {
   coupon_code: string;
+  coupon_type: CouponType;
   description?: string;
   discount_type: CouponDiscountType;
   discount_value: number;
@@ -41,7 +42,7 @@ export async function getAllCoupons() {
   const { data, error } = await adminsupabase
     .from("coupons")
     .select(
-      "coupon_id, coupon_code, description, discount_type, discount_value, min_purchase_amount, max_discount_amount, usage_limit, usage_count, valid_from, valid_until, is_active"
+      "coupon_id, coupon_code, coupon_type, description, discount_type, discount_value, min_purchase_amount, max_discount_amount, usage_limit, usage_count, valid_from, valid_until, is_active"
     )
     .order("valid_until", { ascending: false });
 
@@ -81,6 +82,7 @@ export async function createCoupon(payload: CouponPayload) {
 
   const { error } = await adminsupabase.from("coupons").insert({
     coupon_code: couponCode,
+    coupon_type: payload.coupon_type,
     description: payload.description?.trim() || null,
     discount_type: payload.discount_type,
     discount_value: Number(payload.discount_value),

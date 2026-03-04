@@ -12,12 +12,13 @@ import {
   saveImageResource,
   type ImageResourceRecord,
 } from "@/app/(admin)/admin/actions/resources";
-import type { Coupon, CouponDiscountType } from "@/types/TypeInterface";
+import type { Coupon, CouponDiscountType, CouponType } from "@/types/TypeInterface";
 
 const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB
 
 type CouponFormData = {
   coupon_code: string;
+  coupon_type: CouponType;
   description: string;
   discount_type: CouponDiscountType;
   discount_value: string;
@@ -47,6 +48,7 @@ function buildInitialCouponForm(): CouponFormData {
   const weekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   return {
     coupon_code: "",
+    coupon_type: "PREPAID",
     description: "",
     discount_type: "percentage",
     discount_value: "",
@@ -307,6 +309,7 @@ export default function ResourcesPage() {
     setIsCouponSaving(true);
     const result = await createCoupon({
       coupon_code: couponForm.coupon_code,
+      coupon_type: couponForm.coupon_type,
       description: couponForm.description || undefined,
       discount_type: couponForm.discount_type,
       discount_value: Number(couponForm.discount_value || 0),
@@ -686,6 +689,20 @@ export default function ResourcesPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Coupon type
+                  </label>
+                  <select
+                    name="coupon_type"
+                    value={couponForm.coupon_type}
+                    onChange={handleCouponInput}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
+                  >
+                    <option value="COD">COD</option>
+                    <option value="PREPAID">PREPAID</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Discount type
                   </label>
                   <select
@@ -872,6 +889,11 @@ export default function ResourcesPage() {
                               <h4 className="text-sm sm:text-base font-semibold text-slate-900">
                                 {coupon.coupon_code}
                               </h4>
+                              {coupon.coupon_type && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                                  {coupon.coupon_type}
+                                </span>
+                              )}
                               <span
                                 className={`text-xs px-2 py-0.5 rounded-full ${status.tone}`}
                               >

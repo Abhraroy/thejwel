@@ -6,6 +6,7 @@ interface CashOnDeliveryConfirmationProps {
   cartItems: AnyCart;
   selectedAddressDetails: any | null;
   orderTotal: string;
+  couponDiscount?: number;
   onBack: () => void;
   onConfirm: () => Promise<void> | void;
   isLoadingConfirm?: boolean;
@@ -16,6 +17,7 @@ export default function CashOnDeliveryConfirmation({
   cartItems,
   selectedAddressDetails,
   orderTotal,
+  couponDiscount = 0,
   onBack,
   onConfirm,
   isLoadingConfirm = false,
@@ -123,6 +125,12 @@ export default function CashOnDeliveryConfirmation({
               )}
             </div>
 
+            {couponDiscount > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Coupon discount</span>
+                <span className="text-green-600 font-semibold">-₹{couponDiscount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between pt-1 border-t border-gray-200">
               <span className="text-sm font-semibold text-gray-900">Total Amount</span>
               <span className="text-base font-bold text-amber-600">₹{orderTotal}</span>

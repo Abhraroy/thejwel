@@ -19,8 +19,9 @@ export async function GET() {
   const couponRes = await adminsupabase
     .from("coupons")
     .select(
-      "coupon_code, description, discount_type, discount_value, min_purchase_amount, max_discount_amount, usage_limit, usage_count, valid_from, valid_until"
+      "coupon_code, coupon_type, description, discount_type, discount_value, min_purchase_amount, max_discount_amount, usage_limit, usage_count, valid_from, valid_until, is_active"
     )
+    .eq("coupon_type", "PREPAID")
     .eq("is_active", true)
     .lte("valid_from", nowIso)
     .gte("valid_until", nowIso)

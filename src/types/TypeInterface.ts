@@ -10,6 +10,7 @@ export type ISODateString = string;
 
 export type AddressType = "billing" | "shipping";
 export type CouponDiscountType = "percentage" | "fixed";
+export type CouponType = "COD" | "PREPAID";
 export type ReviewRating = 1 | 2 | 3 | 4 | 5;
 
 // ---------- TABLE TYPES ----------
@@ -65,6 +66,7 @@ export interface Category {
 export interface Coupon {
   coupon_id: UUID;
   coupon_code: string;
+  coupon_type?: CouponType | null;
   description?: string | null;
   discount_type?: CouponDiscountType | null;
   discount_value: number;
@@ -99,6 +101,7 @@ export interface Order {
   merchant_order_id?: string | null;
   transaction_id?: string | null;
   address_text?: string | null;
+  coupon_code?: string | null;
 }
 
 export interface OrderItem {

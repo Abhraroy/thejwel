@@ -55,6 +55,10 @@ export default function PaymentGatewayComponent() {
   const [isFetchingCoupon, setIsFetchingCoupon] = useState(false);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [userCouponInput, setUserCouponInput] = useState("");
+  const [userCoupon, setUserCoupon] = useState<MarketingCoupon | null>(null);
+  const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
+  const [userCouponDiscount, setUserCouponDiscount] = useState(0);
   const supabase = createClient();
   const cartItemCount = (cartItems as AnyCart).reduce(
     (sum, item: any) => sum + (Number(item?.quantity ?? 1) || 0),
@@ -69,22 +73,24 @@ export default function PaymentGatewayComponent() {
     }, 0)
     .toFixed(2);
   const orderTotalNumber = Number(orderTotal);
-  const couponMinPurchaseAmount = Number(prepaidCoupon?.min_purchase_amount ?? 0);
+  const activeCoupon = userCoupon ?? (isCouponApplied ? prepaidCoupon : null);
+  const couponMinPurchaseAmount = Number(activeCoupon?.min_purchase_amount ?? 0);
   const prepaidOfferText = prepaidCoupon
     ? prepaidCoupon.discount_type === "fixed"
       ? `₹${Number(prepaidCoupon.discount_value ?? 0).toFixed(2)} off`
       : `${Number(prepaidCoupon.discount_value ?? 0)}% off`
     : "";
-  const isCouponEligible = !prepaidCoupon || orderTotalNumber >= couponMinPurchaseAmount;
+  const isCouponEligible = !activeCoupon || orderTotalNumber >= couponMinPurchaseAmount;
   const prepaidCouponDiscount = (() => {
-    if (!isCouponApplied || !prepaidCoupon) return 0;
-    const discountType = prepaidCoupon.discount_type;
-    const discountValue = Number(prepaidCoupon.discount_value ?? 0);
+    if (!activeCoupon) return userCoupon ? userCouponDiscount : 0;
+    if (userCoupon) return userCouponDiscount;
+    const discountType = activeCoupon.discount_type;
+    const discountValue = Number(activeCoupon.discount_value ?? 0);
     let computedDiscount =
       discountType === "fixed"
         ? discountValue
         : (orderTotalNumber * discountValue) / 100;
-    const maxDiscount = Number(prepaidCoupon.max_discount_amount ?? 0);
+    const maxDiscount = Number(activeCoupon.max_discount_amount ?? 0);
     if (maxDiscount > 0) {
       computedDiscount = Math.min(computedDiscount, maxDiscount);
     }
@@ -188,7 +194,15 @@ export default function PaymentGatewayComponent() {
   }, [AuthenticatedState]);
 
   useEffect(() => {
-    if (isCouponApplied && !isCouponEligible) {
+    if (userCoupon && !isCouponEligible) {
+      setUserCoupon(null);
+      setUserCouponDiscount(0);
+      setUserCouponInput("");
+      setCouponMessage(
+        `Minimum purchase should be ₹${couponMinPurchaseAmount.toFixed(2)} for this coupon.`
+      );
+    }
+    if (isCouponApplied && !userCoupon && !isCouponEligible) {
       setIsCouponApplied(false);
       if (prepaidCoupon) {
         setCouponMessage(
@@ -196,7 +210,7 @@ export default function PaymentGatewayComponent() {
         );
       }
     }
-  }, [isCouponApplied, isCouponEligible, prepaidCoupon, couponMinPurchaseAmount]);
+  }, [isCouponApplied, isCouponEligible, prepaidCoupon, userCoupon, couponMinPurchaseAmount]);
 
   const saveUserDetailsIfNeeded = async () => {
     if (AuthUserId && (!existingFirstName || !existingLastName || !existingEmail)) {
@@ -232,7 +246,7 @@ export default function PaymentGatewayComponent() {
       await saveUserDetailsIfNeeded();
       const res = await axios.post("/api/payment/auth", {
         address_id: selectedAddress,
-        coupon_code: isCouponApplied ? prepaidCoupon?.coupon_code : null,
+        coupon_code: activeCoupon?.coupon_code ?? null,
       }, {
         headers: {
           "Content-Type": "application/json",
@@ -257,8 +271,57 @@ export default function PaymentGatewayComponent() {
       );
       return;
     }
+    setUserCoupon(null);
+    setUserCouponInput("");
+    setUserCouponDiscount(0);
     setIsCouponApplied(true);
     setCouponMessage(`Coupon ${prepaidCoupon.coupon_code} applied successfully.`);
+  };
+
+  const handleVerifyUserCoupon = async () => {
+    const code = userCouponInput.trim().toUpperCase();
+    if (!code) {
+      setCouponMessage("Please enter a coupon code");
+      return;
+    }
+    setIsVerifyingCoupon(true);
+    setCouponMessage(null);
+    try {
+      const res = await axios.post("/api/payment/verify-coupon", {
+        coupon_code: code,
+        order_total: orderTotalNumber,
+      });
+      if (res.data?.valid) {
+        setUserCoupon({
+          coupon_code: res.data.coupon.coupon_code,
+          description: res.data.coupon.description,
+          discount_type: res.data.coupon.discount_type,
+          discount_value: res.data.coupon.discount_value,
+          min_purchase_amount: res.data.coupon.min_purchase_amount,
+          max_discount_amount: res.data.coupon.max_discount_amount,
+        });
+        setUserCouponDiscount(res.data.discount_amount ?? 0);
+        setIsCouponApplied(false);
+        setCouponMessage(`You saved ₹${(res.data.discount_amount ?? 0).toFixed(2)}! Coupon applied.`);
+      } else {
+        setUserCoupon(null);
+        setUserCouponDiscount(0);
+        setCouponMessage(res.data?.message ?? "Invalid coupon code");
+      }
+    } catch (err: any) {
+      setUserCoupon(null);
+      setUserCouponDiscount(0);
+      setCouponMessage(err?.response?.data?.message ?? "Could not verify coupon. Try again.");
+    } finally {
+      setIsVerifyingCoupon(false);
+    }
+  };
+
+  const handleRemoveUserCoupon = () => {
+    setUserCoupon(null);
+    setUserCouponInput("");
+    setUserCouponDiscount(0);
+    setCouponMessage(null);
   };
 
   const handleAddressSuccess = () => {
@@ -301,6 +364,9 @@ export default function PaymentGatewayComponent() {
     setExistingLastName(null);
     setExistingEmail(null);
     setLoadingUserData(false);
+    setUserCoupon(null);
+    setUserCouponInput("");
+    setUserCouponDiscount(0);
     setInitiatingCheckout(false); // Close the modal
   };
 
@@ -312,6 +378,7 @@ export default function PaymentGatewayComponent() {
       await saveUserDetailsIfNeeded();
       const res = await axios.post("/api/payment/cod", {
         address_id: selectedAddress,
+        coupon_code: activeCoupon?.coupon_code ?? null,
       });
       if (res.status === 200) {
         setPaymentConcluded(true);
@@ -369,15 +436,95 @@ export default function PaymentGatewayComponent() {
         </div>
 
         {showCodConfirmation ? (
-          <CashOnDeliveryConfirmation
-            cartItems={cartItems as AnyCart}
-            selectedAddressDetails={selectedAddressDetails}
-            orderTotal={orderTotal}
-            onBack={() => setShowCodConfirmation(false)}
-            onConfirm={handleConfirmCashOnDelivery}
-            isLoadingConfirm={isPlacingCodOrder}
-            errorMessage={codError}
-          />
+          <div className="flex flex-col flex-1 overflow-hidden">
+            <div className="shrink-0 px-3 sm:px-4 pt-3 sm:pt-4 pb-2">
+              {/* Coupon Code Input - Only visible in Cash on Delivery section */}
+              <div className="rounded-xl border-2 border-amber-200/80 bg-gradient-to-br from-amber-50/90 via-white to-rose-50/70 p-4 shadow-sm mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg" aria-hidden>✨</span>
+                  <h3 className="text-base font-bold text-gray-900">
+                    Got a promo code? Unlock your savings!
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Enter your coupon below and watch the price drop.
+                </p>
+                {userCoupon ? (
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-green-600 font-semibold shrink-0">✓</span>
+                      <div>
+                        <p className="font-bold text-green-800">
+                          {userCoupon.coupon_code} applied — You save ₹{userCouponDiscount.toFixed(2)}!
+                        </p>
+                        <p className="text-sm text-green-700">
+                          Pay ₹{prepaidPayableAmount} instead of ₹{orderTotalNumber.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveUserCoupon}
+                      className="px-2.5 py-1.5 text-xs font-semibold text-green-700 bg-green-100 hover:bg-green-200 rounded-md transition-colors shrink-0"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={userCouponInput}
+                      onChange={(e) => {
+                        setUserCouponInput(e.target.value.toUpperCase());
+                        setCouponMessage(null);
+                      }}
+                      onKeyDown={(e) => e.key === "Enter" && handleVerifyUserCoupon()}
+                      placeholder="Enter coupon code (e.g. SAVE10)"
+                      className="flex-1 px-4 py-2.5 text-base font-medium border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all placeholder:text-gray-400 uppercase tracking-wide"
+                      disabled={isVerifyingCoupon}
+                      aria-label="Coupon code"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyUserCoupon}
+                      disabled={isVerifyingCoupon || !userCouponInput.trim()}
+                      className="px-4 py-2.5 font-bold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all hover:shadow-md active:scale-[0.98] shrink-0"
+                    >
+                      {isVerifyingCoupon ? (
+                        <span className="flex items-center gap-1.5">
+                          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden>
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Verifying…
+                        </span>
+                      ) : (
+                        "Apply"
+                      )}
+                    </button>
+                  </div>
+                )}
+                {couponMessage && !userCoupon && (
+                  <p className={`text-sm mt-2 font-medium ${couponMessage.includes("saved") ? "text-green-600" : "text-rose-600"}`}>
+                    {couponMessage}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <CashOnDeliveryConfirmation
+              cartItems={cartItems as AnyCart}
+              selectedAddressDetails={selectedAddressDetails}
+              orderTotal={activeCoupon ? prepaidPayableAmount.toFixed(2) : orderTotal}
+              couponDiscount={activeCoupon ? prepaidCouponDiscount : 0}
+              onBack={() => setShowCodConfirmation(false)}
+              onConfirm={handleConfirmCashOnDelivery}
+              isLoadingConfirm={isPlacingCodOrder}
+              errorMessage={codError}
+            />
+            </div>
+          </div>
         ) : (
           <>
         {/* Content Area - Scrollable */}
@@ -417,7 +564,7 @@ export default function PaymentGatewayComponent() {
                     </span>
                     <span className="text-gray-700 text-sm font-medium">
                       {cartItemCount} items • ₹{orderTotal}
-                      {isCouponApplied && prepaidCoupon && (
+                      {(activeCoupon || userCoupon) && (
                         <span className="text-green-700"> • Prepaid ₹{prepaidPayableAmount}</span>
                       )}
                     </span>
@@ -479,11 +626,11 @@ export default function PaymentGatewayComponent() {
                         .toFixed(2)}
                     </span>
                   </div>
-                  {isCouponApplied && prepaidCoupon && (
+                  {activeCoupon && (
                     <>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">
-                          Prepaid coupon ({prepaidCoupon.coupon_code}):
+                          Coupon ({activeCoupon.coupon_code}):
                         </span>
                         <span className="text-green-600 font-semibold">
                           -₹{prepaidCouponDiscount.toFixed(2)}
@@ -795,7 +942,7 @@ export default function PaymentGatewayComponent() {
                     <span>Processing...</span>
                   </>
                 ) : AuthenticatedState ? (
-                  isCouponApplied
+                  activeCoupon
                     ? `Proceed to Payment • ₹${prepaidPayableAmount}`
                     : `Proceed to Payment • ₹${orderTotalNumber.toFixed(2)}`
                 ) : (

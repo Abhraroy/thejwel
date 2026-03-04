@@ -22,9 +22,12 @@ export async function POST(request: NextRequest) {
   }
 
   let addressId: string | null = null;
+  let couponCode: string | null = null;
   try {
     const body = await request.json();
     addressId = body?.address_id ?? null;
+    couponCode =
+      typeof body?.coupon_code === "string" ? body.coupon_code.trim() : null;
   } catch {
     return NextResponse.json(
       { message: "No address_id in request body or invalid JSON" },
@@ -48,6 +51,53 @@ export async function POST(request: NextRequest) {
   }
 
   const context = contextRes.data;
+  let totalAmount = context.totalAmount;
+
+  if (couponCode) {
+    const nowIso = new Date().toISOString();
+    const couponRes = await adminsupabase
+      .from("coupons")
+      .select(
+        "coupon_code, discount_type, discount_value, min_purchase_amount, max_discount_amount, usage_limit, usage_count, is_active, valid_from, valid_until"
+      )
+      .eq("coupon_code", couponCode)
+      .eq("is_active", true)
+      .lte("valid_from", nowIso)
+      .gte("valid_until", nowIso)
+      .maybeSingle();
+
+    if (!couponRes.error && couponRes.data) {
+      const coupon = couponRes.data;
+      const usageLimit = Number(coupon.usage_limit ?? 0);
+      const usageCount = Number(coupon.usage_count ?? 0);
+      const minPurchaseAmount = Number(coupon.min_purchase_amount ?? 0);
+
+      if ((usageLimit <= 0 || usageCount < usageLimit) && context.totalAmount >= minPurchaseAmount) {
+        const discountValue = Number(coupon.discount_value ?? 0);
+        let computedDiscount = 0;
+        if (coupon.discount_type === "percentage") {
+          computedDiscount = (context.totalAmount * discountValue) / 100;
+        } else if (coupon.discount_type === "fixed") {
+          computedDiscount = discountValue;
+        }
+
+        const maxDiscountAmount = Number(coupon.max_discount_amount ?? 0);
+        if (maxDiscountAmount > 0) {
+          computedDiscount = Math.min(computedDiscount, maxDiscountAmount);
+        }
+
+        computedDiscount = Math.max(0, Math.min(computedDiscount, context.totalAmount));
+        totalAmount = Math.max(0, Math.round(context.totalAmount - computedDiscount));
+      }
+    }
+  }
+
+  const payableContext = {
+    ...context,
+    totalAmount,
+    amountInPaise: Math.round(totalAmount * 100),
+  };
+
   const now = Date.now();
   const codOrderNumber = `${COD_ORDER_PREFIX}-${context.user.user_id.slice(0, 8)}-${now}`;
 
@@ -77,7 +127,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const orderRes = await createOrderWithItems(context, {
+  const orderRes = await createOrderWithItems(payableContext, {
     orderNumber: codOrderNumber,
     merchantOrderId: codOrderNumber,
     paymentStatus: "pending(cod)",

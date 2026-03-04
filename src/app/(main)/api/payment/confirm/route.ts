@@ -148,6 +148,29 @@ export async function GET(request: NextRequest) {
       console.error("Stock update error:", stockError);
     }
 
+    // Increment coupon usage_count after successful purchase (tracks usage; reduces remaining uses)
+    const couponCode = updatedOrderData?.coupon_code as string | undefined;
+    if (couponCode && typeof couponCode === "string" && couponCode.trim().length > 0) {
+      try {
+        const { data: couponRow } = await adminsupabase
+          .from("coupons")
+          .select("usage_count")
+          .eq("coupon_code", couponCode.trim())
+          .maybeSingle();
+
+        if (couponRow) {
+          const usageCount = Number(couponRow.usage_count ?? 0);
+          const nextUsageCount = Math.max(0, usageCount + 1);
+          await adminsupabase
+            .from("coupons")
+            .update({ usage_count: nextUsageCount })
+            .eq("coupon_code", couponCode.trim());
+        }
+      } catch (couponError) {
+        console.error("Failed to update coupon usage count:", couponError);
+      }
+    }
+
     await createRapidShypOrderForOrder(updatedOrderData.order_id, "PREPAID");
 
     return NextResponse.json(
