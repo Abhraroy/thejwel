@@ -459,12 +459,6 @@ export default function ProductDisplay({
                     {productDetails[0]?.categories?.category_name ?? "--"}
                   </p>
                 </div>
-                <div className="rounded-lg bg-gradient-to-br from-purple-50 to-violet-50 p-2.5 border border-purple-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Weight</p>
-                  <p className="text-xs font-bold text-gray-900">
-                    {productDetails[0]?.weight_grams ?? "--"} <span className="text-[10px] font-normal text-gray-600">grams</span>
-                  </p>
-                </div>
               </div>
 
               {/* Tags */}
@@ -636,12 +630,6 @@ export default function ProductDisplay({
                         </div>
                       </div>
                     )}
-                  <div className="flex justify-between items-center p-3 hover:bg-gray-50 transition-colors">
-                    <span className="text-sm font-medium text-gray-600">Weight</span>
-                    <span className="text-sm font-bold text-gray-900">
-                      {productDetails[0]?.weight_grams ?? "--"} grams
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -824,17 +812,11 @@ export default function ProductDisplay({
               </div>
 
               {/* Product Info Cards */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <div className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-2.5 border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
                   <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Collection</p>
                   <p className="text-xs font-bold text-gray-900">
                     {product?.collection ?? "--"}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-gradient-to-br from-purple-50 to-violet-50 p-2.5 border border-purple-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Weight</p>
-                  <p className="text-xs font-bold text-gray-900">
-                    {product?.weight_grams ?? "--"} <span className="text-[10px] font-normal text-gray-600">grams</span>
                   </p>
                 </div>
               </div>
@@ -980,12 +962,6 @@ export default function ProductDisplay({
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Weight</span>
-                    <span className="font-medium text-gray-900">
-                      {product?.weight_grams ?? "--"} grams
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1153,17 +1129,11 @@ export default function ProductDisplay({
               </div>
 
               {/* Product Info Cards */}
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-3 border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
                   <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Collection</p>
                   <p className="text-xs font-bold text-gray-900">
                     {productDetails[0]?.collection ?? "--"}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-gradient-to-br from-purple-50 to-violet-50 p-3 border border-purple-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Weight</p>
-                  <p className="text-xs font-bold text-gray-900">
-                    {productDetails[0]?.weight_grams ?? "--"} <span className="text-[10px] font-normal text-gray-600">grams</span>
                   </p>
                 </div>
                 <div className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-3 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
