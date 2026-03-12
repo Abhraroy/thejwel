@@ -20,6 +20,7 @@ export default function CategorySection({
               <Link
                 key={category.category_id}
                 href={`/category/${encodeURIComponent(category.slug)}`}
+                prefetch={false}
                 className="flex flex-col items-center group flex-shrink-0 w-20 md:w-24 lg:w-28"
               >
                 {/* Circular Image Container */}

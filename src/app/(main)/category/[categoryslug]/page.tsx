@@ -24,8 +24,8 @@ export async function generateMetadata({
 
   if (!category) {
     return buildPageMetadata({
-      title: "Category Not Found",
-      description: "The requested category does not exist.",
+      title: "Shop Jewellery",
+      description: "Explore jewellery at THE JWEL. Browse categories and discover your next favorite piece.",
       pathname: `/category/${encodeURIComponent(slug)}`,
       noIndex: true,
     });
