@@ -129,7 +129,6 @@ export async function POST(request: NextRequest) {
 
   const orderRes = await createOrderWithItems(payableContext, {
     orderNumber: codOrderNumber,
-    merchantOrderId: codOrderNumber,
     paymentStatus: "pending(cod)",
     orderStatus: "pending",
   });

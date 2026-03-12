@@ -15,7 +15,6 @@ type OrderStatus =
 type PaymentStatus = "pending(cod)" | "pending" | "confirm";
   interface Order {
     order_id: string;
-    merchant_order_id?: string | null;
     user_id: string | null;
     order_date: string;
     shipped_date?: string | null;

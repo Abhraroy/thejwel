@@ -42,7 +42,6 @@ export interface CheckoutContext {
 }
 
 export interface OrderCreationOptions {
-  merchantOrderId?: string | null;
   orderNumber?: string | null;
   paymentStatus?: string;
   orderStatus?: string;
@@ -195,7 +194,6 @@ export async function createOrderWithItems(
 > {
   const orderPayload: Record<string, unknown> = {
     user_id: context.user.user_id,
-    merchant_order_id: options.merchantOrderId || null,
     order_number: options.orderNumber || null,
     order_status: options.orderStatus || "pending",
     payment_status: options.paymentStatus || "pending",

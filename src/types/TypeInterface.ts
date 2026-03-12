@@ -98,7 +98,6 @@ export interface Order {
   order_date?: ISODateString | null;
   shipped_date?: ISODateString | null;
   delivered_date?: ISODateString | null;
-  merchant_order_id?: string | null;
   transaction_id?: string | null;
   address_text?: string | null;
   coupon_code?: string | null;

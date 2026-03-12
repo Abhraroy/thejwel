@@ -21,7 +21,6 @@ type OrderStatus =
 interface Order {
   order_id: string;
   order_number?: string | null;
-  merchant_order_id?: string | null;
   user_id: string | null;
   order_date: string;
   shipped_date?: string | null;

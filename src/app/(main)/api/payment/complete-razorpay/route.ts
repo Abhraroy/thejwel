@@ -93,7 +93,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const now = Date.now();
+  const prepaidOrderNumber = `PREPAID-${payableContext.user.user_id.slice(0, 8)}-${now}`;
+
   const orderRes = await createOrderWithItems(payableContext, {
+    orderNumber: prepaidOrderNumber,
     paymentStatus: "confirm",
     orderStatus: "processing",
     transactionId: razorpayPaymentId,

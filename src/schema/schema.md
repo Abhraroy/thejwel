@@ -101,7 +101,6 @@ CREATE TABLE public.orders (
   order_date timestamp without time zone DEFAULT now(),
   shipped_date timestamp without time zone,
   delivered_date timestamp without time zone,
-  merchant_order_id character varying,
   transaction_id character varying,
   address_text text,
   coupon_code character varying,
