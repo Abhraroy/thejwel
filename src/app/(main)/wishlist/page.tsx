@@ -269,7 +269,7 @@ export default function WishlistPage() {
             <div className="h-8 w-48 bg-gray-200 animate-pulse rounded mb-2" />
             <div className="h-4 w-60 bg-gray-200 animate-pulse rounded" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {Array.from({ length: 8 }).map((_, idx) => (
               <ProductCard key={idx} product={{}} isLoading />
             ))}
@@ -338,7 +338,7 @@ export default function WishlistPage() {
 
         {/* Wishlist Items Grid */}
         {wishlistItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {wishlistItems.map((product) => (
               <ProductCard
                 key={product.product_id || product.wishlist_item_id}
