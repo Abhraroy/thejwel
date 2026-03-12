@@ -39,14 +39,13 @@
 
 import axios from "axios";
 import { useStore } from "@/zustandStore/zustandStore";
+import { hydrateCartAfterLogin } from "@/utilityFunctions/CartFunctions";
 
 export const userSignIn = async (
   completeOtp: string,
   customerMobno: string,
   supabase: any
 ) => {
-  
-
   // 2️⃣ Verify OTP with Supabase
   const {
     data: { session },
@@ -72,23 +71,33 @@ export const userSignIn = async (
       phone: customerMobno,
     });
 
-    const { user, cart_id, wishlist_id } = data;
+    const { user, cart, wishlist } = data;
+    const cartId =
+      typeof cart === "string" ? cart : cart?.cart_id ?? null;
+    const wishlistId = typeof wishlist === "string" ? wishlist : wishlist ?? null;
 
-    // 4️⃣ Hydrate Zustand (CLIENT SIDE ✅)
+    // 4️⃣ Hydrate Zustand (CLIENT SIDE)
     const store = useStore.getState();
     store.setAuthenticatedState(true);
     store.setAuthUserId(user.user_id);
-    store.setCartId(cart_id ?? null);
-    store.setWishlistId(wishlist_id ?? null);
+    store.setCartId(cartId);
+    store.setWishlistId(wishlistId ?? null);
 
-    // 5️⃣ Return clean result
+    // 5️⃣ Hydrate cart instantly (merge local + fetch DB cart, update count)
+    if (cartId) {
+      await hydrateCartAfterLogin(cartId, supabase, store.setCartItems);
+    } else {
+      store.setCartItems([]);
+    }
+
+    // 6️⃣ Return clean result
     return {
       success: true,
       error: null,
       session,
       user,
-      cart_id,
-      wishlist_id,
+      cart_id: cartId,
+      wishlist_id: wishlistId,
       message: "User signed in successfully",
     };
   } catch (apiError: any) {

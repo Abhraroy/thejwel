@@ -346,3 +346,71 @@ export const getDbCartCount = async (cartId: string, supabase: any): Promise<num
     if (error || !data) return 0;
     return data.reduce((sum: number, item: any) => sum + (item.quantity ?? 0), 0);
 }
+
+/**
+ * Merges local cart into DB, fetches full cart via getCartData, and calls setCartItems.
+ * Use after login to hydrate cart instantly without page refresh.
+ */
+export const hydrateCartAfterLogin = async (
+  cartId: string,
+  supabase: SupabaseClient,
+  setCartItems: (items: AnyCart) => void
+): Promise<void> => {
+  if (typeof window === "undefined") return;
+
+  try {
+    const localCartItems = localStorage.getItem("cartItems");
+    if (localCartItems) {
+      const localCartItemsArray: LocalCart = JSON.parse(localCartItems);
+      if (Array.isArray(localCartItemsArray) && localCartItemsArray.length > 0) {
+        const { data: existingCartItems, error: fetchError } = await supabase
+          .from("cart_items")
+          .select("product_id, quantity")
+          .eq("cart_id", cartId);
+
+        if (!fetchError && existingCartItems) {
+          const existingProductsMap = new Map(
+            existingCartItems.map((item) => [item.product_id, item.quantity])
+          );
+
+          const updatePromises = localCartItemsArray.map(async (item) => {
+            const productId = item.products?.product_id;
+            const localQuantity = item.quantity || 1;
+            if (!productId) return;
+
+            if (existingProductsMap.has(productId)) {
+              const currentQuantity = existingProductsMap.get(productId) || 0;
+              await supabase
+                .from("cart_items")
+                .update({ quantity: currentQuantity + localQuantity })
+                .eq("cart_id", cartId)
+                .eq("product_id", productId);
+            } else {
+              await supabase.from("cart_items").insert({
+                cart_id: cartId,
+                product_id: productId,
+                quantity: localQuantity,
+              });
+            }
+          });
+
+          await Promise.allSettled(updatePromises);
+        }
+        localStorage.removeItem("cartItems");
+      }
+    }
+
+    const { success, data } = await getCartData(cartId, supabase);
+    if (success && data) {
+      setCartItems(data);
+    } else {
+      setCartItems([]);
+    }
+  } catch (error) {
+    console.error("hydrateCartAfterLogin error:", error);
+    const { success, data } = await getCartData(cartId, supabase);
+    if (success && data) setCartItems(data);
+    else setCartItems([]);
+    localStorage.removeItem("cartItems");
+  }
+}
