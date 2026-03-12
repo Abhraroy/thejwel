@@ -151,6 +151,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
 }
 
 export default function RootLayout({
@@ -173,8 +174,8 @@ export default function RootLayout({
             email: "support@thejwel.in",
             telephone: "+91-9875512028",
             sameAs: [
-              "https://facebook.com",
-              "https://instagram.com",
+              "https://www.facebook.com/share/1CAgfENN3c/?mibextid=wwXIfr",
+              "https://www.instagram.com/thejwel.in?igsh=MW5mY2ZkNnhlcHEwYg==",
               "https://twitter.com",
               "https://youtube.com",
             ],

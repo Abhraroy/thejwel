@@ -1,4 +1,3 @@
-import PhonePe from "./PhonePe";
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { useStore } from "@/zustandStore/zustandStore";
@@ -11,6 +10,8 @@ import PhoneNumberInput from "../AuthUI/PhoneNumberInput";
 import OtpInput from "../AuthUI/OtpInput";
 import AddressForm from "../Address/AddressForm";
 import CashOnDeliveryConfirmation from "./CashOnDeliveryConfirmation";
+import RazorPayButton from "./RazorPay";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import type { AnyCart } from "@/types/CartTypes";
 
@@ -25,7 +26,7 @@ type MarketingCoupon = {
 
 export default function PaymentGatewayComponent() {
   const router = useRouter();
-  const [transacToken, setTransacToken] = useState<string | null>(null);
+  // const [transacToken, setTransacToken] = useState<string | null>(null);
   const {
     setInitiatingCheckout,
     cartItems,
@@ -42,6 +43,10 @@ export default function PaymentGatewayComponent() {
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
   const [showCodConfirmation, setShowCodConfirmation] = useState(false);
+  const [prepaidOrderData, setPrepaidOrderData] = useState<{
+    razorpay_order_id: string;
+    total_amount: number;
+  } | null>(null);
   const [isPlacingCodOrder, setIsPlacingCodOrder] = useState(false);
   const [codError, setCodError] = useState<string | null>(null);
   const [userFirstName, setUserFirstName] = useState<string>("");
@@ -50,6 +55,7 @@ export default function PaymentGatewayComponent() {
   const [existingFirstName, setExistingFirstName] = useState<string | null>(null);
   const [existingLastName, setExistingLastName] = useState<string | null>(null);
   const [existingEmail, setExistingEmail] = useState<string | null>(null);
+  const [existingPhoneNumber, setExistingPhoneNumber] = useState<string | null>(null);
   const [loadingUserData, setLoadingUserData] = useState(false);
   const [prepaidCoupon, setPrepaidCoupon] = useState<MarketingCoupon | null>(null);
   const [isFetchingCoupon, setIsFetchingCoupon] = useState(false);
@@ -118,10 +124,10 @@ export default function PaymentGatewayComponent() {
         setLoadingAddresses(true);
         setLoadingUserData(true);
         try {
-          // Fetch user data for name and email
+          // Fetch user data for name, email, and phone
           const { data: userData, error: userError } = await supabase
             .from("users")
-            .select("first_name, last_name, email")
+            .select("first_name, last_name, email, phone_number")
             .eq("user_id", AuthUserId)
             .single();
 
@@ -129,6 +135,7 @@ export default function PaymentGatewayComponent() {
             setExistingFirstName(userData.first_name || null);
             setExistingLastName(userData.last_name || null);
             setExistingEmail(userData.email || null);
+            setExistingPhoneNumber(userData.phone_number || null);
             if (userData.first_name) setUserFirstName(userData.first_name);
             if (userData.last_name) setUserLastName(userData.last_name);
             if (userData.email) setUserEmail(userData.email);
@@ -240,24 +247,29 @@ export default function PaymentGatewayComponent() {
     }
   };
 
-  const getAuthToken = async () => {
+  const handleProceedToPayment = async () => {
     setIsLoadingPayment(true);
     try {
       await saveUserDetailsIfNeeded();
-      const res = await axios.post("/api/payment/auth", {
-        address_id: selectedAddress,
-        coupon_code: activeCoupon?.coupon_code ?? null,
-      }, {
-        headers: {
-          "Content-Type": "application/json",
+      const res = await axios.post(
+        "/api/payment/createOrder",
+        {
+          address_id: selectedAddress,
+          coupon_code: activeCoupon?.coupon_code ?? null,
         },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setShowCodConfirmation(false);
+      setPrepaidOrderData({
+        razorpay_order_id: res.data.razorpay_order_id,
+        total_amount: res.data.razorpay_order.amount / 100,
       });
-      console.log("res", res);
-      setTransacToken(res.data.data.redirectUrl);
-      localStorage.setItem("merchantOrderId", res.data.merchantOrderId);
-    } catch (error) {
-      console.error("Error getting auth token:", error);
-      // You might want to show an error message to the user here
+    } catch (error: any) {
+      console.error("Error creating order:", error);
     } finally {
       setIsLoadingPayment(false);
     }
@@ -347,10 +359,10 @@ export default function PaymentGatewayComponent() {
 
   // Reset all payment state to default
   const resetPaymentState = () => {
-    setTransacToken(null);
     setShowPhoneNumberInput(true);
     setShowOrderdetails(false);
     setShowCodConfirmation(false);
+    setPrepaidOrderData(null);
     setIsPlacingCodOrder(false);
     setCodError(null);
     setAddresses([]);
@@ -577,7 +589,50 @@ export default function PaymentGatewayComponent() {
                 )}
               </button>
               {showOrderdetails && (
-                <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
+                  {/* Product list with thumbnails */}
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {(cartItems as AnyCart).map((item: any, index: number) => {
+                      const product = item?.products ?? item?.product ?? item;
+                      const productName = product?.product_name ?? product?.name ?? "Product";
+                      const qty = Number(item?.quantity ?? 1) || 0;
+                      const price = Number(product?.final_price ?? product?.price ?? 0);
+                      const lineTotal = price * qty;
+                      const thumbnail =
+                        product?.thumbnail_image ??
+                        product?.product_images?.[0]?.image_url ??
+                        product?.image_url ??
+                        null;
+                      return (
+                        <div
+                          key={`${product?.product_id ?? index}`}
+                          className="flex items-center gap-2 rounded-md border border-gray-200 bg-white p-2"
+                        >
+                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded border border-gray-100">
+                            {thumbnail ? (
+                              <Image
+                                src={thumbnail}
+                                alt={productName}
+                                fill
+                                className="object-cover"
+                                sizes="48px"
+                              />
+                            ) : (
+                              <div className="h-full w-full bg-gray-100" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {productName}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {qty} × ₹{price.toFixed(2)} = ₹{lineTotal.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal:</span>
                     <span className="text-gray-900 font-semibold">
@@ -923,12 +978,56 @@ export default function PaymentGatewayComponent() {
 
         {/* Footer with Continue Button */}
         <div className="w-full px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-200 bg-gray-50">
-          {!transacToken ? (
-            <>
+          <>
+            {prepaidOrderData ? (
+              <RazorPayButton
+                amount={prepaidOrderData.total_amount}
+                razorpayOrderId={prepaidOrderData.razorpay_order_id}
+                prefill={{
+                  name: [existingFirstName || userFirstName, existingLastName || userLastName].filter(Boolean).join(" ").trim() || undefined,
+                  email: (existingEmail || userEmail) || undefined,
+                  contact: existingPhoneNumber || undefined,
+                }}
+                onPaymentInitiated={() => setInitiatingCheckout(false)}
+                onSuccess={async (response) => {
+                  try {
+                    const completeRes = await axios.post(
+                      "/api/payment/complete-razorpay",
+                      {
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                      },
+                      { headers: { "Content-Type": "application/json" } }
+                    );
+                    if (completeRes.status === 200) {
+                      setPaymentConcluded(true);
+                      setShowPaymentConcluded(true);
+                      resetPaymentState();
+                      router.push("/account/orders");
+                    } else {
+                      alert(
+                        "Could not complete order. Contact support with payment ID: " +
+                          response.razorpay_payment_id
+                      );
+                    }
+                  } catch (error: any) {
+                    const msg =
+                      error?.response?.data?.message ??
+                      "Could not complete order.";
+                    alert(
+                      msg +
+                        " Contact support with payment ID: " +
+                        response.razorpay_payment_id
+                    );
+                  }
+                }}
+              />
+            ) : (
               <button
                 onClick={() => {
                   setShowCodConfirmation(false);
-                  getAuthToken();
+                  handleProceedToPayment();
                 }}
                 className="w-full px-4 py-2.5 bg-[#DECAF2] text-[#360000] font-bold rounded-lg transition-all duration-200 text-base shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
                 disabled={isCheckoutDisabled}
@@ -949,7 +1048,16 @@ export default function PaymentGatewayComponent() {
                   "Login to Continue"
                 )}
               </button>
+            )}
               {AuthenticatedState && (
+                prepaidOrderData ? (
+                  <button
+                    onClick={() => setPrepaidOrderData(null)}
+                    className="w-full mt-2 px-4 py-2.5 border border-[#360000]/30 bg-[#CAF2FF] text-[#360000] font-bold rounded-lg transition-all duration-200 text-base shadow-sm hover:shadow-md"
+                  >
+                    ← Back to payment options
+                  </button>
+                ) : (
                 <button
                   onClick={() => {
                     setCodError(null);
@@ -960,6 +1068,7 @@ export default function PaymentGatewayComponent() {
                 >
                   Cash on Delivery
                 </button>
+                )
               )}
               {AuthenticatedState && !isLoadingPayment && (
                 (() => {
@@ -979,10 +1088,7 @@ export default function PaymentGatewayComponent() {
                   );
                 })()
               )}
-            </>
-          ) : (
-            <PhonePe redirectUrl={transacToken ?? ""} onPaymentInitiated={resetPaymentState} />
-          )}
+          </>
         </div>
         </>
         )}

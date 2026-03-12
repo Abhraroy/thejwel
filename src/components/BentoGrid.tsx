@@ -40,14 +40,14 @@ export default function BentoGrid({
   className = '',
 }: BentoGridProps) {
   return (
-    <section className={`w-full bg-theme-cream py-8 md:py-12 lg:py-16 ${className}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#360000] mb-8 md:mb-12 text-center">
+    <section className={`w-full bg-theme-cream py-4 md:py-6 lg:py-8 ${className}`}>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#360000] mb-5 md:mb-7 text-center">
           {title}
         </h2>
 
         {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5 lg:gap-6">
           {categories.map((category) => (
             <Link
               key={category.id}

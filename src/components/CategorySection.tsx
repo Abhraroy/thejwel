@@ -7,15 +7,15 @@ export default function CategorySection({
   // className = '' 
 }: { categories: any }) {
   return (
-    <section className={`w-full py-8 md:py-12  `} >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl text-gray-900 mb-6 md:mb-8 text-center font-josefin-sans tracking-wider">
+    <section className={`w-full py-4 md:py-6 lg:py-8`} >
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl text-gray-900 mb-4 md:mb-5 text-center font-josefin-sans tracking-wider">
           Shop by Category
         </h2>
         
         {/* Horizontal Scrollable Container */}
-        <div className="overflow-x-auto scrollbar-hide px-2">
-          <div className="flex gap-4 md:gap-6 pb-4 min-w-max md:min-w-0 md:justify-center md:flex-wrap pt-[1rem]  ">
+        <div className="overflow-x-auto scrollbar-hide px-1">
+          <div className="flex gap-3 md:gap-5 pb-3 min-w-max md:min-w-0 md:justify-center md:flex-wrap pt-2">
             {categories.map((category: any) => (
               <Link
                 key={category.category_id}

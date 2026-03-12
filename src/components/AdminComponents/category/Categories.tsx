@@ -101,7 +101,6 @@ export default function Categories({ isDarkTheme, category }: CategoriesProps) {
     if (file) {
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
-      console.log('previewUrl of category image ', previewUrl);
       setFormData((prev) => ({
         ...prev,
         image: file,

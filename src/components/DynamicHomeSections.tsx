@@ -20,6 +20,16 @@ const ImageGalleryCarousel = dynamic(
   { ssr: false }
 );
 
+interface GalleryImage {
+  src: string;
+  alt: string;
+  title?: string;
+}
+
+interface ImageGalleryProps {
+  images?: GalleryImage[];
+}
+
 interface ProductSectionProps {
   products: Product[];
 }
@@ -36,6 +46,6 @@ export function DynamicNewArrivals({ products }: ProductSectionProps) {
   return <NewArrivalSection products={products} />;
 }
 
-export function DynamicImageGallery() {
-  return <ImageGalleryCarousel />;
+export function DynamicImageGallery({ images }: ImageGalleryProps) {
+  return <ImageGalleryCarousel images={images} />;
 }

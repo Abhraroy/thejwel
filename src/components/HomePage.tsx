@@ -64,18 +64,22 @@ function ImageGalleryCarouselSkeleton() {
   );
 }
 
+type GalleryImage = { src: string; alt: string; title?: string };
+
 export default function HomePage({
   categoriesProps,
   bestSellers,
   newArrivals,
   featuredProducts,
   heroItems,
+  galleryItems = [],
 }: {
   categoriesProps: any;
   bestSellers: Product[];
   newArrivals: Product[];
   featuredProducts: Product[];
   heroItems: { imageLink: string; redirectRoute: string | null }[];
+  galleryItems?: GalleryImage[];
 }) {
   const carouselItemsArray = heroItems.map((item, index) => {
     const image = (
@@ -158,7 +162,7 @@ export default function HomePage({
         <OccasionSection />
 
         <InViewSection fallback={<ImageGalleryCarouselSkeleton />}>
-          <DynamicImageGallery />
+          <DynamicImageGallery images={galleryItems} />
         </InViewSection>
       </main>
     </div>

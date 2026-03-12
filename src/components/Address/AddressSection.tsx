@@ -22,7 +22,6 @@ const PlusIcon = ({className}: {className: string}) => (
 );
 
 export default function AddressSection({addresses, userId}: {addresses: any[], userId: string}) {
-  console.log('addresses from address section', addresses);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const handleAddAddress = () => {
     setShowAddressForm(true);

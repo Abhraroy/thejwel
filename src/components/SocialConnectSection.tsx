@@ -9,12 +9,12 @@ import {
 const socialLinks = [
   {
     name: "Facebook",
-    href: "https://facebook.com",
+    href: "https://www.facebook.com/share/1CAgfENN3c/?mibextid=wwXIfr",
     Icon: FaFacebookF,
   },
   {
     name: "Instagram",
-    href: "https://instagram.com",
+    href: "https://www.instagram.com/thejwel.in?igsh=MW5mY2ZkNnhlcHEwYg==",
     Icon: FaInstagram,
   },
   {
@@ -34,7 +34,7 @@ export default function SocialConnectSection() {
     <section
       id="social-connect"
       aria-labelledby="social-connect-heading"
-      className="bg-theme-cream/80 border-y border-theme-sage/15"
+      className="hidden lg:block bg-theme-cream/80 border-y border-theme-sage/15"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">

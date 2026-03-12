@@ -109,7 +109,6 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
     const file = e.target.files?.[0];
     if (file) {
       const previewUrl = URL.createObjectURL(file);
-      console.log("image status after uploading to cloudflare", previewUrl)
       setFormData((prev) => ({
         ...prev,
         subcategory_image_url: file,
@@ -172,8 +171,6 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
     async (e: React.SubmitEvent) => {
       e.preventDefault();
       setSubmitting(true);
-      console.log("category_id", category_id);
-      console.log("Subcategory form data:", formData);
 
       try {
         let imageUrl: string | undefined = undefined;
@@ -205,11 +202,9 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
         category_id: category_id,
         subcategory_image_url: imageUrl || formData.subcategory_image_url
       }
-      console.log("formDataWithCategoryId",formDataWithCategoryId)
       
       if(isEditingSubCategory){
         const result = await updateSubCategory(formDataWithCategoryId)
-        console.log("result of update sub category",result)
         if(result.success){
           router.refresh();
           handleCancel();
@@ -244,7 +239,6 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
     };
 
   const handleEditSubCategory = (subcategory_id: string,subcategory_name: string,subcategory_image_url: string | null | undefined,is_active: boolean | null | undefined) => {
-    console.log("subcategory_id",subcategory_id)
     if(subcategory_id){
       setFormData({
         subcategory_id: subcategory_id,

@@ -19,7 +19,7 @@ export default async function Home() {
 
   const productFields = "product_id, product_name, thumbnail_image, base_price, final_price, discount_percentage, stock_quantity";
 
-  const [catgoriesRes, bestSellersRes, newArrivalsRes, featuredProductsRes, heroImagesRes] = await Promise.all([
+  const [catgoriesRes, bestSellersRes, newArrivalsRes, featuredProductsRes, heroImagesRes, galleryImagesRes] = await Promise.all([
     supabase.from("categories").select("category_id, category_name, slug, category_image_url"),
     supabase
       .from("products")
@@ -46,6 +46,11 @@ export default async function Home() {
       .from("image_resources")
       .select("image_link, redirect_route")
       .eq("section_name", "homepage_hero"),
+    supabase
+      .from("image_resources")
+      .select("image_link, redirect_route")
+      .eq("section_name", "homepage_image_gallery")
+      .order("created_at", { ascending: true }),
   ]);
   
 
@@ -53,6 +58,15 @@ export default async function Home() {
     imageLink: item.image_link,
     redirectRoute: item.redirect_route?.trim() || null,
   }));
+
+  const galleryItems = (galleryImagesRes.data || []).map(
+    (item: { image_link: string; redirect_route: string | null }) => ({
+      src: item.image_link,
+      alt: "Jewelry gallery image",
+      title: item.redirect_route?.trim() || undefined,
+    })
+  );
+
   return (
     <HomePage
       categoriesProps={catgoriesRes.data || []}
@@ -60,6 +74,7 @@ export default async function Home() {
       newArrivals={newArrivalsRes.data || []}
       featuredProducts={featuredProductsRes.data || []}
       heroItems={heroItems}
+      galleryItems={galleryItems}
     />
   )
 }

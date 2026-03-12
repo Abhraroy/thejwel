@@ -2,16 +2,20 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { adminLogin, checkAdminAuth } from './actions'
+import { adminLogin, createAdmin, checkAdminAuth } from './actions'
+
+type Mode = 'login' | 'create'
 
 export default function AdminLoginPage() {
   const router = useRouter()
+  const [mode, setMode] = useState<Mode>('login')
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     key: ''
   })
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -53,26 +57,42 @@ export default function AdminLoginPage() {
       ...prev,
       [name]: value
     }))
-    // Clear error when user starts typing
     if (error) setError('')
+    if (successMessage) setSuccessMessage('')
+  }
+
+  const switchMode = (newMode: Mode) => {
+    setMode(newMode)
+    setError('')
+    setSuccessMessage('')
   }
 
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+    setSuccessMessage('')
 
     try {
-      const result = await adminLogin(formData)
-
-      if (result.success) {
-        // Redirect to admin dashboard on successful login
-        router.push('/admin')
+      if (mode === 'create') {
+        const result = await createAdmin(formData)
+        if (result.success) {
+          setSuccessMessage(result.message || 'Admin created. You can now log in.')
+          setFormData({ email: '', password: '', key: formData.key })
+          setMode('login')
+        } else {
+          setError(result.error || 'Failed to create admin')
+        }
       } else {
-        setError(result.error || 'Login failed')
+        const result = await adminLogin(formData)
+        if (result.success) {
+          router.push('/admin')
+        } else {
+          setError(result.error || 'Login failed')
+        }
       }
-    } catch (err: any) {
-      console.error('Login error:', err)
+    } catch (err: unknown) {
+      console.error(mode === 'create' ? 'Create admin error:' : 'Login error:', err)
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
@@ -100,13 +120,45 @@ export default function AdminLoginPage() {
               Admin Portal
             </h1>
             <p className="text-gray-600">
-              Sign in to access the admin dashboard
+              {mode === 'login' ? 'Sign in to access the admin dashboard' : 'Create a new admin account'}
             </p>
+          </div>
+
+          {/* Tab toggle */}
+          <div className="flex rounded-lg border border-gray-200 p-1 bg-gray-50">
+            <button
+              type="button"
+              onClick={() => switchMode('login')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                mode === 'login'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Login
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode('create')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                mode === 'create'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Create Admin
+            </button>
           </div>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {error}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+              {successMessage}
             </div>
           )}
 
@@ -164,7 +216,7 @@ export default function AdminLoginPage() {
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white text-gray-900 placeholder-gray-400"
-                placeholder="Enter your admin key"
+                placeholder={mode === 'login' ? 'Enter admin key' : 'Enter admin key (required for creation)'}
               />
             </div>
 
@@ -179,8 +231,10 @@ export default function AdminLoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Signing in...
+                  {mode === 'create' ? 'Creating...' : 'Signing in...'}
                 </>
+              ) : mode === 'create' ? (
+                'Create Admin'
               ) : (
                 'Login'
               )}

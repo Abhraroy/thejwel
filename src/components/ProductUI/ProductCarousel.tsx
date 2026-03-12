@@ -42,10 +42,10 @@ export default function ProductCarousel({
 
   return (
     <section
-      className={`w-full bg-theme-cream py-6 md:py-10 lg:py-12 ${className}`}
+      className={`w-full bg-theme-cream py-4 md:py-6 lg:py-8 ${className}`}
     >
       {/* Section Heading */}
-      <div className="flex items-center justify-center mb-5 md:mb-8 px-4 sm:px-6 lg:px-8">
+      <div className="flex items-center justify-center mb-3 md:mb-5 px-3 sm:px-4 lg:px-6">
         {tagSlug ? (
           <Link href={`/Tags/${tagSlug}`} className="group">
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#360000] relative inline-block font-josefin-sans tracking-wider group-hover:text-[#360000]/80 transition-colors">
@@ -66,7 +66,7 @@ export default function ProductCarousel({
       </div>
 
       {/* Carousel Container */}
-      <div className="relative w-full px-4 sm:px-6 lg:px-8">
+      <div className="relative w-full px-3 sm:px-4 lg:px-6">
         <Swiper
           modules={[Navigation, FreeMode]}
           onSwiper={(swiper) => { swiperRef.current = swiper; }}
@@ -80,7 +80,7 @@ export default function ProductCarousel({
             1024: { slidesPerView: 3 },
             1280: { slidesPerView: 4 },
           }}
-          className="pb-10 md:pb-12"
+          className="pb-6 md:pb-8"
         >
           {products.map((product) => (
             <SwiperSlide key={product.product_id}>
@@ -98,7 +98,7 @@ export default function ProductCarousel({
           <>
             <button
               onClick={() => swiperRef.current?.slidePrev()}
-              className="absolute left-4 md:left-6 lg:left-8 top-1/2 -translate-y-1/2 bg-white border border-theme-sage/30 hover:border-theme-olive text-[#360000] rounded-full p-2 md:p-3 shadow-lg transition-all duration-200 z-10 hidden md:flex items-center justify-center hover:bg-theme-cream"
+              className="absolute left-3 md:left-4 lg:left-6 top-1/2 -translate-y-1/2 bg-white border border-theme-sage/30 hover:border-theme-olive text-[#360000] rounded-full p-2 md:p-3 shadow-lg transition-all duration-200 z-10 hidden md:flex items-center justify-center hover:bg-theme-cream"
               aria-label="Scroll left"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 md:w-6 md:h-6">
@@ -107,7 +107,7 @@ export default function ProductCarousel({
             </button>
             <button
               onClick={() => swiperRef.current?.slideNext()}
-              className="absolute right-4 md:right-6 lg:right-8 top-1/2 -translate-y-1/2 bg-white border border-theme-sage/30 hover:border-theme-olive text-[#360000] rounded-full p-2 md:p-3 shadow-lg transition-all duration-200 z-10 hidden md:flex items-center justify-center hover:bg-theme-cream"
+              className="absolute right-3 md:right-4 lg:right-6 top-1/2 -translate-y-1/2 bg-white border border-theme-sage/30 hover:border-theme-olive text-[#360000] rounded-full p-2 md:p-3 shadow-lg transition-all duration-200 z-10 hidden md:flex items-center justify-center hover:bg-theme-cream"
               aria-label="Scroll right"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 md:w-6 md:h-6">

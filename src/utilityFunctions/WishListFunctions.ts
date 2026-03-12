@@ -17,7 +17,6 @@ export const getOrCreateWishlist = async (userId: string, supabase: SupabaseClie
         }
 
         if (existingWishlist && existingWishlist.wishlist_id) {
-            console.log("Wishlist exists:", existingWishlist.wishlist_id);
             return { success: true, wishlist_id: existingWishlist.wishlist_id };
         }
 
@@ -33,7 +32,6 @@ export const getOrCreateWishlist = async (userId: string, supabase: SupabaseClie
             return { success: false, error: createError, wishlist_id: null };
         }
 
-        console.log("Wishlist created:", newWishlist.wishlist_id);
         return { success: true, wishlist_id: newWishlist.wishlist_id };
     } catch (error) {
         console.error("Error in getOrCreateWishlist:", error);
@@ -66,7 +64,6 @@ export const addToDbWishlist = async (product: productWithImages, userId: string
         }
 
         if (existingItem) {
-            console.log("Product already in wishlist");
             return { success: true, alreadyExists: true };
         }
 
@@ -85,7 +82,6 @@ export const addToDbWishlist = async (product: productWithImages, userId: string
             return { success: false, error: error };
         }
 
-        console.log("Product added to wishlist:", data);
         return { success: true, data: data };
     } catch (error) {
         console.error("Error in addToDbWishlist:", error);
@@ -119,7 +115,6 @@ export const removeFromDbWishlist = async (product: productWithImages, userId: s
             return { success: false, error: error };
         }
 
-        console.log("Product removed from wishlist");
         return { success: true };
     } catch (error) {
         console.error("Error in removeFromDbWishlist:", error);

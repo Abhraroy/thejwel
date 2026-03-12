@@ -122,10 +122,10 @@ export default function ImageGalleryCarousel({
   if (slideCount === 0) return null;
 
   return (
-    <section className={`w-full bg-transparent py-12 md:py-20 ${className}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className={`w-full bg-transparent py-6 md:py-10 lg:py-12 ${className}`}>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
         {/* Section Header */}
-        <div className="text-center mb-10 md:mb-14">
+        <div className="text-center mb-6 md:mb-8">
           <h2 className="text-3xl md:text-4xl lg:text-6xl text-[#360000] mb-3 font-josefin-sans tracking-wider">
             Our Gallery
           </h2>
@@ -259,7 +259,7 @@ export default function ImageGalleryCarousel({
           </div>
 
           {/* Dots Indicator */}
-          <div className="mt-6 md:mt-8 flex items-center justify-center">
+          <div className="mt-4 md:mt-5 flex items-center justify-center">
             <div className="flex items-center gap-2 rounded-full bg-black/5 px-3 py-2 ring-1 ring-black/10 backdrop-blur-sm">
               {safeImages.map((img, index) => {
                 const isActive = currentIndex === index;

@@ -116,7 +116,6 @@ export default function OtpInput({ length = 6, onComplete, containerClassName = 
     
     if (completeOtp.length === length) {
       setError('');
-      console.log('OTP:', completeOtp);
       
       const {success,error,session,message} = await userSignIn(completeOtp,customerMobno,supabase)
       if(success && !error && session){
@@ -125,10 +124,6 @@ export default function OtpInput({ length = 6, onComplete, containerClassName = 
           return;
         }
         setOtpInputState();
-        console.log('session', session)
-        console.log("cartId", CartId)
-
-        console.log('redirecting to account')
         router.push('/account');
       }
       else{

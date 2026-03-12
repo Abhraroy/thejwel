@@ -71,7 +71,6 @@ export default function WishlistPage() {
         .maybeSingle();
 
       if (wishlistError) {
-        console.log("Error fetching wishlist:", wishlistError);
         setWishlistItems([]);
         setLoading(false);
         return;
@@ -132,7 +131,6 @@ export default function WishlistPage() {
         }
 
         if (!itemsData || itemsData.length === 0) {
-          console.log("No wishlist items found");
           setWishlistItems([]);
           setLoading(false);
           return;
@@ -177,7 +175,6 @@ export default function WishlistPage() {
       }
 
       if (!data || data.length === 0) {
-        console.log("No wishlist items found");
         setWishlistItems([]);
         setLoading(false);
         return;

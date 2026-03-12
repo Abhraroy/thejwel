@@ -310,6 +310,36 @@ html,body {
   }
 }
 
+@layer utilities {
+  /* iOS Safari-friendly viewport sizing (dynamic browser UI) */
+  .min-h-dvh {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .h-dvh {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* Optional: stable “small viewport” sizing for certain UIs */
+  .min-h-svh {
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+  .h-svh {
+    height: 100vh;
+    height: 100svh;
+  }
+
+  /* Safe-area helpers (notch / home indicator) */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
 button{
   font-family: var(--font-open-sans);
   font-weight: 400;

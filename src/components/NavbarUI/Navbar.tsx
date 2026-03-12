@@ -263,7 +263,6 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
         q: query,
         result_limit: 10,
       });
-      console.log("data", data);
 
       if (error) {
         console.error('Error fetching search suggestions:', error);
@@ -387,11 +386,9 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
       icon: <UserIcon className="w-6 h-6 md:w-7 md:h-7" />,
       onClick: () => {
         if(AuthenticatedState){
-          console.log("isAuthenticated",AuthenticatedState)
           router.push('/account');
         }
         else{
-          console.log("not authenticated")
           setMobnoInputState();
         }
       },

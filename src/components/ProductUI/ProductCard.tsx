@@ -108,7 +108,6 @@ export default function ProductCard({
       //   setWishListItems(updatedWishList);
       //   console.log("removed from wishList", updatedWishList);
       // }
-      console.log("product",product)
     }
   };
 
@@ -140,9 +139,6 @@ export default function ProductCard({
     setIsCartClicked(true);
     onAddToCart?.(product.product_id);
     if(AuthenticatedState){
-      console.log("AuthenticatedState",AuthenticatedState)
-      console.log("AuthUserId",AuthUserId)
-      console.log("CartId",CartId)
       const updatedItem = await addToDbCart(product,CartId,supabase)
       if (Array.isArray(updatedItem)) {
         setCartItems(updatedItem);

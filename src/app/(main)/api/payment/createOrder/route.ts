@@ -1,14 +1,10 @@
-import axios from "axios";
+import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/lib/supabase/server";
 import adminsupabase from "@/lib/supabase/admin";
-import { getAuthToken } from "@/app/utils/Phonepe";
+import { prepareCheckoutContext } from "@/app/utils/orderCheckout";
+import razorpayInstance from "@/app/utils/RazorPay";
 import { redis } from "@/app/utils/Redis";
-import {
-  createOrderWithItems,
-  prepareCheckoutContext,
-} from "@/app/utils/orderCheckout";
 
 export async function POST(request: NextRequest) {
   const userSupabase = await createClient();
@@ -39,7 +35,7 @@ export async function POST(request: NextRequest) {
   } = await userSupabase.auth.getUser();
   if (!user?.phone) {
     return NextResponse.json(
-      { message: "User is not authenticated found" },
+      { message: "User is not authenticated" },
       { status: 404 }
     );
   }
@@ -71,7 +67,10 @@ export async function POST(request: NextRequest) {
 
     if (couponRes.error || !couponRes.data) {
       return NextResponse.json(
-        { message: "Coupon is invalid, expired, or not valid for prepaid payment" },
+        {
+          message:
+            "Coupon is invalid, expired, or not valid for prepaid payment",
+        },
         { status: 400 }
       );
     }
@@ -107,7 +106,10 @@ export async function POST(request: NextRequest) {
       computedDiscount = Math.min(computedDiscount, maxDiscountAmount);
     }
 
-    computedDiscount = Math.max(0, Math.min(computedDiscount, context.totalAmount));
+    computedDiscount = Math.max(
+      0,
+      Math.min(computedDiscount, context.totalAmount)
+    );
     discountedTotalAmount = Math.max(
       0,
       Math.round(context.totalAmount - computedDiscount)
@@ -120,103 +122,40 @@ export async function POST(request: NextRequest) {
     totalAmount: discountedTotalAmount,
     amountInPaise: discountedAmountInPaise,
   };
-  const merchantOrderId = uuidv4();
 
-  const authToken = await getAuthToken();
-  if (!authToken) {
-    return NextResponse.json(
-      { message: "Error getting auth token" },
-      { status: 500 }
-    );
-  }
-
-  redis.set(merchantOrderId, authToken, { ex: 1200 });
-  const paymentRequestHeaders = {
-    "Content-Type": "application/json",
-    Authorization: `O-Bearer ${authToken}`,
-  };
-
-  const orderRes = await createOrderWithItems(payableContext, {
-    merchantOrderId,
-    paymentStatus: "pending",
-    orderStatus: "pending",
-    couponCode: couponCode || undefined,
-  });
-
-  if (!orderRes.success) {
-    return NextResponse.json(
-      { message: orderRes.message },
-      { status: orderRes.status }
-    );
-  }
-
-  const paymentRequestBody = {
-    amount: payableContext.amountInPaise,
-    expireAfter: 1200,
-    metaInfo: {
-      udf1: payableContext.user.user_id,
-      udf2: merchantOrderId,
-      udf3: payableContext.totalAmount,
-      udf4: payableContext.lastAddedProductTime || "additional-information-4",
-      udf5: payableContext.cartId || "additional-information-5",
-      udf6: payableContext.addressId || "additional-information-6",
-      udf7: payableContext.addressText || null,
-      udf8: couponCode || "additional-information-8",
-      udf9: "additional-information-9",
-      udf10: "additional-information-10",
-      udf11: "additional-information-11",
-      udf12: "additional-information-12",
-      udf13: "additional-information-13",
-      udf14: "additional-information-14",
-      udf15: "additional-information-15",
-    },
-    paymentFlow: {
-      type: "PG_CHECKOUT",
-      message: "Payment message used for collect requests",
-      merchantUrls: {
-        redirectUrl:
-          "https://following-blessed-fold-edgar.trycloudflare.com/redirect",
-      },
-    },
-    merchantOrderId,
-    paymentModeConfig: {
-      enabledPaymentModes: [
-        { type: "UPI_INTENT" },
-        { type: "UPI_COLLECT" },
-        { type: "UPI_QR" },
-        { type: "NET_BANKING" },
-        {
-          type: "CARD",
-          cardTypes: ["DEBIT_CARD", "CREDIT_CARD"],
-        },
-      ],
-    },
+  const checkoutData = {
+    context: payableContext,
+    couponCode: couponCode ?? null,
   };
 
   try {
-    const paymentRes = await axios.post(
-      "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay",
-      paymentRequestBody,
-      { headers: paymentRequestHeaders }
-    );
+    const receipt = crypto.randomUUID().replace(/-/g, "");
+    const razorpayOptions = {
+      amount: payableContext.amountInPaise,
+      currency: "INR",
+      receipt,
+    };
+    const razorpayOrder = await razorpayInstance.orders.create(razorpayOptions);
 
-    if (paymentRes.data?.orderId) {
-      await adminsupabase
-        .from("orders")
-        .update({
-          order_number: paymentRes.data.orderId,
-          payment_status: "pending",
-        })
-        .eq("order_id", orderRes.order.order_id);
-    }
+    const redisKey = `razorpay_checkout:${razorpayOrder.id}`;
+    await redis.set(redisKey, JSON.stringify(checkoutData), { ex: 1800 });
 
     return NextResponse.json(
-      { data: paymentRes.data, merchantOrderId },
+      {
+        total_amount: payableContext.totalAmount,
+        amount_in_paise: payableContext.amountInPaise,
+        address_id: payableContext.addressId,
+        address_text: payableContext.addressText,
+        user_id: payableContext.user.user_id,
+        razorpay_order_id: razorpayOrder.id,
+        razorpay_order: razorpayOrder,
+      },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (razorpayError: unknown) {
+    console.error("Razorpay order creation failed:", razorpayError);
     return NextResponse.json(
-      { message: "Error creating payment", error },
+      { message: "Failed to create payment order", error: razorpayError },
       { status: 500 }
     );
   }

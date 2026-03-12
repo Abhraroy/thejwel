@@ -113,7 +113,6 @@ export default function CartBootstrapper() {
     const checkAuthentication = async () => {
       const { data, error } = await supabase.auth.getUser();
       if (error || !data?.user) {
-        console.log("User not authenticated");
         setAuthenticatedState(false);
         setCartItems(getLocalCartItems());
         return;
@@ -125,11 +124,9 @@ export default function CartBootstrapper() {
         .eq("phone_number", "+" + data?.user?.phone)
         .single();
       if (userError || !userData?.user_id) {
-        console.log("User logged but no data found in db");
         setAuthenticatedState(false);
         return;
       }
-      console.log("User data found in db", userData?.user_id);
       setAuthUserId(userData?.user_id);
       const { data: cartData, error: cartError } = await supabase
         .from("cart")
@@ -137,7 +134,6 @@ export default function CartBootstrapper() {
         .eq("user_id", userData?.user_id)
         .maybeSingle();
       if (cartError || !cartData?.cart_id) {
-        console.log("No cart found for user", userData?.user_id);
         const {
           success,
           data: newCart,
@@ -145,7 +141,6 @@ export default function CartBootstrapper() {
         } = await createCart(userData.user_id, supabase);
 
         if (success && newCart?.cart_id) {
-          console.log("Recovery cart created:", newCart.cart_id);
           setCartId(newCart.cart_id);
           setCartItems([]);
           await mergeLocalCartItems(newCart.cart_id);

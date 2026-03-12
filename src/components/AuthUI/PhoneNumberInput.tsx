@@ -46,14 +46,11 @@ export default function PhoneNumberInput({ containerClassName = 'w-full bg-white
       cleanedPhone = '+91' + cleanedPhone;
       if (cleanedPhone.length === 13) {
         setError('');
-        console.log('Phone number:', cleanedPhone);
         // Handle phone number submission here
         // You can add your logic to store or verify the phone number
         const { data, error } = await supabase.auth.signInWithOtp({
             phone: cleanedPhone,
           })
-        console.log('data', data)
-        console.log('error', error)
         setCustomerMobno(cleanedPhone);
         setMobnoInputState();
         setOtpInputState();

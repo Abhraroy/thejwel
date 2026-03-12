@@ -96,12 +96,12 @@ export default function Footer({ className = "" }: FooterProps) {
   const socialLinks: SocialIcon[] = [
     {
       name: "Facebook",
-      href: "https://facebook.com",
+      href: "https://www.facebook.com/share/1CAgfENN3c/?mibextid=wwXIfr",
       icon: <FacebookIcon />,
     },
     {
       name: "Instagram",
-      href: "https://instagram.com",
+      href: "https://www.instagram.com/thejwel.in?igsh=MW5mY2ZkNnhlcHEwYg==",
       icon: <InstagramIcon />,
     },
     {

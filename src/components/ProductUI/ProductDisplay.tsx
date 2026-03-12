@@ -62,7 +62,6 @@ export default function ProductDisplay({
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
   const [productImageView,setProductImageView] = useState(false);
-  console.log(productDetails);
 
   const { cartItems, setCartItems, AuthenticatedState, CartId, setIsCartOpen } = useStore();
   const supabase = createClient();
@@ -226,7 +225,6 @@ export default function ProductDisplay({
       };
 
       if (AuthenticatedState && CartId) {
-        console.log("Adding to database cart");
         const updatedItems = await addToDbCart(productToAdd, CartId, supabase);
         if (Array.isArray(updatedItems)) {
           setCartItems(updatedItems);
@@ -237,7 +235,6 @@ export default function ProductDisplay({
           alert("Failed to add item to cart. Please try again.");
         }
       } else {
-        console.log("Adding to local cart");
         const updatedItems = addToLocalCart(productToAdd);
         setCartItems(updatedItems);
         setCartSuccess(true);

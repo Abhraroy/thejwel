@@ -223,7 +223,6 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
     e.preventDefault();
   
     const startTime = performance.now();
-    console.log('🚀 Product creation/update started at:', new Date().toISOString());
   
     try {
       setIsSaving(true);
@@ -234,7 +233,6 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
       // Upload thumbnail if it's a new file
       if (formData.thumbnail_image instanceof File) {
         const thumbnailStartTime = performance.now();
-        console.log('📤 Starting thumbnail upload...');
         
         const formDataToSend = new FormData();
         formDataToSend.append("file", formData.thumbnail_image);
@@ -252,17 +250,14 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
 
         thumbnailUrl = response.data.url;
         thumbnailUploadTime = performance.now() - thumbnailStartTime;
-        console.log(`✅ Thumbnail upload completed in ${thumbnailUploadTime.toFixed(2)}ms`);
       } else if (typeof formData.thumbnail_image === 'string') {
         // If it's already a URL (editing mode), use it as is
         thumbnailUrl = formData.thumbnail_image;
-        console.log('ℹ️ Using existing thumbnail URL (edit mode)');
       }
   
       if (editingProduct) {
         // Update existing product
         const updateStartTime = performance.now();
-        console.log('🔄 Starting product update...');
         
         const result = await updateProduct(editingProduct.product_id, {
           ...formData,
@@ -273,9 +268,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
         if (!result.success) {
           throw new Error(result.error);
         }
-        console.log("result", result);
         const updateTime = performance.now() - updateStartTime;
-        console.log(`✅ Product update completed in ${updateTime.toFixed(2)}ms`);
         
         router.refresh();
         setShowAddProduct(false);
@@ -283,7 +276,6 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
       } else {
         // Create new product
         const createStartTime = performance.now();
-        console.log('✨ Starting product creation...');
         
         const result = await createProduct({
           ...formData,
@@ -296,7 +288,6 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
         }
   
         const createTime = performance.now() - createStartTime;
-        console.log(`✅ Product creation completed in ${createTime.toFixed(2)}ms`);
         
         router.refresh();
         setShowAddProduct(false);
@@ -304,11 +295,6 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
       }
       
       const totalTime = performance.now() - startTime;
-      console.log(`⏱️ Total operation time: ${totalTime.toFixed(2)}ms (${(totalTime / 1000).toFixed(2)}s)`);
-      if (thumbnailUploadTime > 0) {
-        console.log(`   - Thumbnail upload: ${thumbnailUploadTime.toFixed(2)}ms`);
-        console.log(`   - Product ${editingProduct ? 'update' : 'creation'}: ${(totalTime - thumbnailUploadTime).toFixed(2)}ms`);
-      }
     } catch (error: any) {
       const totalTime = performance.now() - startTime;
       console.error('❌ Error occurred after', totalTime.toFixed(2), 'ms:', error);

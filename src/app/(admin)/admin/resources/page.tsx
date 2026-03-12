@@ -92,6 +92,7 @@ export default function ResourcesPage() {
   const sectionNameOptions = [
     { value: "", label: "Select section" },
     { value: "homepage_hero", label: "Homepage Hero (carousel)" },
+    { value: "homepage_image_gallery", label: "Homepage Image Gallery (carousel)" },
     { value: "banner_summer", label: "Banner Summer" },
     { value: "banner_festival", label: "Banner Festival" },
     { value: "banner_seasonal", label: "Banner Seasonal" },

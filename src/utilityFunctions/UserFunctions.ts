@@ -7,5 +7,4 @@ export const createMyUser = async (customerMobno:string) => {
         phone:customerMobno,
       }),
     })
-    console.log('response from createMyUser', response)
   }

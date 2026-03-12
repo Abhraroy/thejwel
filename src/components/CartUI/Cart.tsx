@@ -21,7 +21,6 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
   const [loading, setLoading] = useState(true);
   // Sample cart items for UI demonstration
   const supabase = createClient();
-  console.log("Initializing supabase",supabase)
 
   const calculateSubTotal = (items: AnyCart) => {
     if (!Array.isArray(items) || items.length === 0) return 0;
@@ -37,7 +36,6 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
     if(AuthenticatedState){
       if (!isDbCartItem(item)) return;
        const updatedItem = await decreaseQuantityFromDbCart(item as DbCartItem,CartId,supabase)
-       console.log("updatedItem",updatedItem)
         if (Array.isArray(updatedItem)) setCartItems(updatedItem);
     }
     else{
@@ -85,10 +83,6 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
 
     if(AuthenticatedState){
       if (!isDbCartItem(item)) return;
-      console.log("Adding to db cart")
-      console.log("product_id", productId)
-      console.log("CartId",CartId)
-      console.log("supabase",supabase)
       const payload = item.products ?? { product_id: productId as string };
       const updatedItem = await addToDbCart(payload,CartId,supabase)
       if (Array.isArray(updatedItem)) setCartItems(updatedItem);
@@ -129,10 +123,6 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
     };
     getCartItems();
   }, [AuthenticatedState, CartId]);
-
-  useEffect(() => {
-    console.log("cart items from cart", cartItems);
-  }, [cartItems]);
 
   return (
     <>

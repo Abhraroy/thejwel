@@ -199,7 +199,6 @@ export default function AccountPage() {
       // First check if there's an active session
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session) {
-        console.log("No active session, redirecting to home");
         router.push("/");
         return;
       }
@@ -210,7 +209,6 @@ export default function AccountPage() {
         router.push("/");
         return;
       }
-      console.log("data from auth getUser", data);
       if (!data?.user?.phone) {
         router.push("/");
         return;
@@ -236,8 +234,6 @@ export default function AccountPage() {
         alert("Error fetching user profile. Please try again.");
         return;
       }
-      
-      console.log("user", user);
       
       // Sort orders by order_date descending and limit to 3
       const sortedOrders = (user?.orders ?? [])
@@ -275,8 +271,6 @@ export default function AccountPage() {
   const handleEmailUpdate = async (e: React.SubmitEvent) => {
     e.preventDefault();
     const email = (e.target as HTMLFormElement).email.value;
-    console.log("email", email);
-    console.log("userId", userData?.user_id);
 
     if (!userData?.user_id) {
       console.error("User ID is missing");
@@ -292,7 +286,6 @@ export default function AccountPage() {
       .single();
 
     if (error) {
-      console.log("error", error);
       alert("Failed to update email. Please try again.");
       return;
     }
@@ -308,8 +301,6 @@ export default function AccountPage() {
     e.preventDefault();
     const firstName = (e.target as HTMLFormElement).firstName.value;
     const lastName = (e.target as HTMLFormElement).lastName.value;
-    console.log("firstName", firstName, "lastName", lastName);
-    console.log("userId", userData?.user_id);
 
     if (!userData?.user_id) {
       console.error("User ID is missing");
@@ -325,7 +316,6 @@ export default function AccountPage() {
       .single();
 
     if (error) {
-      console.log("error", error);
       alert("Failed to update name. Please try again.");
       return;
     }
@@ -980,13 +970,9 @@ export default function AccountPage() {
                 </a>
                 <button
                   onClick={async () => {
-                    // Logout functionality can be added here
-                    console.log("Logout clicked");
                     const { error } = await supabase.auth.signOut();
                     if (error) {
-                      console.log("error", error);
                     } else {
-                      console.log("Logout successful");
                       setAuthenticatedState(false);
                       setAuthUserId("");
                       setCartId("");

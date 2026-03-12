@@ -1,10 +1,9 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-
+import supabaseAdmin from '@/lib/supabase/admin'
+import { ADMIN_SECRET_KEY } from '@/lib/admin-config'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import crypto from 'crypto'
 
 interface LoginFormData {
   email: string
@@ -12,16 +11,23 @@ interface LoginFormData {
   key: string
 }
 
-// Hash function to hash the admin key (matches seed_admin.js)
-function hashKey(data: string): string {
-  return crypto.createHash('sha256').update(data).digest('hex')
+function isValidAdminKey(key: string): boolean {
+  return key === ADMIN_SECRET_KEY && key.length > 0
 }
 
 export async function adminLogin(formData: LoginFormData) {
   try {
+    // Step 1: Verify server-side admin key
+    if (!isValidAdminKey(formData.key)) {
+      return {
+        success: false,
+        error: 'Invalid admin key'
+      }
+    }
+
     const supabase = await createClient()
 
-    // Step 1: Authenticate with Supabase Auth
+    // Step 2: Authenticate with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email: formData.email,
       password: formData.password,
@@ -42,35 +48,14 @@ export async function adminLogin(formData: LoginFormData) {
       }
     }
 
-    // Step 2: Verify user has ADMIN type metadata
+    // Step 3: Verify user has ADMIN type metadata
     const userMetadata = authData.user.user_metadata
     if (!userMetadata || userMetadata.TYPE !== 'ADMIN') {
       console.error('User is not an admin:', authData.user.id)
-      // Sign out the user since they're not authorized
       await supabase.auth.signOut()
       return {
         success: false,
         error: 'Access denied: Admin privileges required'
-      }
-    }
-
-    // Step 3: Hash the provided key and verify it exists for this admin
-    const hashedKey = hashKey(formData.key)
-
-    const { data: keyData, error: keyError } = await supabase
-      .from('admin_key')
-      .select('id, admin, created_at')
-      .eq('key', hashedKey)
-      .eq('admin', authData.user.id)
-      .single()
-
-    if (keyError || !keyData) {
-      console.error('Invalid admin key for user:', authData.user.id)
-      // Sign out the user since key verification failed
-      await supabase.auth.signOut()
-      return {
-        success: false,
-        error: 'Invalid admin key'
       }
     }
 
@@ -80,9 +65,62 @@ export async function adminLogin(formData: LoginFormData) {
     return {
       success: true
     }
-
   } catch (error) {
     console.error('Admin login error:', error)
+    return {
+      success: false,
+      error: 'An unexpected error occurred. Please try again.'
+    }
+  }
+}
+
+export async function createAdmin(formData: LoginFormData) {
+  try {
+    // Step 1: Verify server-side admin key
+    if (!isValidAdminKey(formData.key)) {
+      return {
+        success: false,
+        error: 'Invalid admin key'
+      }
+    }
+
+    // Step 2: Create user with Supabase Admin API
+    const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email: formData.email,
+      password: formData.password,
+      email_confirm: true,
+      user_metadata: { TYPE: 'ADMIN' },
+    })
+
+    if (createError) {
+      if (createError.message?.toLowerCase().includes('already registered')) {
+        return {
+          success: false,
+          error: 'An account with this email already exists. Use Login instead.'
+        }
+      }
+      console.error('Admin creation error:', createError.message)
+      return {
+        success: false,
+        error: createError.message || 'Failed to create admin account'
+      }
+    }
+
+    if (!authData.user) {
+      return {
+        success: false,
+        error: 'Failed to create admin account'
+      }
+    }
+
+    console.log('Admin created successfully:', authData.user.email)
+    revalidatePath('/admin/login')
+    return {
+      success: true,
+      message: 'Admin account created. You can now log in.'
+    }
+  } catch (error) {
+    console.error('Admin creation error:', error)
     return {
       success: false,
       error: 'An unexpected error occurred. Please try again.'
