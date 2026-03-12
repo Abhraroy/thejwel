@@ -83,7 +83,7 @@ export default function HamburgerSidebar({
                   {categories.map((category: any) => (
                     <li key={category.category_id}>
                       <Link
-                        href={`/category/${category.slug}`}
+                        href={`/category/${encodeURIComponent(category.slug)}`}
                         className="flex items-center gap-3 px-4 py-3 bg-[#CAF2FF] text-[#360000] hover:bg-[#CAF2FF]/70 rounded-lg transition-colors"
                         onClick={onClose}
                       >

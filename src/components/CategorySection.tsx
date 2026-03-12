@@ -19,7 +19,7 @@ export default function CategorySection({
             {categories.map((category: any) => (
               <Link
                 key={category.category_id}
-                href={`/category/${category.slug}`}
+                href={`/category/${encodeURIComponent(category.slug)}`}
                 className="flex flex-col items-center group flex-shrink-0 w-20 md:w-24 lg:w-28"
               >
                 {/* Circular Image Container */}
