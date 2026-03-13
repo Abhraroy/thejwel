@@ -1,8 +1,6 @@
 "use client";
 
-import Script from "next/script";
-import { useState } from "react";
-import { toAbsoluteUrl } from "@/lib/seo/metadata";
+import { useState, useEffect } from "react";
 
 interface RazorPayProps {
     /** Amount in rupees */
@@ -40,18 +38,54 @@ export default function RazorPayButton({
     onPaymentInitiated,
 }: RazorPayProps) {
     const [sdkReady, setSdkReady] = useState(false);
+    const [loadError, setLoadError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        let cancelled = false;
+        const start = Date.now();
+        const maxWaitMs = 15_000;
+
+        const check = () => {
+            if (cancelled) return;
+
+            if ((window as any).Razorpay) {
+                setSdkReady(true);
+                setLoadError(null);
+                return;
+            }
+
+            if (Date.now() - start > maxWaitMs) {
+                setSdkReady(false);
+                setLoadError(
+                    "Razorpay is taking too long to load. Please check your internet connection or disable ad-blockers and try again."
+                );
+                return;
+            }
+
+            setTimeout(check, 300);
+        };
+
+        check();
+
+        return () => { cancelled = true; };
+    }, []);
 
     const initiatePayment = async () => {
         const RazorpayConstructor = (window as any).Razorpay;
 
         if (!RazorpayConstructor) {
-            alert("Razorpay is still loading… please wait");
+            setSdkReady(false);
+            setLoadError(
+                "Razorpay could not be initialized. Please refresh the page or disable any ad-blockers and try again."
+            );
             return;
         }
 
         const options: Record<string, unknown> = {
             key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
-            amount: Math.round(amount * 100), // convert rupees to paise
+            amount: Math.round(amount * 100),
             currency: "INR",
             name,
             description,
@@ -123,18 +157,6 @@ export default function RazorPayButton({
 
     return (
         <>
-            <Script
-                src="https://checkout.razorpay.com/v1/checkout.js"
-                strategy="afterInteractive"
-                onLoad={() => {
-                    setSdkReady(true);
-                }}
-                onError={() => {
-                    setSdkReady(false);
-                    alert("Razorpay failed to load!!");
-                }}
-            />
-
             <button
                 disabled={!sdkReady}
                 onClick={initiatePayment}
@@ -145,6 +167,9 @@ export default function RazorPayButton({
             >
                 {sdkReady ? "Pay with Razorpay" : "Loading Razorpay…"}
             </button>
+            {loadError && (
+                <p className="mt-2 text-xs text-red-600 font-medium">{loadError}</p>
+            )}
         </>
     );
 }

@@ -66,7 +66,7 @@ export default function ProductCarousel({
       </div>
 
       {/* Carousel Container */}
-      <div className="relative w-full px-3 sm:px-4 lg:px-6">
+      <div className="relative w-full max-w-full overflow-hidden px-3 sm:px-4 lg:px-6">
         <Swiper
           modules={[Navigation, FreeMode]}
           onSwiper={(swiper) => { swiperRef.current = swiper; }}

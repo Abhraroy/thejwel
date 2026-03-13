@@ -150,8 +150,8 @@ export default function ImageGalleryCarousel({
           </div>
 
           {/* Main Carousel */}
-          <div className="relative overflow-visible">
-            <div className="relative mx-auto h-85 sm:h-110 md:h-135 lg:h-150 max-w-6xl">
+          <div className="relative max-w-full overflow-hidden">
+            <div className="relative mx-auto h-85 max-w-6xl sm:h-110 md:h-135 lg:h-150">
               <Swiper
                 modules={[Autoplay, EffectCoverflow]}
                 onSwiper={(swiper) => { swiperRef.current = swiper; }}

@@ -104,6 +104,19 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
   }, [cartItems]);
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow || "";
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     const getCartItems = async () => {
       setLoading(true);
       if (!AuthenticatedState) {
@@ -137,7 +150,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
 
       {/* Cart Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full w-full max-w-full sm:w-96 md:w-[420px] lg:w-[480px] bg-[#DECAF2] text-white shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-full max-w-[100vw] sm:w-96 md:w-[420px] lg:w-[480px] bg-[#DECAF2] text-white shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
