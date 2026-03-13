@@ -207,15 +207,31 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Prevent body scroll when sidebar is open
+  const sidebarScrollYRef = useRef(0);
+
   useEffect(() => {
+    const unlockBody = () => {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      window.scrollTo(0, sidebarScrollYRef.current);
+    };
+
     if (isSidebarOpen) {
-      document.body.style.overflow = 'hidden';
+      sidebarScrollYRef.current = window.scrollY;
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${sidebarScrollYRef.current}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
     } else {
-      document.body.style.overflow = 'unset';
+      unlockBody();
     }
+
     return () => {
-      document.body.style.overflow = 'unset';
+      unlockBody();
     };
   }, [isSidebarOpen]);
 

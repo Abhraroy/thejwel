@@ -46,7 +46,7 @@ export default function HamburgerSidebar({
     <>
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/20 bg-opacity-50 z-50 md:hidden"
+          className="fixed inset-0 bg-black/20 bg-opacity-50 z-50 md:hidden touch-none overscroll-none"
           onClick={onClose}
         />
       )}
