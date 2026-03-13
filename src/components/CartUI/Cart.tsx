@@ -1,7 +1,7 @@
 "use client";
 
 import { useStore } from "@/zustandStore/zustandStore";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { addToDbCart, addToLocalCart, decreaseQuantityFromDbCart, decreaseQuantityFromLocalCart, getCartData, removeFromDbCart, removeFromLocalCart, getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";
 import CartItem from "./CartItem";
@@ -103,31 +103,31 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
     }
   }, [cartItems]);
 
+  const scrollYRef = useRef(0);
+
   useEffect(() => {
-    if (!isOpen) {
-      return;
+    const unlockBody = () => {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      window.scrollTo(0, scrollYRef.current);
+    };
+
+    if (isOpen) {
+      scrollYRef.current = window.scrollY;
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollYRef.current}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+    } else {
+      unlockBody();
     }
 
-    const scrollY = window.scrollY;
-    const prevOverflow = document.body.style.overflow;
-    const prevPosition = document.body.style.position;
-    const prevTop = document.body.style.top;
-    const prevLeft = document.body.style.left;
-    const prevRight = document.body.style.right;
-
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = "0";
-    document.body.style.right = "0";
-
     return () => {
-      document.body.style.overflow = prevOverflow || "";
-      document.body.style.position = prevPosition || "";
-      document.body.style.top = prevTop || "";
-      document.body.style.left = prevLeft || "";
-      document.body.style.right = prevRight || "";
-      window.scrollTo(0, scrollY);
+      unlockBody();
     };
   }, [isOpen]);
 

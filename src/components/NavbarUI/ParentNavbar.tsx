@@ -21,7 +21,7 @@ export default function ParentNavbar() {
             <Navbar cartCount={cartCount} onCartClick={handleOpenCart} />
             {MobnoInputState && !OtpInputState && <PhoneNumberInput />}
             {OtpInputState && !MobnoInputState && <OtpInput />}
-            {isCartOpen && <Cart isOpen={isCartOpen} onClose={handleCloseCart} />}
+            <Cart isOpen={isCartOpen} onClose={handleCloseCart} />
         </div>
     )
 }
