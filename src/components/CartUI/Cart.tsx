@@ -108,11 +108,26 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
       return;
     }
 
-    const previousOverflow = document.body.style.overflow;
+    const scrollY = window.scrollY;
+    const prevOverflow = document.body.style.overflow;
+    const prevPosition = document.body.style.position;
+    const prevTop = document.body.style.top;
+    const prevLeft = document.body.style.left;
+    const prevRight = document.body.style.right;
+
     document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
 
     return () => {
-      document.body.style.overflow = previousOverflow || "";
+      document.body.style.overflow = prevOverflow || "";
+      document.body.style.position = prevPosition || "";
+      document.body.style.top = prevTop || "";
+      document.body.style.left = prevLeft || "";
+      document.body.style.right = prevRight || "";
+      window.scrollTo(0, scrollY);
     };
   }, [isOpen]);
 
@@ -142,7 +157,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity duration-300"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity duration-300 touch-none overscroll-none"
           onClick={onClose}
           aria-hidden="true"
         />
