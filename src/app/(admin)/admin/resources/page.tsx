@@ -43,6 +43,11 @@ function toDateTimeLocalValue(value: Date) {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
+function toDateTimeLocalIST(value: Date): string {
+  const s = value.toLocaleString("sv-SE", { timeZone: "Asia/Kolkata" });
+  return s.slice(0, 16).replace(" ", "T");
+}
+
 function buildInitialCouponForm(): CouponFormData {
   const now = new Date();
   const weekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -55,8 +60,8 @@ function buildInitialCouponForm(): CouponFormData {
     min_purchase_amount: "0",
     max_discount_amount: "",
     usage_limit: "",
-    valid_from: toDateTimeLocalValue(now),
-    valid_until: toDateTimeLocalValue(weekLater),
+    valid_from: toDateTimeLocalIST(now),
+    valid_until: toDateTimeLocalIST(weekLater),
     is_active: true,
   };
 }
@@ -328,8 +333,8 @@ export default function ResourcesPage() {
           : Number(couponForm.max_discount_amount),
       usage_limit:
         couponForm.usage_limit === "" ? null : Number(couponForm.usage_limit),
-      valid_from: new Date(couponForm.valid_from).toISOString(),
-      valid_until: new Date(couponForm.valid_until).toISOString(),
+      valid_from: new Date(couponForm.valid_from + ":00+05:30").toISOString(),
+      valid_until: new Date(couponForm.valid_until + ":00+05:30").toISOString(),
       is_active: couponForm.is_active,
     });
 
@@ -782,7 +787,7 @@ export default function ResourcesPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Valid from
+                    Valid from (IST)
                   </label>
                   <input
                     name="valid_from"
@@ -795,7 +800,7 @@ export default function ResourcesPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Valid until
+                    Valid until (IST)
                   </label>
                   <input
                     name="valid_until"
