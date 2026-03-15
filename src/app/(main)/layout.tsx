@@ -21,6 +21,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { getBaseUrl, toAbsoluteUrl } from "@/lib/seo/metadata";
 import JsonLd from "@/components/seo/JsonLd";
+import MetaPixel from "@/components/analytics/MetaPixel";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -194,6 +195,7 @@ export default function RootLayout({
             },
           }}
         />
+        <MetaPixel />
         <ParentNavbar />
         <CartBootstrapper />
         {children}
