@@ -1,46 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Run the website locally (step-by-step)
 
-## Getting Started
+### 1) Prerequisites
 
-First, run the development server:
+- **Node.js**: install Node 20+ (recommended)
+- **pnpm**: this repo uses `pnpm` (see `package.json` → `packageManager`)
+
+### 2) Install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3) Create environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a file named `.env.local` in the project root.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Minimum required to boot pages that hit the database:
 
-## Learn More
+```bash
+# Supabase (required for most pages + sitemap dynamic URLs)
+NEXT_PUBLIC_SUPABASE_URL="..."
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="..."
+```
 
-To learn more about Next.js, take a look at the following resources:
+Recommended for correct canonical URLs / OpenGraph URLs / robots+sitemap host:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Public site base URL (used for canonical URLs + OG/Twitter + robots/sitemap host)
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+# or
+SITE_URL="http://localhost:3000"
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Optional (only needed for the related features):
 
-## Deploy on Vercel
+```bash
+# Meta Pixel (optional; defaults to a hardcoded id if not set)
+NEXT_PUBLIC_META_PIXEL_ID="..."
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Razorpay (required for payment APIs / checkout)
+RAZORPAY_KEY_ID="..."
+RAZORPAY_KEY_SECRET="..."
+NEXT_PUBLIC_RAZORPAY_KEY_ID="..."
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Upstash Redis (optional; used where Redis is used)
+UPSTASH_REDIS_REST_URL="..."
+UPSTASH_REDIS_REST_TOKEN="..."
+```
 
+### 4) Run the dev server
 
+```bash
+pnpm dev
+```
 
+Open `http://localhost:3000`.
 
+### 5) Production build (optional)
 
+```bash
+pnpm build
+pnpm start
+```
 
+## SEO-related data locations (all places)
 
+### Global SEO (applies site-wide)
 
+- **Root metadata (title/description/canonical/OG/Twitter/robots/icons + Google verification)**: `src/app/(main)/layout.tsx` (exports `metadata`)
+- **Base URL + helpers for canonical/OG/Twitter/robots**: `src/lib/seo/metadata.ts` (`getBaseUrl`, `toAbsoluteUrl`, `buildPageMetadata`)
+- **Structured data (JSON-LD renderer component)**: `src/components/seo/JsonLd.tsx`
+- **Structured data injected globally (Organization + WebSite schema)**: `src/app/(main)/layout.tsx` (uses `JsonLd`)
 
-https://colorhunt.co/palette/feeac9ffcdc9fdacacfd7979
+### Per-route SEO (metadata / canonical / noindex)
+
+- **Home page metadata**: `src/app/(main)/page.tsx` (exports `metadata` via `buildPageMetadata`)
+- **Product page metadata + Product/Breadcrumb JSON-LD**: `src/app/(main)/product/[product_id]/page.tsx` (`generateMetadata`, `JsonLd`)
+- **Category page metadata + ItemList JSON-LD**: `src/app/(main)/category/[categoryslug]/page.tsx` (`generateMetadata`, `JsonLd`)
+- **Collection page metadata + ItemList JSON-LD**: `src/app/(main)/collection/[collection]/page.tsx` (`generateMetadata`, `JsonLd`)
+- **Occasion page metadata + ItemList JSON-LD**: `src/app/(main)/occasion/[occasion]/page.tsx` (`generateMetadata`, `JsonLd`)
+- **Tags page metadata + ItemList JSON-LD**: `src/app/(main)/Tags/[tags]/page.tsx` (`generateMetadata`, `JsonLd`)
+- **Search pages set to noindex**: `src/app/(main)/search/[product_arg]/layout.tsx` (exports `metadata.robots.index = false`)
+- **Account area noindex**: `src/app/(main)/account/layout.tsx` (exports `metadata` with `noIndex: true`)
+- **Wishlist area noindex**: `src/app/(main)/wishlist/layout.tsx` (exports `metadata` with `noIndex: true`)
+- **Admin area noindex**: `src/app/(admin)/layout.tsx` (exports `metadata` with `noIndex: true`)
+
+### Crawling / indexing endpoints
+
+- **`robots.txt` rules + sitemap link**: `src/app/robots.ts`
+- **`sitemap.xml` generation (static + DB-driven dynamic URLs)**: `src/app/sitemap.ts`
+
+### Social sharing assets
+
+- **Default OpenGraph image**: `src/app/opengraph-image.tsx` (served as `/opengraph-image`)
+
+### Analytics / pixels (SEO-adjacent)
+
+- **Google Analytics**: `src/components/analytics/GoogleAnalytics.tsx` (included in `src/app/(main)/layout.tsx`)
+- **Meta Pixel**: `src/components/analytics/MetaPixel.tsx` (included in `src/app/(main)/layout.tsx`)
