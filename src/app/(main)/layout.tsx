@@ -22,6 +22,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import { getBaseUrl, toAbsoluteUrl } from "@/lib/seo/metadata";
 import JsonLd from "@/components/seo/JsonLd";
 import MetaPixel from "@/components/analytics/MetaPixel";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -79,6 +80,9 @@ export const metadata: Metadata = {
     template: "%s | The JWEL",
   },
   description: "Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
+  verification: {
+    google: "oib3Fjzpke7bd7r6asp8sAMS_wujZU-F2FqVA0Ap6yI",
+  },
   alternates: {
     canonical: "/",
   },
@@ -195,6 +199,7 @@ export default function RootLayout({
             },
           }}
         />
+        <GoogleAnalytics />
         <MetaPixel />
         <ParentNavbar />
         <CartBootstrapper />
