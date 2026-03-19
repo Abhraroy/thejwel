@@ -147,6 +147,13 @@ export default function Orders({ initialOrders }: OrdersProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
+  useEffect(() => {
+    console.log("[Orders] initialOrders:", {
+      count: initialOrders?.length ?? 0,
+      firstOrder: initialOrders?.[0] ? { id: initialOrders[0].order_id } : null,
+    });
+  }, [initialOrders]);
+
   const filteredOrders = useMemo(() => {
     const now = new Date();
     const todayStart = startOfDay(now);
@@ -190,6 +197,15 @@ export default function Orders({ initialOrders }: OrdersProps) {
       return matchesStatus && matchesPayment && matchesSearch && matchesDate;
     });
   }, [orders, search, statusFilter, paymentFilter, dateFilter, customDateFrom, customDateTo]);
+
+  console.log("[Orders] filtering:", {
+    total: orders.length,
+    filtered: filteredOrders.length,
+    search,
+    statusFilter,
+    paymentFilter,
+    dateFilter,
+  });
 
   useEffect(() => {
     setCurrentPage(1);

@@ -15,6 +15,14 @@ export async function getOrders() {
     .order("order_date", { ascending: false })
     .limit(100);
 
+  console.log("[getOrders] Supabase response:", {
+    error: error?.message ?? null,
+    dataLength: ordersData?.length ?? 0,
+    firstOrder: ordersData?.[0]
+      ? { id: ordersData[0].order_id, order_number: ordersData[0].order_number }
+      : null,
+  });
+
   if (error) {
     console.error("Error fetching orders:", error);
     return { success: false, data: null, message: error.message };

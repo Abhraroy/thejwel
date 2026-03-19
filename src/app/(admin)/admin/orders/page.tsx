@@ -6,6 +6,12 @@ export default async function OrdersPage() {
   
   const { success, data: ordersData, message } = await getOrders();
 
+  console.log("[OrdersPage] getOrders result:", {
+    success,
+    message,
+    ordersCount: ordersData?.length ?? 0,
+    hasData: !!ordersData,
+  });
 
   if (!success) {
     console.error("Error fetching orders:", message);
