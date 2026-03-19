@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import adminsupabase from "@/lib/supabase/admin";
 import crypto from "crypto";
 
@@ -93,7 +94,8 @@ export async function POST(request: NextRequest) {
         console.log("cart data is different, no order items to be created somebody messed with the cart")
       }
     }
-    
+
+    revalidatePath("/admin/orders");
     return NextResponse.json({ message: "Webhook received" }, { status: 200 });
   }
 }

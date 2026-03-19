@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import adminsupabase from "@/lib/supabase/admin";
 
 type CheckoutCartItem = {
@@ -237,5 +238,6 @@ export async function createOrderWithItems(
     return { success: false, message: "Failed to create order items", status: 500 };
   }
 
+  revalidatePath("/admin/orders");
   return { success: true, order: orderRes.data, orderItemsPayload };
 }

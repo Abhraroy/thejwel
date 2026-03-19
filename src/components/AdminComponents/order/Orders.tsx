@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
+import { getOrders } from "@/app/(admin)/admin/orders/action";
 import {
   updateOrdersStatus,
   updatePaymentStatus,
@@ -148,11 +149,19 @@ export default function Orders({ initialOrders }: OrdersProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    console.log("[Orders] initialOrders:", {
-      count: initialOrders?.length ?? 0,
-      firstOrder: initialOrders?.[0] ? { id: initialOrders[0].order_id } : null,
-    });
+    setOrders(initialOrders ?? []);
   }, [initialOrders]);
+
+  useEffect(() => {
+    const POLL_INTERVAL_MS = 30000;
+    const id = setInterval(async () => {
+      const { success, data } = await getOrders();
+      if (success && data) {
+        setOrders(data);
+      }
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
 
   const filteredOrders = useMemo(() => {
     const now = new Date();
