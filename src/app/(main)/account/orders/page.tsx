@@ -4,6 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import CopyOrderNumberButton from "./CopyOrderNumberButton";
 import { orderItemsWithProducts, orderWithItemsAndProducts, userWithOrdersAndItemsAndProducts } from "@/types/RelationTypeInterface";
 
+const devLog = (...args: unknown[]) => {
+  if (process.env.NODE_ENV === "development") {
+    console.log("[account/orders/page]", ...args);
+  }
+};
 
 
 
@@ -28,6 +33,7 @@ const CalendarIcon = () => (
 
 export default async function OrdersPage() {
   const supabase = await createClient();
+  devLog("page-load:start");
 
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData?.session) redirect("/");
@@ -36,6 +42,7 @@ export default async function OrdersPage() {
   if (error || !data?.user?.phone) redirect("/");
 
   const phoneNumber = "+" + data.user.phone;
+  devLog("fetch-user-orders:start", { phoneSuffix: phoneNumber.slice(-4) });
 
   const { data: user, error: userError } = await supabase
     .from("users")
@@ -63,6 +70,7 @@ export default async function OrdersPage() {
 
 
   if (userError) {
+    devLog("fetch-user-orders:failed", { error: userError.message });
     return (
       <div className="min-h-screen bg-theme-cream">
         <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -91,6 +99,10 @@ export default async function OrdersPage() {
     const dateA = new Date(a.order_date ?? "").getTime();
     const dateB = new Date(b.order_date ?? "").getTime();
     return dateB - dateA;
+  });
+  devLog("fetch-user-orders:success", {
+    userId: user?.user_id ?? null,
+    totalOrders: ordersAll.length,
   });
 
   return (

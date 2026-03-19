@@ -7,6 +7,12 @@ import {
 import { redis } from "@/app/utils/Redis";
 import { createRapidShypOrderForOrder } from "@/app/utils/rapidShyp";
 
+const devLog = (...args: unknown[]) => {
+  if (process.env.NODE_ENV === "development") {
+    console.log("[api/payment/complete-razorpay]", ...args);
+  }
+};
+
 export async function POST(request: NextRequest) {
   let razorpayOrderId: string | null = null;
   let razorpayPaymentId: string | null = null;
@@ -21,6 +27,7 @@ export async function POST(request: NextRequest) {
     razorpaySignature =
       typeof body?.razorpay_signature === "string" ? body.razorpay_signature : null;
   } catch {
+    devLog("invalid-json");
     return NextResponse.json(
       { message: "Invalid request body" },
       { status: 400 }
@@ -28,6 +35,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+    devLog("missing-fields", { razorpayOrderId, razorpayPaymentId, hasSignature: Boolean(razorpaySignature) });
     return NextResponse.json(
       { message: "Missing razorpay_order_id, razorpay_payment_id, or razorpay_signature" },
       { status: 400 }
@@ -41,6 +49,7 @@ export async function POST(request: NextRequest) {
     .digest("hex");
 
   if (expectedSignature !== razorpaySignature) {
+    devLog("signature-mismatch", { razorpayOrderId, razorpayPaymentId });
     return NextResponse.json(
       { message: "Invalid payment signature" },
       { status: 400 }
@@ -51,6 +60,7 @@ export async function POST(request: NextRequest) {
   const storedData = await redis.get<string>(redisKey);
 
   if (!storedData) {
+    devLog("checkout-session-expired", { redisKey });
     return NextResponse.json(
       { message: "Checkout session expired" },
       { status: 410 }
@@ -62,6 +72,7 @@ export async function POST(request: NextRequest) {
     checkoutData =
       typeof storedData === "string" ? JSON.parse(storedData) : storedData;
   } catch {
+    devLog("invalid-checkout-data", { redisKey });
     return NextResponse.json(
       { message: "Invalid checkout data" },
       { status: 500 }
@@ -70,6 +81,7 @@ export async function POST(request: NextRequest) {
 
   const { context: payableContext, couponCode } = checkoutData;
   if (!payableContext) {
+    devLog("missing-payable-context", { redisKey });
     return NextResponse.json(
       { message: "Invalid checkout context" },
       { status: 500 }
@@ -83,6 +95,10 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (!existingOrder.error && existingOrder.data) {
+    devLog("duplicate-payment-detected", {
+      razorpayPaymentId,
+      orderId: existingOrder.data.order_id,
+    });
     await redis.del(redisKey);
     return NextResponse.json(
       {
@@ -105,6 +121,11 @@ export async function POST(request: NextRequest) {
   });
 
   if (!orderRes.success) {
+    devLog("createOrderWithItems-failed", {
+      razorpayPaymentId,
+      message: orderRes.message,
+      status: orderRes.status,
+    });
     return NextResponse.json(
       { message: orderRes.message },
       { status: orderRes.status }
@@ -112,6 +133,11 @@ export async function POST(request: NextRequest) {
   }
 
   const updatedOrderData = orderRes.order;
+  devLog("order-created", {
+    orderId: updatedOrderData.order_id,
+    orderNumber: updatedOrderData.order_number,
+    transactionId: razorpayPaymentId,
+  });
 
   try {
     const items = orderRes.orderItemsPayload ?? [];
@@ -144,6 +170,7 @@ export async function POST(request: NextRequest) {
         .eq("product_id", productId);
     }
   } catch (stockError) {
+    devLog("stock-update-error", { orderId: updatedOrderData.order_id, error: stockError });
     console.error("Stock update error:", stockError);
   }
 
@@ -167,6 +194,7 @@ export async function POST(request: NextRequest) {
           .eq("coupon_code", appliedCouponCode);
       }
     } catch (couponError) {
+      devLog("coupon-usage-update-failed", { appliedCouponCode, error: couponError });
       console.error("Failed to update coupon usage count:", couponError);
     }
   }
@@ -174,10 +202,12 @@ export async function POST(request: NextRequest) {
   try {
     await createRapidShypOrderForOrder(updatedOrderData.order_id, "PREPAID");
   } catch (rapidShypError) {
+    devLog("rapidshyp-create-failed", { orderId: updatedOrderData.order_id, error: rapidShypError });
     console.error("RapidShyp order creation error:", rapidShypError);
   }
 
   await redis.del(redisKey);
+  devLog("checkout-session-cleared", { redisKey, orderId: updatedOrderData.order_id });
 
   return NextResponse.json(
     {

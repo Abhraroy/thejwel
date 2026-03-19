@@ -24,6 +24,12 @@ type MarketingCoupon = {
   max_discount_amount?: number | null;
 };
 
+const devLog = (...args: unknown[]) => {
+  if (process.env.NODE_ENV === "development") {
+    console.log("[PaymentGatewayComponent]", ...args);
+  }
+};
+
 export default function PaymentGatewayComponent() {
   const router = useRouter();
   // const [transacToken, setTransacToken] = useState<string | null>(null);
@@ -249,6 +255,11 @@ export default function PaymentGatewayComponent() {
 
   const handleProceedToPayment = async () => {
     setIsLoadingPayment(true);
+    devLog("proceed-to-payment:clicked", {
+      selectedAddress,
+      hasCoupon: Boolean(activeCoupon?.coupon_code),
+      orderTotal: orderTotalNumber,
+    });
     try {
       await saveUserDetailsIfNeeded();
       const res = await axios.post(
@@ -268,7 +279,14 @@ export default function PaymentGatewayComponent() {
         razorpay_order_id: res.data.razorpay_order_id,
         total_amount: res.data.razorpay_order.amount / 100,
       });
+      devLog("proceed-to-payment:order-created", {
+        razorpayOrderId: res.data.razorpay_order_id,
+        amount: res.data?.razorpay_order?.amount / 100,
+      });
     } catch (error: any) {
+      devLog("proceed-to-payment:failed", {
+        message: error?.response?.data?.message ?? error?.message,
+      });
       console.error("Error creating order:", error);
     } finally {
       setIsLoadingPayment(false);
@@ -383,9 +401,16 @@ export default function PaymentGatewayComponent() {
   };
 
   const handleConfirmCashOnDelivery = async () => {
-    setCodError(null);
-    if (!selectedAddress) return;
     setIsPlacingCodOrder(true);
+    setCodError(null);
+    if (!selectedAddress) {
+      setIsPlacingCodOrder(false);
+      return;
+    }
+    devLog("cod:confirm-clicked", {
+      selectedAddress,
+      hasCoupon: Boolean(activeCoupon?.coupon_code),
+    });
     try {
       await saveUserDetailsIfNeeded();
       const res = await axios.post("/api/payment/cod", {
@@ -393,12 +418,19 @@ export default function PaymentGatewayComponent() {
         coupon_code: activeCoupon?.coupon_code ?? null,
       });
       if (res.status === 200) {
+        devLog("cod:success", {
+          orderId: res.data?.orderId,
+          orderNumber: res.data?.orderNumber,
+        });
         setPaymentConcluded(true);
         setShowPaymentConcluded(true);
         resetPaymentState();
         router.push("/account/orders");
       }
     } catch (error: any) {
+      devLog("cod:failed", {
+        message: error?.response?.data?.message ?? error?.message,
+      });
       const message =
         error?.response?.data?.message ||
         "Could not place COD order. Please try again.";
@@ -990,6 +1022,10 @@ export default function PaymentGatewayComponent() {
                 }}
                 onPaymentInitiated={() => setInitiatingCheckout(false)}
                 onSuccess={async (response) => {
+                  devLog("razorpay:onSuccess", {
+                    razorpayOrderId: response.razorpay_order_id,
+                    razorpayPaymentId: response.razorpay_payment_id,
+                  });
                   try {
                     const completeRes = await axios.post(
                       "/api/payment/complete-razorpay",
@@ -1001,17 +1037,27 @@ export default function PaymentGatewayComponent() {
                       { headers: { "Content-Type": "application/json" } }
                     );
                     if (completeRes.status === 200) {
+                      devLog("complete-razorpay:success", {
+                        orderId: completeRes.data?.order_id,
+                        orderNumber: completeRes.data?.order_number,
+                      });
                       setPaymentConcluded(true);
                       setShowPaymentConcluded(true);
                       resetPaymentState();
                       router.push("/account/orders");
                     } else {
+                      devLog("complete-razorpay:unexpected-status", {
+                        status: completeRes.status,
+                      });
                       alert(
                         "Could not complete order. Contact support with payment ID: " +
                           response.razorpay_payment_id
                       );
                     }
                   } catch (error: any) {
+                    devLog("complete-razorpay:failed", {
+                      message: error?.response?.data?.message ?? error?.message,
+                    });
                     const msg =
                       error?.response?.data?.message ??
                       "Could not complete order.";

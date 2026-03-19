@@ -1,5 +1,10 @@
-import { revalidatePath } from "next/cache";
 import adminsupabase from "@/lib/supabase/admin";
+
+const devLog = (...args: unknown[]) => {
+  if (process.env.NODE_ENV === "development") {
+    console.log("[orderCheckout]", ...args);
+  }
+};
 
 type CheckoutCartItem = {
   product_id: string;
@@ -57,6 +62,10 @@ export async function prepareCheckoutContext(
   phoneNumber: string,
   addressId: string
 ): Promise<{ success: true; data: CheckoutContext } | { success: false; message: string; status: number }> {
+  devLog("prepareCheckoutContext:start", {
+    phoneSuffix: phoneNumber.slice(-4),
+    addressId,
+  });
   const userRes = await adminsupabase
     .from("users")
     .select("user_id, first_name, last_name, email, phone_number, cart(*)")
@@ -64,6 +73,7 @@ export async function prepareCheckoutContext(
     .single();
 
   if (userRes.error || !userRes.data) {
+    devLog("prepareCheckoutContext:user-not-found", { error: userRes.error?.message });
     return { success: false, message: "User is not found", status: 404 };
   }
 
@@ -71,6 +81,7 @@ export async function prepareCheckoutContext(
   const userCart = Array.isArray(user.cart) ? user.cart[0] : user.cart;
   const cartId = userCart?.cart_id;
   if (!cartId) {
+    devLog("prepareCheckoutContext:missing-cart", { userId: user.user_id });
     return { success: false, message: "Cart not found for user", status: 400 };
   }
 
@@ -82,6 +93,11 @@ export async function prepareCheckoutContext(
     .single();
 
   if (addressRes.error || !addressRes.data) {
+    devLog("prepareCheckoutContext:invalid-address", {
+      userId: user.user_id,
+      addressId,
+      error: addressRes.error?.message,
+    });
     return { success: false, message: "Shipping address is invalid", status: 400 };
   }
 
@@ -104,6 +120,10 @@ export async function prepareCheckoutContext(
     .order("added_at", { ascending: false });
 
   if (cartRes.error || !cartRes.data || cartRes.data.length === 0) {
+    devLog("prepareCheckoutContext:empty-cart", {
+      cartId,
+      error: cartRes.error?.message,
+    });
     return { success: false, message: "Cart is empty", status: 400 };
   }
 
@@ -132,6 +152,7 @@ export async function prepareCheckoutContext(
     .in("product_id", productIds);
 
   if (stockRes.error) {
+    devLog("prepareCheckoutContext:stock-check-failed", { error: stockRes.error.message });
     return { success: false, message: "Could not validate stock", status: 500 };
   }
 
@@ -147,6 +168,7 @@ export async function prepareCheckoutContext(
     const productStock = stockMap.get(pid);
     const available = productStock?.stock ?? 0;
     if (available <= 0) {
+      devLog("prepareCheckoutContext:out-of-stock", { productId: pid, available, requested: info.qty });
       return {
         success: false,
         message: `${productStock?.name || info.name} is out of stock`,
@@ -154,6 +176,7 @@ export async function prepareCheckoutContext(
       };
     }
     if (info.qty > available) {
+      devLog("prepareCheckoutContext:insufficient-stock", { productId: pid, available, requested: info.qty });
       return {
         success: false,
         message: `${productStock?.name || info.name} has only ${available} in stock`,
@@ -168,9 +191,16 @@ export async function prepareCheckoutContext(
   }, 0);
 
   if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
+    devLog("prepareCheckoutContext:invalid-total", { totalAmount });
     return { success: false, message: "Invalid order amount", status: 400 };
   }
 
+  devLog("prepareCheckoutContext:success", {
+    userId: user.user_id,
+    cartId,
+    itemCount: cartData.length,
+    totalAmount: Number(totalAmount.toFixed(2)),
+  });
   return {
     success: true,
     data: {
@@ -193,6 +223,15 @@ export async function createOrderWithItems(
   | { success: true; order: any; orderItemsPayload: any[] }
   | { success: false; message: string; status: number }
 > {
+  devLog("createOrderWithItems:start", {
+    userId: context.user.user_id,
+    cartId: context.cartId,
+    itemCount: context.cartData.length,
+    totalAmount: context.totalAmount,
+    orderStatus: options.orderStatus || "pending",
+    paymentStatus: options.paymentStatus || "pending",
+    hasCoupon: Boolean(options.couponCode),
+  });
   const orderPayload: Record<string, unknown> = {
     user_id: context.user.user_id,
     order_number: options.orderNumber || null,
@@ -214,6 +253,7 @@ export async function createOrderWithItems(
     .single();
 
   if (orderRes.error || !orderRes.data) {
+    devLog("createOrderWithItems:order-insert-failed", { error: orderRes.error?.message });
     return { success: false, message: "Error creating order", status: 500 };
   }
 
@@ -234,10 +274,18 @@ export async function createOrderWithItems(
     .insert(orderItemsPayload);
 
   if (orderItemsRes.error) {
+    devLog("createOrderWithItems:order-items-failed", {
+      orderId: orderRes.data.order_id,
+      error: orderItemsRes.error.message,
+    });
     await adminsupabase.from("orders").delete().eq("order_id", orderRes.data.order_id);
     return { success: false, message: "Failed to create order items", status: 500 };
   }
 
-  revalidatePath("/admin/orders");
+  devLog("createOrderWithItems:success", {
+    orderId: orderRes.data.order_id,
+    orderNumber: orderRes.data.order_number,
+    itemCount: orderItemsPayload.length,
+  });
   return { success: true, order: orderRes.data, orderItemsPayload };
 }

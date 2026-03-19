@@ -6,6 +6,12 @@ import { prepareCheckoutContext } from "@/app/utils/orderCheckout";
 import razorpayInstance from "@/app/utils/RazorPay";
 import { redis } from "@/app/utils/Redis";
 
+const devLog = (...args: unknown[]) => {
+  if (process.env.NODE_ENV === "development") {
+    console.log("[api/payment/createOrder]", ...args);
+  }
+};
+
 export async function POST(request: NextRequest) {
   const userSupabase = await createClient();
   let addressId: string | null = null;
@@ -17,6 +23,7 @@ export async function POST(request: NextRequest) {
     couponCode =
       typeof body?.coupon_code === "string" ? body.coupon_code.trim() : null;
   } catch {
+    devLog("invalid-json");
     return NextResponse.json(
       { message: "No address_id in request body or invalid JSON" },
       { status: 400 }
@@ -24,6 +31,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!addressId) {
+    devLog("missing-address-id");
     return NextResponse.json(
       { message: "Shipping address is required" },
       { status: 400 }
@@ -34,6 +42,7 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await userSupabase.auth.getUser();
   if (!user?.phone) {
+    devLog("unauthenticated-user");
     return NextResponse.json(
       { message: "User is not authenticated" },
       { status: 404 }
@@ -42,6 +51,10 @@ export async function POST(request: NextRequest) {
 
   const contextRes = await prepareCheckoutContext("+" + user.phone, addressId);
   if (!contextRes.success) {
+    devLog("prepareCheckoutContext-failed", {
+      status: contextRes.status,
+      message: contextRes.message,
+    });
     return NextResponse.json(
       { message: contextRes.message },
       { status: contextRes.status }
@@ -52,6 +65,7 @@ export async function POST(request: NextRequest) {
   let discountedAmountInPaise = context.amountInPaise;
 
   if (couponCode) {
+    devLog("coupon-check:start", { couponCode });
     const nowIso = new Date().toISOString();
     const couponRes = await adminsupabase
       .from("coupons")
@@ -66,6 +80,7 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (couponRes.error || !couponRes.data) {
+      devLog("coupon-check:invalid", { couponCode, error: couponRes.error?.message });
       return NextResponse.json(
         {
           message:
@@ -79,6 +94,7 @@ export async function POST(request: NextRequest) {
     const usageLimit = Number(coupon.usage_limit ?? 0);
     const usageCount = Number(coupon.usage_count ?? 0);
     if (usageLimit > 0 && usageCount >= usageLimit) {
+      devLog("coupon-check:limit-reached", { couponCode, usageLimit, usageCount });
       return NextResponse.json(
         { message: "Coupon usage limit reached" },
         { status: 400 }
@@ -87,6 +103,11 @@ export async function POST(request: NextRequest) {
 
     const minPurchaseAmount = Number(coupon.min_purchase_amount ?? 0);
     if (context.totalAmount < minPurchaseAmount) {
+      devLog("coupon-check:min-purchase-failed", {
+        couponCode,
+        totalAmount: context.totalAmount,
+        minPurchaseAmount,
+      });
       return NextResponse.json(
         { message: `Minimum purchase should be ₹${minPurchaseAmount}` },
         { status: 400 }
@@ -115,6 +136,11 @@ export async function POST(request: NextRequest) {
       Math.round(context.totalAmount - computedDiscount)
     );
     discountedAmountInPaise = discountedTotalAmount * 100;
+    devLog("coupon-check:applied", {
+      couponCode,
+      discountedTotalAmount,
+      discountedAmountInPaise,
+    });
   }
 
   const payableContext = {
@@ -136,9 +162,15 @@ export async function POST(request: NextRequest) {
       receipt,
     };
     const razorpayOrder = await razorpayInstance.orders.create(razorpayOptions);
+    devLog("razorpay-order-created", {
+      razorpayOrderId: razorpayOrder.id,
+      amountInPaise: payableContext.amountInPaise,
+      userId: payableContext.user.user_id,
+    });
 
     const redisKey = `razorpay_checkout:${razorpayOrder.id}`;
     await redis.set(redisKey, JSON.stringify(checkoutData), { ex: 1800 });
+    devLog("checkout-session-saved", { redisKey, ttlSeconds: 1800 });
 
     return NextResponse.json(
       {
@@ -153,6 +185,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (razorpayError: unknown) {
+    devLog("razorpay-order-create-failed", { error: razorpayError });
     console.error("Razorpay order creation failed:", razorpayError);
     return NextResponse.json(
       { message: "Failed to create payment order", error: razorpayError },

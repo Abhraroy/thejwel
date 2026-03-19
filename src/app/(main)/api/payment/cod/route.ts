@@ -7,6 +7,11 @@ import {
 } from "@/app/utils/orderCheckout";
 
 const COD_ORDER_PREFIX = "COD";
+const devLog = (...args: unknown[]) => {
+  if (process.env.NODE_ENV === "development") {
+    console.log("[api/payment/cod]", ...args);
+  }
+};
 
 export async function POST(request: NextRequest) {
   const userSupabase = await createClient();
@@ -15,6 +20,7 @@ export async function POST(request: NextRequest) {
   } = await userSupabase.auth.getUser();
 
   if (!user?.phone) {
+    devLog("unauthenticated-user");
     return NextResponse.json(
       { message: "User is not authenticated found" },
       { status: 404 }
@@ -29,6 +35,7 @@ export async function POST(request: NextRequest) {
     couponCode =
       typeof body?.coupon_code === "string" ? body.coupon_code.trim() : null;
   } catch {
+    devLog("invalid-json");
     return NextResponse.json(
       { message: "No address_id in request body or invalid JSON" },
       { status: 400 }
@@ -36,6 +43,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!addressId) {
+    devLog("missing-address-id");
     return NextResponse.json(
       { message: "Shipping address is required" },
       { status: 400 }
@@ -44,6 +52,10 @@ export async function POST(request: NextRequest) {
 
   const contextRes = await prepareCheckoutContext("+" + user.phone, addressId);
   if (!contextRes.success) {
+    devLog("prepareCheckoutContext-failed", {
+      status: contextRes.status,
+      message: contextRes.message,
+    });
     return NextResponse.json(
       { message: contextRes.message },
       { status: contextRes.status }
@@ -54,6 +66,7 @@ export async function POST(request: NextRequest) {
   let totalAmount = context.totalAmount;
 
   if (couponCode) {
+    devLog("coupon-check:start", { couponCode });
     const nowIso = new Date().toISOString();
     const couponRes = await adminsupabase
       .from("coupons")
@@ -88,6 +101,11 @@ export async function POST(request: NextRequest) {
 
         computedDiscount = Math.max(0, Math.min(computedDiscount, context.totalAmount));
         totalAmount = Math.max(0, Math.round(context.totalAmount - computedDiscount));
+        devLog("coupon-check:applied", {
+          couponCode,
+          originalTotal: context.totalAmount,
+          totalAmount,
+        });
       }
     }
   }
@@ -102,7 +120,7 @@ export async function POST(request: NextRequest) {
   const codOrderNumber = `${COD_ORDER_PREFIX}-${context.user.user_id.slice(0, 8)}-${now}`;
 
   // Server-side duplicate guard for accidental double-clicks.
-  const ninetySecondsAgo = new Date(now - 90 * 1000).toISOString();
+  const twoSecondsAgo = new Date(now - 2 * 1000).toISOString();
   const duplicateRes = await adminsupabase
     .from("orders")
     .select("order_id, order_number, total_amount, order_date")
@@ -110,13 +128,18 @@ export async function POST(request: NextRequest) {
     .eq("shipping_address_id", context.addressId)
     .eq("payment_status", "pending(cod)")
     .eq("order_status", "pending")
-    .gte("order_date", ninetySecondsAgo)
+    .gte("order_date", twoSecondsAgo)
     .like("order_number", `${COD_ORDER_PREFIX}-%`)
     .order("order_date", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (!duplicateRes.error && duplicateRes.data) {
+    devLog("duplicate-cod-detected", {
+      userId: context.user.user_id,
+      orderId: duplicateRes.data.order_id,
+      orderNumber: duplicateRes.data.order_number,
+    });
     return NextResponse.json(
       {
         message: "COD order already created",
@@ -134,11 +157,17 @@ export async function POST(request: NextRequest) {
   });
 
   if (!orderRes.success) {
+    devLog("createOrderWithItems-failed", { message: orderRes.message, status: orderRes.status });
     return NextResponse.json(
       { message: orderRes.message },
       { status: orderRes.status }
     );
   }
+  devLog("cod-order-created", {
+    orderId: orderRes.order.order_id,
+    orderNumber: orderRes.order.order_number,
+    userId: context.user.user_id,
+  });
 
   return NextResponse.json(
     {
