@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createCategory, updateCategory, type Category, type CreateCategoryData, type UpdateCategoryData } from '../../../app/(admin)/admin/actions';
+import OptimizedImage from '@/components/OptimizedImage';
 import { useRouter } from 'next/navigation';
 import useAdminStore from '../../../zustandStore/AdminZustandStore';
 import axios from 'axios';
@@ -405,11 +406,13 @@ export default function Categories({ isDarkTheme, category }: CategoriesProps) {
                   </label>
                 </div>
               ) : (
-                <div className="relative">
-                  <img
+                <div className="relative w-full h-48 rounded-lg border overflow-hidden">
+                  <OptimizedImage
                     src={formData.imagePreview}
                     alt="Category preview"
-                    className="w-full h-48 object-cover rounded-lg border"
+                    fill
+                    objectFit="cover"
+                    className="rounded-lg"
                   />
                   <button
                     type="button"

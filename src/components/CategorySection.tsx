@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import OptimizedImage from "@/components/OptimizedImage";
 import Link from 'next/link';
 
 
@@ -25,11 +25,13 @@ export default function CategorySection({
               >
                 {/* Circular Image Container */}
                 <div className="relative w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-full overflow-hidden bg-white ring-2 group-hover:ring-theme-olive transition-all duration-300 mb-2 md:mb-3 shadow-sm group-hover:shadow-md">
-                  <Image
-                    src={category.category_image_url}
+                  <OptimizedImage
+                    src={category.category_image_url ?? ""}
                     alt={category.category_name}
+                    preset="card"
                     fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-300"
+                    objectFit="cover"
+                    className="group-hover:scale-110 transition-transform duration-300"
                     sizes="(max-width: 768px) 80px, (max-width: 1024px) 96px, 112px"
                   />
                 </div>

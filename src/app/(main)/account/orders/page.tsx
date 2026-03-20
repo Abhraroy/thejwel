@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import CopyOrderNumberButton from "./CopyOrderNumberButton";
+import OptimizedImage from "@/components/OptimizedImage";
 import { orderItemsWithProducts, orderWithItemsAndProducts, userWithOrdersAndItemsAndProducts } from "@/types/RelationTypeInterface";
 
 const devLog = (...args: unknown[]) => {
@@ -235,14 +236,17 @@ export default async function OrdersPage() {
                                 className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200"
                               >
                                 {item?.products?.thumbnail_image && (
-                                  <div className="shrink-0 w-full sm:w-auto">
-                                    <img
+                                  <div className="shrink-0 w-16 h-16 relative rounded-md overflow-hidden">
+                                    <OptimizedImage
                                       src={item.products.thumbnail_image}
                                       alt={
                                         item?.products?.product_name ??
                                         "Product"
                                       }
-                                      className="w-full sm:w-16 h-auto sm:h-16 object-cover rounded-md"
+                                      preset="thumbnail"
+                                      fill
+                                      objectFit="cover"
+                                      className="rounded-md"
                                     />
                                   </div>
                                 )}

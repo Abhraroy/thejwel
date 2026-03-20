@@ -11,7 +11,7 @@ import OtpInput from "../AuthUI/OtpInput";
 import AddressForm from "../Address/AddressForm";
 import CashOnDeliveryConfirmation from "./CashOnDeliveryConfirmation";
 import RazorPayButton from "./RazorPay";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { createClient } from "@/lib/supabase/client";
 import type { AnyCart } from "@/types/CartTypes";
 
@@ -642,11 +642,12 @@ export default function PaymentGatewayComponent() {
                         >
                           <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded border border-gray-100">
                             {thumbnail ? (
-                              <Image
+                              <OptimizedImage
                                 src={thumbnail}
                                 alt={productName}
+                                preset="thumbnail"
                                 fill
-                                className="object-cover"
+                                objectFit="cover"
                                 sizes="48px"
                               />
                             ) : (

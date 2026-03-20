@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import ProductCard from "@/components/ProductUI/ProductCard";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 
 interface CategoryClientProps {
   category: any;
@@ -179,11 +179,13 @@ export default function CategoryClient({ category, subcategories, products }: Ca
                         }`}
                       >
                         {subcategory.subcategory_image_url ? (
-                          <Image
+                          <OptimizedImage
                             src={subcategory.subcategory_image_url}
                             alt={subcategory.subcategory_name}
+                            preset="card"
                             fill
-                            className="object-cover group-hover:scale-110 transition-transform duration-300"
+                            objectFit="cover"
+                            className="group-hover:scale-110 transition-transform duration-300"
                             sizes="(max-width: 768px) 80px, (max-width: 1024px) 96px, 112px"
                           />
                         ) : (

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useStore } from "@/zustandStore/zustandStore";
@@ -53,7 +53,6 @@ export default function ProductCard({
   isLoading = false,
 }: ProductCardProps) {
   const [isWishlistActive, setIsWishlistActive] = useState(isWishlisted);
-  const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isCartClicked, setIsCartClicked] = useState(false);
   const { cartItems, setCartItems, AuthenticatedState, AuthUserId, CartId, setWishListItems } = useStore();
@@ -186,42 +185,22 @@ export default function ProductCard({
     >
       {/* Image Container with Gradient Overlay */}
       <div className="relative w-full aspect-[2/3] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
-        {!imageError ? (
-          <>
-            <Image
-              src={product.thumbnail_image}
-              alt={product.product_name}
-              fill
-              className={`object-contain transition-all duration-700 ${
-                isHovered ? " brightness-105" : "brightness-100"
-              }`}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              onError={() => setImageError(true)}
-            />
-            {/* Gradient Overlay on Hover */}
-            <div
-              className={`absolute inset-0 bg-gradient-to-t from-black/0 via-black/0 to-black/0 transition-all duration-500 ${
-                isHovered ? "via-black/5 to-black/10" : ""
-              }`}
-            />
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-            <svg
-              className="w-20 h-20 text-gray-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-        )}
+        <OptimizedImage
+          src={product.thumbnail_image ?? ""}
+          alt={product.product_name}
+          preset="card"
+          fill
+          className={`object-contain transition-all duration-700 ${
+            isHovered ? " brightness-105" : "brightness-100"
+          }`}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        />
+        {/* Gradient Overlay on Hover */}
+        <div
+          className={`absolute inset-0 bg-gradient-to-t from-black/0 via-black/0 to-black/0 transition-all duration-500 ${
+            isHovered ? "via-black/5 to-black/10" : ""
+          }`}
+        />
 
         {/* Discount Badge - Redesigned */}
         {discountPercentage > 0 && (

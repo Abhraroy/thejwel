@@ -13,6 +13,7 @@ import {
   type ImageResourceRecord,
 } from "@/app/(admin)/admin/actions/resources";
 import type { Coupon, CouponDiscountType, CouponType } from "@/types/TypeInterface";
+import OptimizedImage from "@/components/OptimizedImage";
 
 const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB
 
@@ -515,13 +516,13 @@ export default function ResourcesPage() {
 
             <div className="space-y-3 mt-5">
               <div className="text-sm font-semibold text-slate-800">Preview</div>
-              <div className="border border-slate-200 rounded-xl bg-slate-50 overflow-hidden aspect-16/10 flex items-center justify-center">
+              <div className="border border-slate-200 rounded-xl bg-slate-50 overflow-hidden aspect-[16/10] flex items-center justify-center relative">
                 {previewUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <OptimizedImage
                     src={previewUrl}
                     alt="Preview"
-                    className="w-full h-full object-contain"
+                    fill
+                    objectFit="contain"
                   />
                 ) : (
                   <div className="text-sm text-slate-500">
@@ -638,11 +639,12 @@ export default function ResourcesPage() {
                     >
                       <div className="aspect-video bg-slate-100 relative">
                         {resource.image_link ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <OptimizedImage
                             src={resource.image_link}
                             alt={resource.section_name || "Resource"}
-                            className="w-full h-full object-cover"
+                            preset="card"
+                            fill
+                            objectFit="cover"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">

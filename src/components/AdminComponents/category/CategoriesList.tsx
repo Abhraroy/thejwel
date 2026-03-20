@@ -7,6 +7,7 @@ import axios from 'axios';
 import useAdminStore from "../../../zustandStore/AdminZustandStore";
 import { categoryWithSubCategories } from '@/types/RelationTypeInterface';
 import { SubCategory } from '@/types/TypeInterface';
+import OptimizedImage from '@/components/OptimizedImage';
 
 
   const ImageIcon = ({ className = 'w-5 h-5' }) => (
@@ -272,12 +273,14 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
               >
                 {/* Image */}
                 <td className="py-3 px-4">
-                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center relative">
                     {category.category_image_url ? (
-                      <img
+                      <OptimizedImage
                         src={category.category_image_url}
                         alt={category.category_name}
-                        className="w-full h-full object-cover"
+                        preset="thumbnail"
+                        fill
+                        objectFit="cover"
                       />
                     ) : (
                       <ImageIcon className={`w-6 h-6 ${isDarkTheme ? 'text-gray-600' : 'text-gray-400'}`} />
@@ -389,7 +392,7 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
                     <tr key={subCategory.subcategory_id}>
                       <td colSpan={7} className="py-4 px-4 text-center border-b-3 border-t-3 border-gray-200">
                         <div className="flex flex-row items-center justify-around">
-                         <div className='w-1/4' > <img src={subCategory.subcategory_image_url ?? ''} alt={subCategory.subcategory_name ?? ''} className="w-20 h-20 rounded-full shrink-0 " /></div>
+                         <div className='w-1/4 flex justify-center'><div className='relative w-20 h-20 rounded-full shrink-0 overflow-hidden'><OptimizedImage src={subCategory.subcategory_image_url ?? ''} alt={subCategory.subcategory_name ?? ''} preset="thumbnail" fill objectFit="cover" className="rounded-full" /></div></div>
                           <div className='w-1/4 flex items-center justify-center'>
                             <span className={`text-[1rem] shrink-0 font-bold ${isDarkTheme ? 'text-gray-400' : 'text-gray-600'}`}>
                               {subCategory.subcategory_name}

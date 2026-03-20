@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductUI/ProductCard";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { Category } from "@/types/TypeInterface";
 import { productWithImages } from "@/types/RelationTypeInterface";
 
@@ -121,11 +121,11 @@ export default function OccasionPageClient({
                   className="flex flex-col items-center group shrink-0 w-16 md:w-20 transition-all"
                 >
                   <div className="relative w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden bg-white mb-1.5 md:mb-2 shadow-sm">
-                    <Image
+                    <OptimizedImage
                       src="/logo/cropped-logo.svg"
                       alt="All"
                       fill
-                      className="object-cover"
+                      objectFit="cover"
                       sizes="(max-width: 768px) 56px, 64px"
                     />
                   </div>
@@ -139,11 +139,12 @@ export default function OccasionPageClient({
                     className="flex flex-col items-center group shrink-0 w-16 md:w-20 transition-all"
                   >
                     <div className="relative w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden bg-white mb-1.5 md:mb-2 shadow-sm">
-                      <Image
+                      <OptimizedImage
                         src={category.category_image_url ?? "/logo/cropped-logo.svg"}
                         alt={category.category_name}
+                        preset="card"
                         fill
-                        className="object-cover"
+                        objectFit="cover"
                         sizes="(max-width: 768px) 56px, 64px"
                       />
                     </div>

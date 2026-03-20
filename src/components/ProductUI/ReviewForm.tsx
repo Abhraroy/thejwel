@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useStore } from "@/zustandStore/zustandStore";
 import { FaStar, FaTimes } from "react-icons/fa";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import PhoneNumberInput from "@/components/AuthUI/PhoneNumberInput";
 
 interface ReviewFormProps {
@@ -301,13 +301,12 @@ export default function ReviewForm({ productId, onClose, onSuccess }: ReviewForm
               <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-3">
                 {imagePreviews.map((preview, index) => (
                   <div key={index} className="relative group">
-                    <div className="aspect-square rounded-lg overflow-hidden border border-gray-200">
-                      <Image
+                    <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 relative">
+                      <OptimizedImage
                         src={preview}
                         alt={`Preview ${index + 1}`}
-                        width={100}
-                        height={100}
-                        className="w-full h-full object-cover"
+                        fill
+                        objectFit="cover"
                       />
                     </div>
                     <button

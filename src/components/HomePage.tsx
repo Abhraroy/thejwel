@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
 import Carousel from "@/components/Carousel";
 import CategorySection from "@/components/CategorySection";
@@ -83,13 +83,13 @@ export default function HomePage({
 }) {
   const carouselItemsArray = heroItems.map((item, index) => {
     const image = (
-      <Image
+      <OptimizedImage
         src={item.imageLink}
         alt="Where Tradition Meets Modern Sparkle — TheJWEL Kolkata"
-        fill={true}
-        className="!object-contain md:!object-cover object-center"
+        fill
+        objectFit="contain"
+        className="md:!object-cover object-center"
         priority={index === 0}
-        fetchPriority={index === 0 ? "high" : "auto"}
         sizes="100vw"
       />
     );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { FaStar } from "react-icons/fa";
 import { IoIosClose } from "react-icons/io";
 import ReviewForm from "./ReviewForm";
@@ -133,13 +133,14 @@ export default function ProductReview({ reviews }: { reviews: any }) {
             </div>
           </div>
           {review.review_images && review.review_images.length > 0 && (
-            <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 shrink-0">
-              <Image
+            <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 shrink-0 relative">
+              <OptimizedImage
                 src={review.review_images[0].review_image_url}
                 alt="Review"
+                preset="thumbnail"
                 width={64}
                 height={64}
-                className="w-full h-full object-cover"
+                objectFit="cover"
               />
             </div>
           )}
@@ -156,14 +157,15 @@ export default function ProductReview({ reviews }: { reviews: any }) {
               <button
                 key={idx}
                 onClick={() => handleImageClick(img.review_image_url)}
-                className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 shrink-0 hover:border-pink-400 transition-colors"
+                className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 shrink-0 hover:border-pink-400 transition-colors relative"
               >
-                <Image
+                <OptimizedImage
                   src={img.review_image_url}
                   alt="Review"
+                  preset="thumbnail"
                   width={64}
                   height={64}
-                  className="w-full h-full object-cover"
+                  objectFit="cover"
                 />
               </button>
             ))}
@@ -275,14 +277,14 @@ export default function ProductReview({ reviews }: { reviews: any }) {
                   <button
                     key={image.review_image_id || index}
                     onClick={() => handleImageClick(image.review_image_url)}
-                    className="aspect-square rounded-lg overflow-hidden border border-gray-200 hover:border-pink-400 transition-colors"
+                    className="aspect-square rounded-lg overflow-hidden border border-gray-200 hover:border-pink-400 transition-colors relative"
                   >
-                    <Image
+                    <OptimizedImage
                       src={image.review_image_url}
                       alt="Review"
-                      width={100}
-                      height={100}
-                      className="w-full h-full object-cover"
+                      preset="thumbnail"
+                      fill
+                      objectFit="cover"
                     />
                   </button>
                 ))}
@@ -343,11 +345,12 @@ export default function ProductReview({ reviews }: { reviews: any }) {
             </button>
             <div className="relative aspect-square bg-white rounded-lg overflow-hidden">
               {allReviewImages[modalImageIndex] && (
-                <Image
+                <OptimizedImage
                   src={allReviewImages[modalImageIndex].review_image_url}
                   alt="Review"
+                  preset="full"
                   fill
-                  className="object-contain"
+                  objectFit="contain"
                 />
               )}
             </div>

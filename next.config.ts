@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "pub-6da66eab69fe457ca97348b35f86f86b.r2.dev",
+        hostname: "images.thejwel.in",
       },
       ...(supabaseHost ? [{ protocol: "https" as const, hostname: supabaseHost }] : []),
     ],

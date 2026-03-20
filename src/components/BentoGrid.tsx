@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import OptimizedImage from "@/components/OptimizedImage";
 import Link from 'next/link';
 
 interface BentoCategory {
@@ -56,11 +56,13 @@ export default function BentoGrid({
             >
               {/* Image Container */}
               <div className="relative w-full h-full">
-                <Image
+                <OptimizedImage
                   src={category.imageUrl}
                   alt={category.name}
+                  preset="full"
                   fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                  objectFit="cover"
+                  className="group-hover:scale-110 transition-transform duration-700 ease-out"
                   sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 50vw"
                   priority={category.id === '1' || category.id === '2'}
                 />

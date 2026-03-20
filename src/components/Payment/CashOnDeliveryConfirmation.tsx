@@ -1,5 +1,5 @@
 import type { AnyCart } from "@/types/CartTypes";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
 
 interface CashOnDeliveryConfirmationProps {
@@ -56,11 +56,12 @@ export default function CashOnDeliveryConfirmation({
                           className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-md border border-[#7A1C1C]/20 bg-white"
                         >
                           {productImage ? (
-                            <Image
+                            <OptimizedImage
                               src={productImage}
                               alt={productName}
+                              preset="thumbnail"
                               fill
-                              className="object-cover"
+                              objectFit="cover"
                               sizes="(max-width: 640px) 80px, 96px"
                             />
                           ) : (
@@ -70,11 +71,12 @@ export default function CashOnDeliveryConfirmation({
                       ) : (
                         <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-md border border-[#7A1C1C]/20 bg-white">
                           {productImage ? (
-                            <Image
+                            <OptimizedImage
                               src={productImage}
                               alt={productName}
+                              preset="thumbnail"
                               fill
-                              className="object-cover"
+                              objectFit="cover"
                               sizes="(max-width: 640px) 80px, 96px"
                             />
                           ) : (

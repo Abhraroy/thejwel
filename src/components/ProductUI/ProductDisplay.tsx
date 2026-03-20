@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useStore } from "@/zustandStore/zustandStore";
 import { createClient } from "@/lib/supabase/client";
 import { addToLocalCart, addToDbCart } from "@/utilityFunctions/CartFunctions";
@@ -318,14 +318,16 @@ export default function ProductDisplay({
                   {carouselImages.map((img: any, idx: number) => (
                     <SwiperSlide key={img?.image_id ?? idx}>
                       <div className="relative h-full w-full">
-                        <Image
+                        <OptimizedImage
                           src={img?.image_url ?? "/placeholder.png"}
                           alt={`${productDetails?.[0]?.product_name ?? "Product"} ${idx + 1}`}
+                          preset="full"
                           fill
-                          className="object-cover cursor-pointer"
+                          objectFit="cover"
+                          className="cursor-pointer"
                           priority={idx === 0}
-                          onClick={() => setProductImageView(true)}
                           sizes="100vw"
+                          onClick={() => setProductImageView(true)}
                         />
                       </div>
                     </SwiperSlide>
@@ -339,18 +341,18 @@ export default function ProductDisplay({
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`h-16 w-16 overflow-hidden rounded-lg border-2 transition-all ${
+                      className={`h-16 w-16 overflow-hidden rounded-lg border-2 transition-all relative ${
                         selectedImage === index
                           ? "border-[#E94E8B] scale-105"
                           : "border-gray-200"
                       }`}
                     >
-                      <Image
+                      <OptimizedImage
                         src={img.image_url}
                         alt={`${productDetails?.[0]?.product_name ?? "Product"} thumbnail ${index + 1}`}
-                        width={64}
-                        height={64}
-                        className="h-full w-full object-cover"
+                        preset="thumbnail"
+                        fill
+                        objectFit="cover"
                       />
                     </button>
                   )
@@ -643,21 +645,21 @@ export default function ProductDisplay({
               {/* Thumbnail Images */}
               <div className="flex flex-row gap-3 overflow-x-auto pb-1 lg:flex-col lg:overflow-x-visible lg:pb-0">
                 {productImages.map((img: any, index: number) => (
-                  <button
+                    <button
                     key={img.review_image_id ?? index}
                     onClick={() => setSelectedImage(index)}
-                    className={`h-20 w-20 overflow-hidden rounded-lg border-2 transition-all ${
+                    className={`h-20 w-20 overflow-hidden rounded-lg border-2 transition-all relative ${
                       selectedImage === index
                         ? "border-[#E94E8B] scale-105"
                         : "border-gray-200"
                     }`}
                   >
-                    <Image
+                    <OptimizedImage
                       src={img.image_url}
                       alt={`${product?.product_name ?? "Product"} thumbnail ${index + 1}`}
-                      width={80}
-                      height={80}
-                      className="h-full w-full object-cover"
+                      preset="thumbnail"
+                      fill
+                      objectFit="cover"
                     />
                   </button>
                 ))}
@@ -681,14 +683,15 @@ export default function ProductDisplay({
                   {carouselImages.map((img: any, idx: number) => (
                     <SwiperSlide key={img?.image_id ?? idx}>
                       <div className="relative h-full w-full">
-                        <Image
+                        <OptimizedImage
                           src={img?.image_url ?? "/placeholder.png"}
                           alt={`${product?.product_name ?? "Product"} ${idx + 1}`}
+                          preset="full"
                           fill
-                          className="object-cover"
+                          objectFit="cover"
                           priority={idx === 0}
-                          onClick={() => setProductImageView(true)}
                           sizes="50vw"
+                          onClick={() => setProductImageView(true)}
                         />
                       </div>
                     </SwiperSlide>
@@ -979,18 +982,18 @@ export default function ProductDisplay({
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${
+                      className={`w-24 h-24 rounded-lg overflow-hidden border-2 transition-all relative ${
                         selectedImage === index
                           ? "border-[#E94E8B] scale-105"
                           : "border-gray-200"
                       }`}
                     >
-                      <Image
+                      <OptimizedImage
                         src={img.image_url}
                         alt={`${productDetails?.[0]?.product_name ?? "Product"} thumbnail ${index + 1}`}
-                        width={96}
-                        height={96}
-                        className="object-cover w-full h-full"
+                        preset="thumbnail"
+                        fill
+                        objectFit="cover"
                       />
                     </button>
                   )
@@ -1003,11 +1006,13 @@ export default function ProductDisplay({
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
-                <Image
-                  src={productDetails[0]?.product_images[selectedImage]?.image_url}
+                <OptimizedImage
+                  src={productDetails[0]?.product_images[selectedImage]?.image_url ?? "/placeholder.png"}
                   alt={`${productDetails?.[0]?.product_name ?? "Product"} image ${selectedImage + 1}`}
+                  preset="full"
                   fill
-                  className="object-cover cursor-pointer"
+                  objectFit="cover"
+                  className="cursor-pointer"
                   priority
                   onClick={() => setProductImageView(true)}
                 />
@@ -1326,11 +1331,13 @@ export default function ProductDisplay({
                 {carouselImages.map((img: any, idx: number) => (
                   <SwiperSlide key={img?.image_id ?? idx} className="flex items-center justify-center">
                     <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
-                      <Image
+                      <OptimizedImage
                         src={img?.image_url ?? "/placeholder.png"}
                         alt={`${product?.product_name ?? "Product"} fullscreen image ${idx + 1}`}
+                        preset="full"
                         fill
-                        className="object-contain select-none"
+                        objectFit="contain"
+                        className="select-none"
                         priority={idx === 0}
                         sizes="100vw"
                         draggable={false}
@@ -1375,11 +1382,12 @@ export default function ProductDisplay({
                     }}
                   />
                 ) : (
-                  <Image
+                  <OptimizedImage
                     src={carouselImages?.[selectedImage]?.image_url ?? carouselImages?.[0]?.image_url ?? "/placeholder.png"}
                     alt={`Product image ${selectedImage + 1}`}
+                    preset="full"
                     fill
-                    className="object-contain"
+                    objectFit="contain"
                     priority
                     sizes="100vw"
                   />
@@ -1409,11 +1417,12 @@ export default function ProductDisplay({
                       }`}
                       aria-label={`View image ${idx + 1}`}
                     >
-                      <Image
+                      <OptimizedImage
                         src={img.image_url}
                         alt={`Thumbnail ${idx + 1}`}
+                        preset="thumbnail"
                         fill
-                        className="object-cover"
+                        objectFit="cover"
                         sizes="80px"
                       />
                     </button>

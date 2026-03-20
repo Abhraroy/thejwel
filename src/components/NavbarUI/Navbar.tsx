@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../zustandStore/zustandStore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import HamburgerSidebar from './HamburgerSidebar';
 import { createClient } from '@/lib/supabase/client';
 
@@ -441,7 +441,7 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
           {/* Logo Section */}
           <div className="navbar-logo-section shrink-0 ml-2 md:ml-0 flex-row flex ">
             <a href="/" className="flex items-center gap-2 md:gap-3">
-              <Image
+              <OptimizedImage
                 src="/logo/cropped-logo.svg"
                 alt="JWEL"
                 width={74}
@@ -513,11 +513,12 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
                       >
                         {suggestion.thumbnail_image && (
                           <div className="relative w-12 h-12 shrink-0 rounded overflow-hidden">
-                            <Image
+                            <OptimizedImage
                               src={suggestion.thumbnail_image}
                               alt={suggestion.product_name || ''}
+                              preset="thumbnail"
                               fill
-                              className="object-cover"
+                              objectFit="cover"
                               sizes="48px"
                             />
                           </div>
@@ -635,11 +636,12 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
                       >
                         {suggestion.thumbnail_image && (
                           <div className="relative w-12 h-12 shrink-0 rounded overflow-hidden">
-                            <Image
+                            <OptimizedImage
                               src={suggestion.thumbnail_image}
                               alt={suggestion.product_name || ''}
+                              preset="thumbnail"
                               fill
-                              className="object-cover"
+                              objectFit="cover"
                               sizes="48px"
                             />
                           </div>

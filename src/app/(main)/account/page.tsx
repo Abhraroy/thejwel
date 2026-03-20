@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/client";
 
 import AddressSection from "@/components/Address/AddressSection";
+import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -832,8 +833,8 @@ export default function AccountPage() {
                                       >
                                         {/* Product Image */}
                                         {item?.products?.thumbnail_image && (
-                                          <div className="flex-shrink-0 w-full sm:w-auto">
-                                            <img
+                                          <div className="flex-shrink-0 w-16 h-16 relative rounded-md overflow-hidden">
+                                            <OptimizedImage
                                               src={
                                                 item.products.thumbnail_image
                                               }
@@ -841,7 +842,10 @@ export default function AccountPage() {
                                                 item?.products?.product_name ??
                                                 "Product"
                                               }
-                                              className="w-full sm:w-16 h-auto sm:h-16 object-cover rounded-md"
+                                              preset="thumbnail"
+                                              fill
+                                              objectFit="cover"
+                                              className="rounded-md"
                                             />
                                           </div>
                                         )}

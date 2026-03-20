@@ -1,6 +1,6 @@
 'use client';
 
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/zustandStore/zustandStore";
 import type { AnyCartItem } from "@/types/CartTypes";
@@ -49,17 +49,15 @@ export default function CartItem({
     >
       {/* Product Image */}
       <div className="relative w-30 h-30 sm:w-30 sm:h-30 md:w-30 md:h-30 flex-shrink-0 bg-white rounded-lg overflow-hidden border border-[#7A1C1C]/20">
-        {productImage ? (
-          <Image
-            src={productImage}
-            alt={productName}
-            fill
-            className="object-cover cursor-pointer"
-            sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
-          />
-        ) : (
-          <div className="w-full h-full bg-[#CAF2FF]" />
-        )}
+        <OptimizedImage
+          src={productImage ?? ""}
+          alt={productName}
+          preset="thumbnail"
+          fill
+          objectFit="cover"
+          className="cursor-pointer"
+          sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
+        />
       </div>
 
       {/* Product Details */}

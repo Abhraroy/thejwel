@@ -7,6 +7,7 @@ import axios from "axios";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import useAdminStore from "../../../zustandStore/AdminZustandStore";
+import OptimizedImage from "@/components/OptimizedImage";
 
 const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB guard to keep server action body small
 
@@ -934,11 +935,13 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
                   </label>
                 </div>
               ) : (
-                <div className="relative w-2/3 max-w-xs">
-                  <img
+                <div className="relative w-2/3 max-w-xs aspect-[2/3] rounded-lg border overflow-hidden">
+                  <OptimizedImage
                     src={thumbnailImagePreview}
                     alt="Thumbnail preview"
-                    className="w-full aspect-2/3 object-cover rounded-lg border"
+                    fill
+                    objectFit="cover"
+                    className="rounded-lg"
                   />
                   <button
                     type="button"

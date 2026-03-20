@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useMemo, useState, useCallback, useEffect } from "react";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, EffectCoverflow } from "swiper/modules";
@@ -190,11 +190,12 @@ export default function ImageGalleryCarousel({
                           className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/15 z-10"
                         />
 
-                        <Image
+                        <OptimizedImage
                           src={image.src}
                           alt={image.alt}
+                          preset="full"
                           fill
-                          className="object-cover"
+                          objectFit="cover"
                           sizes="(max-width: 640px) 270px, (max-width: 768px) 340px, (max-width: 1024px) 420px, 470px"
                           priority={isActive}
                         />

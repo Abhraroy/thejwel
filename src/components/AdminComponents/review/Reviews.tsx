@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { FaStar } from "react-icons/fa";
 
 interface Review {
@@ -289,13 +289,13 @@ export default function Reviews({ initialReviews }: ReviewsProps) {
                       <Td>
                         <div className="flex items-center gap-3">
                           {product?.thumbnail_image && (
-                            <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 shrink-0">
-                              <Image
+                            <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 shrink-0 relative">
+                              <OptimizedImage
                                 src={product.thumbnail_image}
                                 alt={product.product_name || "Product"}
-                                width={48}
-                                height={48}
-                                className="w-full h-full object-cover"
+                                preset="thumbnail"
+                                fill
+                                objectFit="cover"
                               />
                             </div>
                           )}
@@ -379,13 +379,13 @@ export default function Reviews({ initialReviews }: ReviewsProps) {
                       <Td>
                         {review.review_images && review.review_images.length > 0 ? (
                           <div className="flex items-center gap-1">
-                            <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200">
-                              <Image
+                            <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 relative">
+                              <OptimizedImage
                                 src={review.review_images[0].review_image_url}
                                 alt="Review image"
-                                width={40}
-                                height={40}
-                                className="w-full h-full object-cover"
+                                preset="thumbnail"
+                                fill
+                                objectFit="cover"
                               />
                             </div>
                             {review.review_images.length > 1 && (
@@ -437,11 +437,12 @@ export default function Reviews({ initialReviews }: ReviewsProps) {
                                           key={img.review_image_id}
                                           className="relative w-full aspect-square rounded-lg overflow-hidden border border-gray-200"
                                         >
-                                          <Image
+                                          <OptimizedImage
                                             src={img.review_image_url}
                                             alt="Review image"
+                                            preset="card"
                                             fill
-                                            className="object-cover"
+                                            objectFit="cover"
                                           />
                                         </div>
                                       ))}

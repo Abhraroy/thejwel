@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { deleteProduct, saveProductImageUrls, deleteProductImage } from "../../../app/(admin)/admin/actions/Product";
 import axios from "axios";
+import OptimizedImage from "@/components/OptimizedImage";
 import useAdminStore from "../../../zustandStore/AdminZustandStore";
 
 // Icon Components
@@ -1205,10 +1206,14 @@ export default function ProductsList({ products, isDarkTheme }: ProductsListProp
                 </button>
               )}
 
-              <div className="relative">
-                <img
-                  src={viewerImages[currentImageIndex]?.url}
+              <div className="relative max-w-full max-h-[70vh]">
+                <OptimizedImage
+                  src={viewerImages[currentImageIndex]?.url ?? ""}
                   alt={`Product image ${currentImageIndex + 1}`}
+                  preset="full"
+                  width={800}
+                  height={600}
+                  objectFit="contain"
                   className="max-w-full max-h-[70vh] object-contain rounded-lg"
                 />
                 {/* Delete Button Overlay */}
@@ -1296,9 +1301,13 @@ export default function ProductsList({ products, isDarkTheme }: ProductsListProp
                           : "opacity-60 hover:opacity-100"
                       }`}
                     >
-                      <img
+                      <OptimizedImage
                         src={image.url}
                         alt={`Thumbnail ${index + 1}`}
+                        preset="thumbnail"
+                        width={64}
+                        height={64}
+                        objectFit="cover"
                         className="w-16 h-16 object-cover rounded-lg border-2 border-transparent"
                       />
                     </button>

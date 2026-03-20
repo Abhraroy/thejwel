@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import OptimizedImage from "@/components/OptimizedImage";
 import { FacebookIcon, InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/icons/SocialIcons";
 
 interface FooterProps {
@@ -126,7 +126,7 @@ export default function Footer({ className = "" }: FooterProps) {
           {/* Brand & Social */}
           <div className="space-y-5 flex flex-col items-center justify-center footer-logo-section">
             <Link href="/" className="inline-block">
-              <Image
+              <OptimizedImage
                 src="/logo/cropped-logo.svg"
                 alt="THE JWEL | Beyond the Jewellery"
                 width={100}
