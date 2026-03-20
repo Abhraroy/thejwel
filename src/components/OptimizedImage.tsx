@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   getOptimizedImageUrl,
   getImagePreset,
   getImageSrcSet,
+  getBlurImageUrl,
   PLACEHOLDER_IMAGE,
   SRC_SET_WIDTHS,
   type ImagePresetName,
@@ -74,22 +75,30 @@ export default function OptimizedImage({
   draggable,
 }: OptimizedImageProps) {
   const [hasError, setHasError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
-  const { imageSrc, srcSet } = useMemo(() => {
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [src]);
+
+  const { imageSrc, srcSet, blurPlaceholder } = useMemo(() => {
     const effectiveSrc = src?.trim() || "";
     if (!effectiveSrc) {
-      return { imageSrc: PLACEHOLDER_IMAGE, srcSet: null };
+      return { imageSrc: PLACEHOLDER_IMAGE, srcSet: null, blurPlaceholder: null };
     }
 
     const resolvedSrc = preset
       ? getImagePreset(effectiveSrc, preset)
-      : getOptimizedImageUrl(effectiveSrc);
+      : getOptimizedImageUrl(effectiveSrc, width ?? 800, 85);
 
     const shouldUseSrcSet = responsive && (fill || preset);
     const resolvedSrcSet = shouldUseSrcSet ? getImageSrcSet(effectiveSrc, SRC_SET_WIDTHS) : null;
 
-    return { imageSrc: resolvedSrc, srcSet: resolvedSrcSet };
-  }, [src, preset, fill, responsive]);
+    const blurSrc = fill && !placeholderSrc ? getBlurImageUrl(effectiveSrc) : null;
+    const effectiveBlur = placeholderSrc ?? (blurSrc && blurSrc !== resolvedSrc ? blurSrc : null);
+
+    return { imageSrc: resolvedSrc, srcSet: resolvedSrcSet, blurPlaceholder: effectiveBlur };
+  }, [src, preset, fill, responsive, width, placeholderSrc]);
 
   const handleError = () => {
     setHasError(true);
@@ -128,6 +137,7 @@ export default function OptimizedImage({
     decoding: "async" as const,
     className,
     onError: handleError,
+    onLoad: () => setImageLoaded(true),
     onClick,
     ...(draggable !== undefined && { draggable }),
     ...(srcSet && { srcSet, sizes }),
@@ -135,14 +145,19 @@ export default function OptimizedImage({
 
   if (fill) {
     return (
-      <div className="relative w-full h-full" style={style}>
-        {placeholderSrc && (
+      <div className="relative w-full h-full overflow-hidden" style={style}>
+        {blurPlaceholder && (
           <img
-            src={placeholderSrc}
+            src={blurPlaceholder}
             alt=""
             aria-hidden
-            className={`absolute inset-0 w-full h-full ${objectFit === "cover" ? "object-cover" : "object-contain"}`}
-            style={{ filter: "blur(12px)", transform: "scale(1.05)" }}
+            className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${objectFit === "cover" ? "object-cover" : "object-contain"}`}
+            style={{
+              filter: "blur(12px)",
+              transform: "scale(1.05)",
+              opacity: imageLoaded ? 0 : 1,
+              pointerEvents: imageLoaded ? "none" : "auto",
+            }}
           />
         )}
         <img
@@ -154,6 +169,7 @@ export default function OptimizedImage({
             inset: 0,
             width: "100%",
             height: "100%",
+            zIndex: 1,
           }}
         />
       </div>
