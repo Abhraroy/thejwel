@@ -3,6 +3,10 @@ import CategoryHeader from "../../../../components/AdminComponents/category/Cate
 import CategoriesList from "@/components/AdminComponents/category/CategoriesList";
 import Categories from "@/components/AdminComponents/category/Categories";
 import { getCategories } from "./action";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function CategoriesPage() {
   const isDarkTheme = false;
 

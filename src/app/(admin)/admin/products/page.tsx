@@ -4,6 +4,9 @@ import ProductsList from "@/components/AdminComponents/product/ProductsList";
 import ProductForm from "@/components/AdminComponents/product/Products";
 import { getProducts } from "./action";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 
 export default async function ProductsPage() {
   const isDarkTheme = false;

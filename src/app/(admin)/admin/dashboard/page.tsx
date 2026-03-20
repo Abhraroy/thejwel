@@ -2,6 +2,9 @@
 import Dashboard from "../../../../components/AdminComponents/Dashboard";
 import { getDashboardData } from "./action";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function DashboardPage() {
   const isDarkTheme = false;
   const today = new Date();

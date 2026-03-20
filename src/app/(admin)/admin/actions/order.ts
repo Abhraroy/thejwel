@@ -1,6 +1,7 @@
 "use server";
 
 import supabase from "@/lib/supabase/admin";
+import { revalidatePath } from "next/cache";
 import { createRapidShypOrderForOrder } from "@/app/utils/rapidShyp";
 
 
@@ -106,6 +107,8 @@ export async function updateOrdersStatus(orderId: string, status: string) {
             await createRapidShypOrderForOrder(orderId, "COD");
         }
 
+        revalidatePath("/admin/orders");
+        revalidatePath("/admin/dashboard");
         return { success: true, data: data, message: "Order status updated successfully" };
     } catch (error) {
         console.error("Error updating order status:", error);
@@ -150,6 +153,8 @@ export async function approveCodOrder(orderId: string) {
 
         await createRapidShypOrderForOrder(orderId, "COD");
 
+        revalidatePath("/admin/orders");
+        revalidatePath("/admin/dashboard");
         return { success: true, message: "COD order approved and RapidShyp updated" };
     } catch (error) {
         console.error("Error approving COD order:", error);
@@ -177,6 +182,8 @@ export async function updatePaymentStatus(orderId: string, paymentStatus: string
             return { success: false, data: null, message: error.message };
         }
 
+        revalidatePath("/admin/orders");
+        revalidatePath("/admin/dashboard");
         return { success: true, data, message: "Payment status updated successfully" };
     } catch (error) {
         console.error("Error updating payment status:", error);
@@ -210,6 +217,8 @@ export async function deleteOrder(orderId: string) {
             return { success: false, message: error.message };
         }
 
+        revalidatePath("/admin/orders");
+        revalidatePath("/admin/dashboard");
         return { success: true, message: "Order deleted successfully" };
     } catch (error) {
         console.error("Error deleting order:", error);
@@ -232,6 +241,8 @@ export async function toggleLockOrder(orderId: string, lockState: boolean) {
             return { success: false, message: error.message };
         }
 
+        revalidatePath("/admin/orders");
+        revalidatePath("/admin/dashboard");
         return {
             success: true,
             message: lockState ? "Order locked" : "Order unlocked",

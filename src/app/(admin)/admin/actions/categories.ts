@@ -168,6 +168,7 @@ export async function createCategory(
       return { success: false, error: error.message };
     }
 
+    revalidatePath("/admin/categories");
     revalidatePath("/admin");
     return { success: true, data: data as Category };
   } catch (error) {
@@ -263,6 +264,7 @@ export async function updateCategory(
       return { success: false, error: error.message };
     }
 
+    revalidatePath("/admin/categories");
     revalidatePath("/admin");
     return { success: true, data: data as Category };
   } catch (error) {
@@ -316,6 +318,7 @@ export async function deleteCategory(
       }
     }
 
+    revalidatePath("/admin/categories");
     revalidatePath("/admin");
     return { success: true };
   } catch (error) {
@@ -381,6 +384,8 @@ export async function createSubCategory(formData: any) {
       };
     }
 
+    revalidatePath("/admin/categories");
+    revalidatePath("/admin");
     return {
       success: true,
       data: data,
@@ -464,6 +469,8 @@ export async function updateSubCategory(formData: any) {
         error: error.message,
       };
     }
+    revalidatePath("/admin/categories");
+    revalidatePath("/admin");
     return {
       success: true,
       data: data,
@@ -517,6 +524,7 @@ export async function deleteSubCategory(
       }
     }
 
+    revalidatePath("/admin/categories");
     revalidatePath("/admin");
     return { success: true };
   } catch (error) {
