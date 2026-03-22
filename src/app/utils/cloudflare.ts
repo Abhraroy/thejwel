@@ -72,11 +72,20 @@ function joinUrl(baseUrl: string, key: string): string {
 }
 
 function sanitizeSinglePathSegment(input: string, fallback: string): string {
-  // Keep it to a single segment so our key format stays: folder/timestamp-random.ext
-  const collapsed = input.trim().replace(/\s+/g, '-').replace(/[\\/]/g, '-');
-  const safe = collapsed.replace(/[^a-zA-Z0-9._-]/g, '-');
+  // Single segment; use underscore (no hyphen). Allowed: alphanumeric, dot, underscore.
+  const collapsed = input.trim().replace(/\s+/g, '_').replace(/[\\/]/g, '_');
+  const safe = collapsed.replace(/[^a-zA-Z0-9._]/g, '_');
   if (!safe || safe === '.' || safe === '..') return fallback;
   return safe;
+}
+
+function sanitizeFolderPath(input: string, fallback: string): string {
+  // Multi-segment folder path: products/images → products/images (sanitize each segment, join with /)
+  const trimmed = input.trim().replace(/\\/g, '/');
+  const segments = trimmed.split('/').filter(Boolean);
+  if (segments.length === 0) return fallback;
+  const safe = segments.map((s) => sanitizeSinglePathSegment(s, 'default')).join('/');
+  return safe || fallback;
 }
 
 function sanitizeHeaderValue(input: string): string {
@@ -227,12 +236,11 @@ export async function uploadImageToCloudflare(
     devLog('Upload started', { name: file.name, size: file.size, type: file.type, folder: options.folder ?? 'categories' });
 
     // Generate deterministic, safe object key:
-    // folder/timestamp-random.ext
-    const folder = sanitizeSinglePathSegment(options.folder ?? 'categories', 'categories');
+    // folder/random.ext (all / no -, no timestamp)
+    const folder = sanitizeFolderPath(options.folder ?? 'categories', 'categories');
     const ext = extensionFromMime(file.type); // MIME-type-based extension
-    const timestamp = Date.now().toString();
     const randomString = crypto.randomBytes(8).toString('hex');
-    const key = `${folder}/${timestamp}-${randomString}.${ext}`;
+    const key = `${folder}/${randomString}.${ext}`;
 
     // Prepare S3-compatible SigV4 request
     const region = 'auto'; // R2 uses 'auto' as region

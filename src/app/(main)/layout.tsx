@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     default: "The Jwel: Every Single Detail Shines Brightly",
     template: "%s | The JWEL",
   },
-  description: "Welcome to The Jwel: rghuujEvery Single Detail Shines Brightly – a world of prestige, beauty, and elegance designed exclusively for the discerning few.Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
+  description: "Welcome to The Jwel:Every Single Detail Shines Brightly – a world of prestige, beauty, and elegance designed exclusively for the discerning few.Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
   verification: {
     google: "oib3Fjzpke7bd7r6asp8sAMS_wujZU-F2FqVA0Ap6yI",
   },

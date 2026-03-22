@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const DEFAULT_SITE_URL = "https://thejwel.com";
+const DEFAULT_SITE_URL = "https://thejwel.in";
 const SITE_NAME = "THE JWEL";
 
 function trimTrailingSlash(url: string) {
