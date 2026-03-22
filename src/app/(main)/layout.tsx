@@ -64,7 +64,7 @@ const playfair_display = Playfair_Display({
 const josefin_sans = Josefin_Sans({
   variable: "--font-josefin-sans",
   subsets: ["latin"],
-  weight: ["700","100","200","300","400","500","600"],
+  weight: ["700", "100", "200", "300", "400", "500", "600"],
 });
 
 const open_sans = Open_Sans({
@@ -76,10 +76,10 @@ const open_sans = Open_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
   title: {
-    default: "The JWEL",
+    default: "The Jwel: Every Single Detail Shines Brightly",
     template: "%s | The JWEL",
   },
-  description: "Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
+  description: "Welcome to The Jwel: rghuujEvery Single Detail Shines Brightly – a world of prestige, beauty, and elegance designed exclusively for the discerning few.Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
   verification: {
     google: "oib3Fjzpke7bd7r6asp8sAMS_wujZU-F2FqVA0Ap6yI",
   },
@@ -119,32 +119,32 @@ export const metadata: Metadata = {
         url: "/faviconFolder/favicon.ico",
       },
       {
-        url:"/faviconFolder/android-chrome-192x192.png",
-        sizes:"192x192",
-        type:"image/png",
+        url: "/faviconFolder/android-chrome-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
       },
       {
-        url:"/faviconFolder/android-chrome-512x512.png",
-        sizes:"512x512",
-        type:"image/png",
+        url: "/faviconFolder/android-chrome-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
       },
       {
-        url:"/faviconFolder/favicon-32x32.png",
-        sizes:"32x32",
-        type:"image/png",
+        url: "/faviconFolder/favicon-32x32.png",
+        sizes: "32x32",
+        type: "image/png",
       },
       {
-        url:"/faviconFolder/favicon-16x16.png",
-        sizes:"16x16",
-        type:"image/png",
+        url: "/faviconFolder/favicon-16x16.png",
+        sizes: "16x16",
+        type: "image/png",
       },
-    
+
     ],
-    apple:[
+    apple: [
       {
-        url:"/faviconFolder/apple-touch-icon.png",
-        sizes:"180x180",
-        type:"image/png",
+        url: "/faviconFolder/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
       },
     ],
   },
