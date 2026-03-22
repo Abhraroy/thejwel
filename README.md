@@ -98,4 +98,4 @@ pnpm start
 
 - **Google Analytics**: `src/components/analytics/GoogleAnalytics.tsx` (included in `src/app/(main)/layout.tsx`)
 - **Meta Pixel**: `src/components/analytics/MetaPixel.tsx` (included in `src/app/(main)/layout.tsx`)
-ghjom
+ghjomafa
