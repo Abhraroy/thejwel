@@ -39,6 +39,24 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
   const editingProduct = product ?? selectedProduct;
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [subCategoriesList, setSubCategoriesList] = useState<any[]>([]);
+
+  const normalizeCollection = (value: any): string => {
+    const raw = (value ?? "").toString().trim().toLowerCase();
+
+    // Keep the stored values consistent with what the app routes/filters on.
+    if (raw === "american-diamond" || raw === "american diamond") return "american-diamond";
+    if (
+      raw === "temple-jewellery" ||
+      raw === "temple jewellery" ||
+      raw === "temple"
+    ) {
+      return "temple-jewellery";
+    }
+
+    // Fallback to a valid option so the dropdown always has a selected value.
+    return "american-diamond";
+  };
+
   // Allow empty string for numeric inputs so placeholder can show (instead of a leading 0).
   type NumericInput = number | "";
   const [formData, setFormData] = useState({
@@ -56,7 +74,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
     size: [] as string[],
     tags: [] as string[],
     occasion: "" as string,
-    collection: "" as string,
+    collection: "american-diamond" as string,
     listed_status: true as boolean,
   });
   const [thumbnailImagePreview, setThumbnailImagePreview] = useState<string | null>(null);
@@ -103,7 +121,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
         size: safeArray(editingProduct.size),
         tags: safeArray(editingProduct.tags),
         occasion: safeString(editingProduct.occasion),
-        collection: safeString(editingProduct.collection),
+        collection: normalizeCollection(editingProduct.collection),
         listed_status: editingProduct.listed_status ?? true,
       });
       setThumbnailImagePreview(
@@ -132,7 +150,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
         size: [],
         tags: [],
         occasion: "",
-        collection: "",
+        collection: "american-diamond",
         listed_status: true,
       });
       setThumbnailImagePreview(null);
@@ -323,7 +341,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
       size: [],
       tags: [],
       occasion: "",
-      collection: "",
+      collection: "american-diamond",
       listed_status: true,
     });
     setThumbnailImagePreview(null);
@@ -752,18 +770,19 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
                   >
                     Collection
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="collection"
                     value={formData.collection}
                     onChange={handleInputChange}
-                    placeholder="Enter collection name"
                     className={`w-full px-4 py-2 rounded-lg border transition-colors ${
                       isDarkTheme
                         ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500"
                         : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
                     } focus:outline-none focus:ring-2 focus:ring-[#E94E8B]`}
-                  />
+                  >
+                    <option value="american-diamond">American Diamond</option>
+                    <option value="temple-jewellery">Temple Jewellery</option>
+                  </select>
                 </div>
               </div>
             </div>

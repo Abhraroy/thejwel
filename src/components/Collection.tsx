@@ -11,13 +11,13 @@ function Collection() {
   // Sample collection data - you can expand this later
   const collections: CollectionItem[] = [
     {
-      heading: "american-diamond",
+      heading: "American Diamond",
       description: "Why choose between style and savings? Our American Diamond collection delivers dazzling brilliance for every occasion",
       href: "/collection/american-diamond",
       gradient: "linear-gradient(145deg, #a8c5e0 0%, #c5d8eb 25%, #e8e4f4 50%, #d4d0e8 75%, #b8c8dc 100%)",
     },
     {
-      heading: "temple-jewellery",
+      heading: "Temple Jewellery",
       description: "Celebrate the rich legacy of Indian artistry with our exquisite Temple Jewelry collection — where tradition meets contemporary elegance.",
       href: "/collection/temple-jewellery",
       gradient: "linear-gradient(145deg, #f5e6d3 0%, #e8d4b8 30%, #d4b896 60%, #c4a574 85%, #a68b5b 100%)",
