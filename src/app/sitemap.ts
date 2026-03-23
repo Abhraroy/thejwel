@@ -5,8 +5,8 @@ import { createClient } from "@/lib/supabase/server";
  * Base URL for sitemap entries.
  *
  * Recommended: set one of these environment variables:
- * - SITE_URL="https://thejwel.com"
- * - NEXT_PUBLIC_SITE_URL="https://thejwel.com"
+ * - SITE_URL="https://thejwel.in"
+ * - NEXT_PUBLIC_SITE_URL="https://thejwel.in"
  *
  * Vercel fallback: VERCEL_URL="your-domain.vercel.app" (no scheme)
  */

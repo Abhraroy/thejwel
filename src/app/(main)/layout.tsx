@@ -87,9 +87,9 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "The JWEL",
+    title: "The Jwel: Every Single Detail Shines Brightly",
     description:
-      "Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
+      "Welcome to The Jwel:Every Single Detail Shines Brightly – a world of prestige, beauty, and elegance designed exclusively for the discerning few.Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
     url: toAbsoluteUrl("/"),
     siteName: "THE JWEL",
     type: "website",
@@ -104,9 +104,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "The JWEL",
+    title: "The Jwel: Every Single Detail Shines Brightly",
     description:
-      "Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
+      "Welcome to The Jwel:Every Single Detail Shines Brightly – a world of prestige, beauty, and elegance designed exclusively for the discerning few.Shop premium American Diamond and traditional Temple Jewellery at TheJWEL, Kolkata. Explore elegant bangles, rings, necklaces & more – crafted for modern and timeless beauty.",
     images: [toAbsoluteUrl("/faviconFolder/android-chrome-512x512.png")],
   },
   robots: {
