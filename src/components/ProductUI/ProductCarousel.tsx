@@ -47,7 +47,7 @@ export default function ProductCarousel({
       {/* Section Heading */}
       <div className="flex items-center justify-center mb-3 md:mb-5 px-3 sm:px-4 lg:px-6">
         {tagSlug ? (
-          <Link href={`/Tags/${tagSlug}`} className="group">
+          <Link href={`/tags/${tagSlug}`} className="group">
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#360000] relative inline-block font-josefin-sans tracking-wider group-hover:text-[#360000]/80 transition-colors">
               {sectionHeading}
               <span className="absolute -bottom-2 left-0 right-0 h-0.5"></span>

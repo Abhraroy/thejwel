@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: TagsPageProps): Promise<Metad
   return buildPageMetadata({
     title: `${decodedTag} Jewellery`,
     description: `Browse ${decodedTag} jewellery from THE JWEL. Explore curated products by tag and find your perfect pick.`,
-    pathname: `/Tags/${encodeURIComponent(decodedTag)}`,
+    pathname: `/tags/${encodeURIComponent(decodedTag)}`,
   });
 }
 

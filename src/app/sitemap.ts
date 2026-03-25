@@ -179,7 +179,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       for (const tag of new Set([...hardcodedTags, ...uniqStrings(dbTags)])) {
         entries.push({
-          url: abs(`/Tags/${encodeURIComponent(tag)}`),
+          url: abs(`/tags/${encodeURIComponent(tag)}`),
           lastModified: new Date(),
           changeFrequency: "weekly",
           priority: 0.5,

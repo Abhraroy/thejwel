@@ -448,13 +448,13 @@ export default function ProductDisplay({
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-2.5 border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
                   <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Collection</p>
-                  <p className="text-xs font-bold text-gray-900">
+                  <p className="text-xs font-medium text-gray-900">
                     {productDetails[0]?.collection ?? "--"}
                   </p>
                 </div>
                 <div className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-2.5 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
                   <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Category</p>
-                  <p className="text-xs font-bold text-gray-900">
+                  <p className="text-xs font-medium text-gray-900">
                     {productDetails[0]?.categories?.category_name ?? "--"}
                   </p>
                 </div>
@@ -465,14 +465,14 @@ export default function ProductDisplay({
                 Array.isArray(productDetails[0]?.tags) &&
                 productDetails[0]?.tags.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                    <span className="text-sm font-medium text-gray-900 uppercase tracking-wide">
                       Tags
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {productDetails[0].tags.map((tag: string, index: number) => (
                         <span
                           key={index}
-                          className="inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1 text-[11px] font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200"
+                          className="inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1 text-[11px] font-medium text-white shadow-md hover:shadow-lg transition-all duration-200"
                         >
                           {tag}
                         </span>
@@ -484,7 +484,7 @@ export default function ProductDisplay({
               {/* Size Selection */}
               {productDetails[0]?.size && productDetails[0]?.size.length > 0 && (
                 <div className="flex flex-col gap-3">
-                  <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                  <span className="text-sm font-medium text-gray-900 uppercase tracking-wide">
                     Select Size
                   </span>
                   <div className="flex flex-wrap gap-2.5">
@@ -493,7 +493,7 @@ export default function ProductDisplay({
                         type="button"
                         key={index}
                         onClick={() => setSelectedSize(index)}
-                        className={`relative rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 transform ${
+                        className={`relative rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-200 transform ${
                           selectedSize === index
                             ? "bg-gradient-to-r from-[#E94E8B] to-[#d43e7a] text-white shadow-lg scale-105 ring-2 ring-[#E94E8B] ring-offset-2"
                             : "bg-white text-gray-700 border-2 border-gray-200 hover:border-[#E94E8B] hover:shadow-md hover:scale-105"
@@ -594,20 +594,20 @@ export default function ProductDisplay({
 
               {/* Additional Info */}
               <div className="space-y-3 border-t border-gray-200 pt-6">
-                <h3 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
+                <h3 className="text-lg font-medium text-gray-900 uppercase tracking-wide">
                   Product Details
                 </h3>
                 <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
                   <div className="flex justify-between items-center p-3 hover:bg-gray-50 transition-colors">
                     <span className="text-sm font-medium text-gray-600">Category</span>
-                    <span className="text-sm font-bold text-gray-900">
+                    <span className="text-sm font-medium text-gray-900">
                       {productDetails[0]?.categories?.category_name ?? "--"}
                     </span>
                   </div>
                   {productDetails[0]?.collection && (
                     <div className="flex justify-between items-center p-3 hover:bg-gray-50 transition-colors">
                       <span className="text-sm font-medium text-gray-600">Collection</span>
-                      <span className="text-sm font-bold text-gray-900">
+                      <span className="text-sm font-medium text-gray-900">
                         {productDetails[0]?.collection ?? "--"}
                       </span>
                     </div>
@@ -621,7 +621,7 @@ export default function ProductDisplay({
                           {productDetails[0].tags.map((tag: string, idx: number) => (
                             <span
                               key={idx}
-                              className="inline-flex items-center rounded-full bg-gray-100 text-gray-800 px-3 py-1 text-xs font-semibold"
+                              className="inline-flex items-center rounded-full bg-gray-100 text-gray-800 px-3 py-1 text-xs font-medium"
                             >
                               {tag}
                             </span>
@@ -815,7 +815,7 @@ export default function ProductDisplay({
               <div className="grid grid-cols-1 gap-2">
                 <div className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-2.5 border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
                   <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Collection</p>
-                  <p className="text-xs font-bold text-gray-900">
+                  <p className="text-xs font-medium text-gray-900">
                     {product?.collection ?? "--"}
                   </p>
                 </div>
@@ -824,12 +824,12 @@ export default function ProductDisplay({
               {/* Tags */}
               {product?.tags && Array.isArray(product?.tags) && product?.tags.length > 0 && (
                 <div className="flex flex-col gap-3">
-                  <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">Tags</span>
+                  <span className="text-sm font-medium text-gray-900 uppercase tracking-wide">Tags</span>
                   <div className="flex flex-wrap gap-2">
                     {product.tags.map((tag: string, index: number) => (
                       <span
                         key={index}
-                        className="inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-4 py-1.5 text-xs font-semibold text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
+                        className="inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-4 py-1.5 text-xs font-medium text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
                       >
                         {tag}
                       </span>
@@ -841,7 +841,7 @@ export default function ProductDisplay({
               {/* Size Selection */}
               {product?.size && product?.size.length > 0 && (
                 <div className="flex flex-col gap-3">
-                  <span className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                  <span className="text-sm font-medium text-gray-900 uppercase tracking-wide">
                     Select Size
                   </span>
                   <div className="flex flex-wrap gap-2.5">
@@ -849,7 +849,7 @@ export default function ProductDisplay({
                       <button
                         key={index}
                         onClick={() => setSelectedSize(index)}
-                        className={`relative rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 transform ${
+                        className={`relative rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-200 transform ${
                           selectedSize === index
                             ? "bg-gradient-to-r from-[#E94E8B] to-[#d43e7a] text-white shadow-lg scale-105 ring-2 ring-[#E94E8B] ring-offset-2"
                             : "bg-white text-gray-700 border-2 border-gray-200 hover:border-[#E94E8B] hover:shadow-md hover:scale-105"
@@ -936,7 +936,7 @@ export default function ProductDisplay({
 
               {/* Additional Info */}
               <div className="space-y-2 border-t pt-4">
-                <h3 className="text-base font-semibold text-gray-900">
+                <h3 className="text-base font-medium text-gray-900">
                   Product Details
                 </h3>
                 <div className="space-y-1.5 text-xs">
@@ -1045,7 +1045,7 @@ export default function ProductDisplay({
             <div className="w-1/2 flex flex-col gap-5">
               {/* Product Name */}
               <div className="space-y-2">
-                <h1 className="text-4xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-4xl font-medium text-gray-900 leading-tight">
                   {productDetails[0]?.product_name}
                 </h1>
                 
@@ -1086,7 +1086,7 @@ export default function ProductDisplay({
 
               {/* Price */}
               <div className="flex items-baseline gap-4 flex-wrap">
-                <span className="text-5xl font-bold text-gray-900">
+                <span className="text-5xl font-medium text-gray-900">
                   ₹{productDetails[0]?.final_price}
                 </span>
                 {productDetails[0]?.base_price && productDetails[0]?.base_price > productDetails[0]?.final_price && (
@@ -1134,13 +1134,13 @@ export default function ProductDisplay({
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-3 border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
                   <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Collection</p>
-                  <p className="text-xs font-bold text-gray-900">
+                  <p className="text-xs font-medium text-gray-900">
                     {productDetails[0]?.collection ?? "--"}
                   </p>
                 </div>
                 <div className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-3 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
                   <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Category</p>
-                  <p className="text-xs font-bold text-gray-900">
+                  <p className="text-xs font-medium text-gray-900">
                     {productDetails[0]?.categories?.category_name ?? "--"}
                   </p>
                 </div>
@@ -1149,12 +1149,12 @@ export default function ProductDisplay({
               {/* Tags */}
               {productDetails[0]?.tags && Array.isArray(productDetails[0]?.tags) && productDetails[0]?.tags.length > 0 && (
                 <div className="flex flex-col gap-3">
-                  <span className="text-base font-bold text-gray-900 uppercase tracking-wide">Tags</span>
+                  <span className="text-base font-medium text-gray-900 uppercase tracking-wide">Tags</span>
                   <div className="flex flex-wrap gap-2.5">
                     {productDetails[0].tags.map((tag: string, index: number) => (
                       <span
                         key={index}
-                        className="inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-5 py-2 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
+                        className="inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-5 py-2 text-sm font-medium text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
                       >
                         {tag}
                       </span>
@@ -1166,7 +1166,7 @@ export default function ProductDisplay({
               {/* Size Selection */}
               {productDetails[0]?.size && productDetails[0]?.size.length > 0 && (
                 <div className="flex flex-col gap-3">
-                  <span className="text-base font-bold text-gray-900 uppercase tracking-wide">
+                  <span className="text-base font-medium text-gray-900 uppercase tracking-wide">
                     Select Size
                   </span>
                   <div className="flex flex-wrap gap-3">
@@ -1174,7 +1174,7 @@ export default function ProductDisplay({
                       <button
                         key={index}
                         onClick={() => setSelectedSize(index)}
-                        className={`relative rounded-xl px-6 py-3 font-semibold text-base transition-all duration-200 transform ${
+                        className={`relative rounded-xl px-6 py-3 font-medium text-base transition-all duration-200 transform ${
                           selectedSize === index
                             ? "bg-gradient-to-r from-[#E94E8B] to-[#d43e7a] text-white shadow-lg scale-105 ring-2 ring-[#E94E8B] ring-offset-2"
                             : "bg-white text-gray-700 border-2 border-gray-200 hover:border-[#E94E8B] hover:shadow-md hover:scale-105"
