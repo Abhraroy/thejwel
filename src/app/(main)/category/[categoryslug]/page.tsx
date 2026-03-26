@@ -25,7 +25,7 @@ export async function generateMetadata({
   if (!category) {
     return buildPageMetadata({
       title: "Shop Jewellery",
-      description: "Explore jewellery at THE JWEL. Browse categories and discover your next favorite piece.",
+      description: "Explore jewellery at TheJwel. Browse categories and discover your next favorite piece.",
       pathname: `/category/${encodeURIComponent(slug)}`,
       noIndex: true,
     });
@@ -35,7 +35,7 @@ export async function generateMetadata({
     title: `${category.category_name} Jewellery`,
     description:
       category.category_description ||
-      `Explore ${category.category_name} jewellery at THE JWEL. Browse curated designs and discover your next favorite piece.`,
+      `Find beautiful ${category.category_name} at TheJwel, created to add elegance and charm to your style. Perfect for daily wear, festive looks, and special moments.`,
     pathname: `/category/${encodeURIComponent(category.slug)}`,
     imagePath: category.category_image_url || "/faviconFolder/android-chrome-512x512.png",
   });

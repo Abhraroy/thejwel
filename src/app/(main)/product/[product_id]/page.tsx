@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     title,
     description:
       (product.description || "").slice(0, 155) ||
-      `Buy ${product.product_name} from THE JWEL. Explore premium jewelry collections with trusted quality and pricing.`,
+      `Discover ${product.product_name} at TheJwel, crafted to enhance your style with elegance and comfort. A perfect choice for every occasion with timeless appeal.`,
     pathname: `/product/${encodeURIComponent(String(product.product_id))}`,
     imagePath: product.thumbnail_image || "/faviconFolder/android-chrome-512x512.png",
   });
