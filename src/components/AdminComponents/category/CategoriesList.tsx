@@ -535,21 +535,44 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
                                 </label>
                               </div>
                             ) : (
-                              <div className="relative">
-                                <img
-                                  src={subcategory_image_url_preview}
-                                  alt="Sub category preview"
-                                  className="w-full h-48 object-cover rounded-lg border"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={removeImage}
-                                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                              <div className="space-y-3">
+                                {/* Preview box */}
+                                <div
+                                  className={`w-full h-72 rounded-lg border overflow-hidden flex items-center justify-center ${
+                                    isDarkTheme ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'
+                                  }`}
                                 >
-                                  <DeleteIcon className="w-4 h-4" />
-                                </button>
-                                <div className={`mt-2 text-sm ${isDarkTheme ? 'text-gray-400' : 'text-gray-600'}`}>
-                                  Image uploaded successfully
+                                  <img
+                                    src={subcategory_image_url_preview}
+                                    alt="Sub category preview"
+                                    className="w-full h-full object-contain"
+                                  />
+                                </div>
+
+                                {/* Image actions */}
+                                <div className="flex flex-wrap gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => document.getElementById('sub-category-image-upload')?.click()}
+                                    className="px-4 py-2 bg-[#E94E8B] text-white rounded-lg cursor-pointer hover:bg-[#d43d75] transition-colors"
+                                  >
+                                    {isEditingSubCategory ? 'Update Image' : 'Change Image'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={removeImage}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                      isDarkTheme
+                                        ? 'bg-red-900/40 text-red-200 hover:bg-red-900/60'
+                                        : 'bg-red-50 text-red-700 hover:bg-red-100'
+                                    }`}
+                                  >
+                                    Delete Image
+                                  </button>
+                                </div>
+
+                                <div className={`text-sm ${isDarkTheme ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  {formData.subcategory_image_url instanceof File ? 'New image selected' : 'Current image'}
                                 </div>
                               </div>
                             )}
