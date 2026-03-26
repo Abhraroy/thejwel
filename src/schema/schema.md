@@ -127,6 +127,9 @@ CREATE TABLE public.product_images (
   CONSTRAINT product_images_pkey PRIMARY KEY (image_id),
   CONSTRAINT product_images_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(product_id)
 );
+
+
+
 CREATE TABLE public.products (
   product_id uuid NOT NULL DEFAULT uuid_generate_v4(),
   category_id uuid,
@@ -151,6 +154,17 @@ CREATE TABLE public.products (
   CONSTRAINT products_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(category_id),
   CONSTRAINT products_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.sub_categories(subcategory_id)
 );
+
+
+
+
+
+
+
+
+
+
+
 CREATE TABLE public.review_images (
   review_image_id uuid NOT NULL DEFAULT gen_random_uuid(),
   created_at timestamp with time zone NOT NULL DEFAULT now(),

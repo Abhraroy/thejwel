@@ -102,6 +102,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
         .filter((img: string) => !!img)
     : [];
   const imageUrls = images.length > 0 ? images : [normalizedProduct.thumbnail_image].filter(Boolean);
+  
+  
   const schemaProduct = {
     "@context": "https://schema.org",
     "@type": "Product",

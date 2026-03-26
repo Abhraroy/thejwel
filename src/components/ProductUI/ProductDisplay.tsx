@@ -364,7 +364,7 @@ export default function ProductDisplay({
             <div className="flex w-full flex-col gap-4 pt-4">
               {/* Product Name */}
               <div className="space-y-2">
-                <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-2xl font-medium text-gray-900 leading-tight">
                   {productDetails[0]?.product_name}
                 </h1>
                 
@@ -400,7 +400,7 @@ export default function ProductDisplay({
 
               {/* Price */}
               <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="text-3xl font-bold text-gray-900">
+                <span className="text-3xl font-medium text-gray-900">
                   ₹{productDetails[0]?.final_price}
                 </span>
                 {productDetails[0]?.base_price && productDetails[0]?.base_price > productDetails[0]?.final_price && (
@@ -432,7 +432,7 @@ export default function ProductDisplay({
                   )}
                 </div>
                 <span
-                  className={`text-sm font-semibold ${
+                  className={`text-sm font-medium ${
                     (productDetails[0]?.stock_quantity ?? 0) > 0
                       ? "text-green-700"
                       : "text-red-700"
@@ -726,7 +726,7 @@ export default function ProductDisplay({
             <div className="flex w-full flex-col gap-4 lg:w-1/2">
               {/* Product Name */}
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-3xl font-medium text-gray-900 leading-tight">
                   {product?.product_name}
                 </h1>
                 
@@ -767,7 +767,7 @@ export default function ProductDisplay({
 
               {/* Price */}
               <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="text-4xl font-bold text-gray-900">
+                <span className="text-4xl font-medium text-gray-900">
                   ₹{product?.final_price}
                 </span>
                 {product?.base_price && product?.base_price > product?.final_price && (
@@ -799,7 +799,7 @@ export default function ProductDisplay({
                   )}
                 </div>
                 <span
-                  className={`text-sm font-semibold ${
+                    className={`text-sm font-medium ${
                     (product?.stock_quantity ?? 0) > 0
                       ? "text-green-700"
                       : "text-red-700"
