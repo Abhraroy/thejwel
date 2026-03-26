@@ -120,8 +120,8 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
   };
 
   const removeImage = () => {
-    if (formData.subcategory_image_url) {
-      URL.revokeObjectURL(formData.subcategory_image_url.toString() || '');
+    if (subcategory_image_url_preview?.startsWith('blob:')) {
+      URL.revokeObjectURL(subcategory_image_url_preview);
     }
     setFormData((prev) => ({
       ...prev,
@@ -146,15 +146,15 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
         setFormData((prev) => ({
           ...prev,
           subcategory_image_url: file,
-          subcategory_image_url_preview: previewUrl,
         }));
+        setSubcategoryImageUrlPreview(previewUrl);
       }
     }
   };
 
   const handleCancel = () => {
-    if (formData.subcategory_image_url) {
-      URL.revokeObjectURL(formData.subcategory_image_url.toString() || '');
+    if (subcategory_image_url_preview?.startsWith('blob:')) {
+      URL.revokeObjectURL(subcategory_image_url_preview);
     }
     setFormData({
       subcategory_id: '',
@@ -165,6 +165,7 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
     });
     setSubcategoryImageUrlPreview(null)
     setShowAddSubCategory(false);
+    setIsEditingSubCategory(false);
   };
 
   const handleSubmit =
@@ -248,6 +249,7 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
         subcategory_image_url: subcategory_image_url,
         is_active: is_active ?? true
       })
+      setSubcategoryImageUrlPreview(subcategory_image_url || null);
       setIsEditingSubCategory(true)
       setShowAddSubCategory(true)
     }
@@ -453,7 +455,7 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
                     <td colSpan={7} className="py-6 px-6">
                       <div className={`${isDarkTheme ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6`}>
                         <h3 className={`text-xl font-semibold mb-6 ${isDarkTheme ? 'text-white' : 'text-gray-900'}`}>
-                          Add New Sub Category
+                          {isEditingSubCategory ? 'Edit Sub Category' : 'Add New Sub Category'}
                         </h3>
                         
                         <form onSubmit={handleSubmit(category.category_id)} className="space-y-6">
@@ -529,7 +531,7 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
                                   htmlFor="sub-category-image-upload"
                                   className="mt-4 inline-block px-4 py-2 bg-[#E94E8B] text-white rounded-lg cursor-pointer hover:bg-[#d43d75] transition-colors"
                                 >
-                                  Select Image
+                                  {isEditingSubCategory ? 'Change Image' : 'Select Image'}
                                 </label>
                               </div>
                             ) : (
@@ -571,7 +573,7 @@ export default function CategoriesList({ category, isDarkTheme }: { category: ca
                               disabled={submitting}
                               className="px-6 py-2 bg-[#E94E8B] text-white rounded-lg font-medium hover:bg-[#d43d75] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              {submitting ? 'Saving...' : 'Add Sub Category'}
+                              {submitting ? 'Saving...' : (isEditingSubCategory ? 'Update Sub Category' : 'Add Sub Category')}
                             </button>
                           </div>
                         </form>

@@ -26,7 +26,7 @@ export interface CreateCategoryData {
   category_name: string;
   slug: string;
   description?: string;
-  category_image_url?: File | string;
+  category_image_url?: File | string | null;
   sub_categories?: Array<{
     sub_category_id: string;
     sub_category_name: string;
@@ -208,8 +208,17 @@ export async function updateCategory(
     let imageUrl = currentCategory.category_image_url;
 
     // Upload new image to Cloudflare if provided
-    if (formData.category_image_url) {
-      if (formData.category_image_url instanceof File) {
+    if (formData.category_image_url !== undefined) {
+      if (formData.category_image_url === null) {
+        // Explicit image removal
+        if (currentCategory.category_image_url) {
+          const r2Key = extractR2KeyFromUrl(currentCategory.category_image_url);
+          if (r2Key) {
+            await deleteImageFromCloudflare(r2Key);
+          }
+        }
+        imageUrl = null;
+      } else if (formData.category_image_url instanceof File) {
         // Delete old image if it exists
         if (currentCategory.category_image_url) {
           // Extract R2 key from URL
@@ -409,8 +418,25 @@ export async function updateSubCategory(formData: any) {
     typeof formData.subcategory_image_url
   );
   try {
-    // Handle image - if it's a File, upload it; if it's a string (URL), use it directly
-    if (formData.subcategory_image_url instanceof File) {
+    // Handle image:
+    // - File: upload + replace (delete old)
+    // - string: keep as-is
+    // - null: explicit removal (delete old)
+    if (formData.subcategory_image_url === null) {
+      const { data: currentSubcategory } = await supabase
+        .from("sub_categories")
+        .select("subcategory_image_url")
+        .eq("subcategory_id", formData.subcategory_id)
+        .single();
+
+      if (currentSubcategory?.subcategory_image_url) {
+        const r2Key = extractR2KeyFromUrl(currentSubcategory.subcategory_image_url);
+        if (r2Key) {
+          await deleteImageFromCloudflare(r2Key);
+        }
+      }
+      formData.subcategory_image_url = null;
+    } else if (formData.subcategory_image_url instanceof File) {
       console.log("subcategory_image_url is a file");
       
       // Get current subcategory to delete old image if needed

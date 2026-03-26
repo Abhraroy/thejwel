@@ -150,7 +150,7 @@ export default function Categories({ isDarkTheme, category }: CategoriesProps) {
     setSubmitting(true);
 
     try {
-      let imageUrl: string | undefined = undefined;
+      let categoryImageUrl: string | null | undefined = undefined;
 
       // Upload image via API if it's a new file
       if (formData.image instanceof File) {
@@ -168,10 +168,10 @@ export default function Categories({ isDarkTheme, category }: CategoriesProps) {
           throw new Error(response.data.error || "Image upload failed");
         }
 
-        imageUrl = response.data.url;
-      } else if (typeof formData.image === 'string') {
-        // If it's already a URL (editing mode), use it as is
-        imageUrl = formData.image;
+        categoryImageUrl = response.data.url;
+      } else if (editingCategory && !formData.imagePreview) {
+        // Explicit image removal in edit mode
+        categoryImageUrl = null;
       }
 
       const categoryData: CreateCategoryData = {
@@ -179,7 +179,7 @@ export default function Categories({ isDarkTheme, category }: CategoriesProps) {
         category_name: formData.category_name,
         slug: formData.slug,
         description: formData.description || undefined,
-        category_image_url: imageUrl || undefined,
+        category_image_url: categoryImageUrl,
         is_active: formData.is_active,
       };
 
@@ -396,7 +396,7 @@ export default function Categories({ isDarkTheme, category }: CategoriesProps) {
                     onChange={handleImageUpload}
                     className="hidden"
                     id="category-image-upload"
-                    required={!category}
+                    required={!editingCategory}
                   />
                   <label
                     htmlFor="category-image-upload"
@@ -447,7 +447,7 @@ export default function Categories({ isDarkTheme, category }: CategoriesProps) {
                 disabled={submitting}
                 className="px-6 py-2 bg-[#E94E8B] text-white rounded-lg font-medium hover:bg-[#d43d75] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submitting ? 'Saving...' : (category ? 'Update Category' : 'Add Category')}
+                {submitting ? 'Saving...' : (editingCategory ? 'Update Category' : 'Add Category')}
               </button>
             </div>
           </form>
