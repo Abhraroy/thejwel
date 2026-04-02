@@ -128,14 +128,14 @@ export default function HamburgerSidebar({
                 }
                 return (
                   <li key={index}>
-                    <a
+                    <Link
                       href={item.href}
                       className="flex items-center gap-3 px-4 py-3 bg-[#CAF2FF] text-[#360000] hover:bg-[#CAF2FF]/70 rounded-lg transition-colors"
                       onClick={onClose}
                     >
                       {item.icon}
                       <span className="font-medium font-open-sans tracking-wider">{item.label}</span>
-                    </a>
+                    </Link>
                   </li>
                 );
               })}

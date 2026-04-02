@@ -183,7 +183,8 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
   const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const { setMobnoInputState, AuthenticatedState, categories } = useStore();
+  const { setMobnoInputState, AuthenticatedState, categories, setCategories } = useStore();
+  const categoriesFetchInFlight = useRef(false);
   const router = useRouter();
   const supabase = createClient();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -217,6 +218,31 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
       unlockBody();
     };
   }, [isSidebarOpen]);
+
+  useEffect(() => {
+    if (categories.length > 0) return;
+    if (categoriesFetchInFlight.current) return;
+    categoriesFetchInFlight.current = true;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("categories")
+          .select("category_id, category_name, slug, category_image_url");
+        if (!cancelled && !error && data?.length) {
+          setCategories(data);
+        }
+      } finally {
+        if (!cancelled) {
+          categoriesFetchInFlight.current = false;
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      categoriesFetchInFlight.current = false;
+    };
+  }, [categories.length, setCategories, supabase]);
 
   // Debounced search suggestions with 300ms delay
   useEffect(() => {
@@ -440,7 +466,7 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
 
           {/* Logo Section */}
           <div className="navbar-logo-section shrink-0 ml-2 md:ml-0 flex-row flex ">
-            <a href="/" className="flex items-center gap-2 md:gap-3">
+            <Link href="/" className="flex items-center gap-2 md:gap-3">
               <OptimizedImage
                 src="/logo/cropped-logo.svg"
                 alt="JWEL"
@@ -457,7 +483,7 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
                   BEYOND THE JEWELLERY
                 </span>
               </div>
-            </a>
+            </Link>
           </div>
 
           {/* Search Bar Section - Hidden on mobile, visible on tablet and up */}
