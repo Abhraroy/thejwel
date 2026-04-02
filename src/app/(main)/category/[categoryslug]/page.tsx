@@ -4,23 +4,30 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { buildPageMetadata, toAbsoluteUrl } from "@/lib/seo/metadata";
 import JsonLd from "@/components/seo/JsonLd";
+import { cache } from "react";
 
 type CategoryPageProps = {
   params: Promise<{ categoryslug: string }>;
 };
 
+const getCategoryBase = cache(async (slug: string) => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("categories")
+    .select("category_id, slug, category_name, description, category_image_url")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) return null;
+  return data;
+});
+
 export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
-  const supabase = await createClient();
   const { categoryslug } = await params;
   const slug = decodeURIComponent(categoryslug);
-
-  const { data: category } = await supabase
-    .from("categories")
-    .select("slug, category_name, category_description, category_image_url")
-    .eq("slug", slug)
-    .maybeSingle();
+  const category = await getCategoryBase(slug);
 
   if (!category) {
     return buildPageMetadata({
@@ -34,7 +41,7 @@ export async function generateMetadata({
   return buildPageMetadata({
     title: `${category.category_name} Jewellery`,
     description:
-      category.category_description ||
+      category.description ||
       `Find beautiful ${category.category_name} at TheJwel, created to add elegance and charm to your style. Perfect for daily wear, festive looks, and special moments.`,
     pathname: `/category/${encodeURIComponent(category.slug)}`,
     imagePath: category.category_image_url || "/faviconFolder/android-chrome-512x512.png",
@@ -44,35 +51,26 @@ export async function generateMetadata({
 export default async function CategoryPage({ 
   params 
 }: CategoryPageProps) {
-  const supabase = await createClient();
   const { categoryslug } = await params;
   const slug = decodeURIComponent(categoryslug);
+  const supabase = await createClient();
 
-  const { data: category, error: categoryError } = await supabase
-    .from("categories")
-    .select("*")
-    .eq("slug", slug)
-    .single();
+  const category = await getCategoryBase(slug);
 
-  if (categoryError || !category) {
+  if (!category) {
     notFound();
   }
 
   const { data: subcategories } = await supabase
     .from("sub_categories")
-    .select("*")
+    .select("subcategory_id, category_id, subcategory_name, subcategory_image_url, is_active")
     .eq("category_id", category.category_id)
     .eq("is_active", true);
 
   const { data: products } = await supabase
     .from("products")
-    .select(`
-      *,
-      categories!inner(*),
-      sub_categories(*),
-      product_images(*)
-    `)
-    .eq("categories.slug", slug)
+    .select("product_id, product_name, base_price, discount_percentage, final_price, stock_quantity, updated_at, thumbnail_image, tags, subcategory_id")
+    .eq("category_id", category.category_id)
     .eq("listed_status", true)
     .order("updated_at", { ascending: false });
 

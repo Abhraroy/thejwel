@@ -29,7 +29,7 @@ export default function CategoryClient({ category, subcategories, products }: Ca
     
     if (selectedSubcategory !== "all") {
       filtered = filtered.filter((product) => 
-        product.sub_categories?.subcategory_id === selectedSubcategory
+        product.subcategory_id === selectedSubcategory
       );
     }
 
@@ -47,7 +47,11 @@ export default function CategoryClient({ category, subcategories, products }: Ca
         filtered.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
         break;
       case "featured":
-        filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+        filtered.sort((a, b) => {
+          const aFeatured = Array.isArray(a.tags) && a.tags.includes("featured") ? 1 : 0;
+          const bFeatured = Array.isArray(b.tags) && b.tags.includes("featured") ? 1 : 0;
+          return bFeatured - aFeatured;
+        });
         break;
       default:
         break;

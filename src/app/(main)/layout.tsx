@@ -23,6 +23,7 @@ import { getBaseUrl, toAbsoluteUrl } from "@/lib/seo/metadata";
 import JsonLd from "@/components/seo/JsonLd";
 import MetaPixel from "@/components/analytics/MetaPixel";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import RoutePerfTracker from "@/components/analytics/RoutePerfTracker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -201,6 +202,7 @@ export default function RootLayout({
         />
         <GoogleAnalytics />
         <MetaPixel />
+        <RoutePerfTracker />
         <ParentNavbar />
         <CartBootstrapper />
         {children}

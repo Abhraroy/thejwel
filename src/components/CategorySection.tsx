@@ -1,5 +1,5 @@
 import OptimizedImage from "@/components/OptimizedImage";
-import Link from 'next/link';
+import NavPerfLink from "@/components/analytics/NavPerfLink";
 
 
 export default function CategorySection({ 
@@ -17,11 +17,11 @@ export default function CategorySection({
         <div className="overflow-x-auto scrollbar-hide px-1">
           <div className="flex gap-3 md:gap-5 pb-3 min-w-max md:min-w-0 md:justify-center md:flex-wrap pt-2">
             {categories.map((category: any) => (
-              <Link
+              <NavPerfLink
                 key={category.category_id}
                 href={`/category/${encodeURIComponent(category.slug)}`}
-                prefetch={false}
                 className="flex flex-col items-center group flex-shrink-0 w-20 md:w-24 lg:w-28"
+                markName="nav-category-start"
               >
                 {/* Circular Image Container */}
                 <div className="relative w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-full overflow-hidden bg-white ring-2 group-hover:ring-theme-olive transition-all duration-300 mb-2 md:mb-3 shadow-sm group-hover:shadow-md">
@@ -40,7 +40,7 @@ export default function CategorySection({
                 <span className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-[#360000] group-hover:text-[#360000]/80 text-center transition-colors duration-200 leading-tight">
                   {category.category_name}
                 </span>
-              </Link>
+              </NavPerfLink>
             ))}
           </div>
         </div>

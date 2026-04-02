@@ -3,21 +3,43 @@ import ProductPageClient from "./ProductPageClient";
 import { createClient } from "@/lib/supabase/server";
 import { buildPageMetadata, toAbsoluteUrl } from "@/lib/seo/metadata";
 import JsonLd from "@/components/seo/JsonLd";
+import { cache } from "react";
 
 type ProductPageProps = {
   params: Promise<{ product_id: string }>;
 };
 
-export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const { product_id } = await params;
+const getProductBase = cache(async (productId: string) => {
   const supabase = await createClient();
-
-  const { data: product } = await supabase
+  const { data, error } = await supabase
     .from("products")
-    .select("product_id, product_name, description, thumbnail_image, categories(category_name)")
-    .eq("product_id", product_id)
+    .select(`
+      product_id,
+      product_name,
+      description,
+      thumbnail_image,
+      base_price,
+      discount_percentage,
+      final_price,
+      stock_quantity,
+      size,
+      tags,
+      collection,
+      sku,
+      category_id,
+      categories(category_name)
+    `)
+    .eq("product_id", productId)
     .eq("listed_status", true)
     .maybeSingle();
+
+  if (error) return null;
+  return data;
+});
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { product_id } = await params;
+  const product = await getProductBase(product_id);
 
   if (!product) {
     return buildPageMetadata({
@@ -48,31 +70,29 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 export default async function ProductPage({ params }: ProductPageProps) {
   const { product_id } = await params;
   const supabase = await createClient();
+  const [product, productImagesRes, reviewsRes] = await Promise.all([
+    getProductBase(product_id),
+    supabase
+      .from("product_images")
+      .select("image_id, product_id, image_url")
+      .eq("product_id", product_id),
+    supabase
+      .from("reviews")
+      .select(`
+        review_id,
+        product_id,
+        user_id,
+        rating,
+        title,
+        review_text,
+        created_at,
+        review_images(review_image_id, review_id, review_image_url),
+        users(user_id, first_name, last_name, email)
+      `)
+      .eq("product_id", product_id),
+  ]);
 
-  const [{ data: product, error: productError }, { data: reviewData, error: reviewError }] =
-    await Promise.all([
-      supabase
-        .from("products")
-        .select(`
-          *,
-          product_images!product_images_product_id_fkey(*),
-          reviews(*),
-          categories(*)
-        `)
-        .eq("product_id", product_id)
-        .eq("listed_status", true)
-        .maybeSingle(),
-      supabase
-        .from("reviews")
-        .select(`
-          *,
-          review_images(*),
-          users(*)
-        `)
-        .eq("product_id", product_id),
-    ]);
-
-  if (productError || !product) {
+  if (!product) {
     return (
       <ProductPageClient
         productDetails={[]}
@@ -82,7 +102,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
     );
   }
 
+  const reviewData = reviewsRes.data || [];
+  const reviewError = reviewsRes.error;
+
   const normalizedProduct = { ...product } as any;
+  normalizedProduct.product_images = productImagesRes.data || [];
+  normalizedProduct.reviews = reviewData;
+
   if (
     (!Array.isArray(normalizedProduct.product_images) || normalizedProduct.product_images.length === 0) &&
     normalizedProduct.thumbnail_image

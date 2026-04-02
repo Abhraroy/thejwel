@@ -1,7 +1,12 @@
 "use client";
 
-import ProductDisplay from "@/components/ProductUI/ProductDisplay";
-import ProductReview from "@/components/ProductUI/ProductReview";
+import dynamic from "next/dynamic";
+
+const ProductDisplay = dynamic(() => import("@/components/ProductUI/ProductDisplay"), {
+  loading: () => <ProductPageSkeleton />,
+});
+
+const ProductReview = dynamic(() => import("@/components/ProductUI/ProductReview"));
 
 type ProductPageClientProps = {
   productDetails: any[] | null;

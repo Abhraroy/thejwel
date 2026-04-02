@@ -84,7 +84,6 @@ export default function HamburgerSidebar({
                     <li key={category.category_id}>
                       <Link
                         href={`/category/${encodeURIComponent(category.slug)}`}
-                        prefetch={false}
                         className="flex items-center gap-3 px-4 py-3 bg-[#CAF2FF] text-[#360000] hover:bg-[#CAF2FF]/70 rounded-lg transition-colors"
                         onClick={onClose}
                       >

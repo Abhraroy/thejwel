@@ -1,7 +1,7 @@
 "use client";
 
 import OptimizedImage from "@/components/OptimizedImage";
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useStore } from "@/zustandStore/zustandStore";
 import { addToDbCart, addToLocalCart } from "@/utilityFunctions/CartFunctions";
@@ -10,8 +10,7 @@ import { Product } from "@/types/TypeInterface";
 import { 
   
   addToDbWishlist,
-  removeFromDbWishlist,
-  checkIfWishlisted
+  removeFromDbWishlist
 } from "@/utilityFunctions/WishListFunctions";
 import { toast } from "react-toastify";
 import { getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";
@@ -44,7 +43,7 @@ interface ProductCardProps {
   isLoading?: boolean;
 }
 
-export default function ProductCard({
+function ProductCard({
   product,
   onAddToCart,
   onWishlistToggle,
@@ -55,19 +54,20 @@ export default function ProductCard({
   const [isWishlistActive, setIsWishlistActive] = useState(isWishlisted);
   const [isHovered, setIsHovered] = useState(false);
   const [isCartClicked, setIsCartClicked] = useState(false);
-  const { cartItems, setCartItems, AuthenticatedState, AuthUserId, CartId, setWishListItems } = useStore();
+  const { cartItems, setCartItems, AuthenticatedState, AuthUserId, CartId, wishListItems, setWishListItems } = useStore();
   const supabase = createClient();
 
-  // Check if product is wishlisted when component mounts (for authenticated users)
+  const isWishlistedFromStore = useMemo(() => {
+    if (!Array.isArray(wishListItems) || !product?.product_id) return false;
+    return wishListItems.some((item: any) => {
+      const pid = item?.product_id ?? item?.products?.product_id;
+      return pid === product.product_id;
+    });
+  }, [wishListItems, product?.product_id]);
+
   useEffect(() => {
-    const checkWishlistStatus = async () => {
-      if (AuthenticatedState && AuthUserId && product.product_id) {
-        const wishlisted = await checkIfWishlisted(product.product_id, AuthUserId, supabase);
-        setIsWishlistActive(wishlisted);
-      }
-    };
-    checkWishlistStatus();
-  }, [AuthenticatedState, AuthUserId, product.product_id]);
+    setIsWishlistActive(Boolean(isWishlisted || isWishlistedFromStore));
+  }, [isWishlisted, isWishlistedFromStore]);
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -86,6 +86,11 @@ export default function ProductCard({
           // Revert state if failed
           setIsWishlistActive(!newWishlistState);
           console.error("Failed to add to wishlist:", result.error);
+        } else {
+          const exists = Array.isArray(wishListItems)
+            ? wishListItems.some((item: any) => (item?.product_id ?? item?.products?.product_id) === product.product_id)
+            : false;
+          if (!exists) setWishListItems([...(wishListItems || []), product]);
         }
       } else {
         // Remove from wishlist
@@ -94,6 +99,14 @@ export default function ProductCard({
           // Revert state if failed
           setIsWishlistActive(!newWishlistState);
           console.error("Failed to remove from wishlist:", result.error);
+        } else {
+          setWishListItems(
+            Array.isArray(wishListItems)
+              ? wishListItems.filter(
+                  (item: any) => (item?.product_id ?? item?.products?.product_id) !== product.product_id
+                )
+              : []
+          );
         }
       }
     } else {
@@ -334,7 +347,15 @@ export default function ProductCard({
 
   if (product.product_id) {
     return (
-      <Link href={`/product/${product.product_id}`} className="block h-full">
+      <Link
+        href={`/product/${product.product_id}`}
+        className="block h-full"
+        onClick={() => {
+          if (process.env.NEXT_PUBLIC_NAV_PERF_DEBUG === "true") {
+            performance.mark("nav-product-start");
+          }
+        }}
+      >
         {CardContent}
       </Link>
     );
@@ -342,3 +363,5 @@ export default function ProductCard({
 
   return CardContent;
 }
+
+export default memo(ProductCard);
