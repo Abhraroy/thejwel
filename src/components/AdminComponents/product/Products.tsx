@@ -157,6 +157,21 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
     }
   }, [editingProduct]);
 
+  const selectedCategoryName = categoriesList.find(
+    (cat) => cat.category_id === formData.category_id
+  )?.category_name;
+  const isBangleCategory = (selectedCategoryName ?? "")
+    .toLowerCase()
+    .trim()
+    .includes("bangle");
+
+  // Keep size data only for bangle products.
+  useEffect(() => {
+    if (!isBangleCategory && formData.size.length > 0) {
+      setFormData((prev) => ({ ...prev, size: [] }));
+    }
+  }, [isBangleCategory, formData.size.length]);
+
 
   const fetchSubCategories = async (categoryId: string) => {
     const result = await getSubCategories(categoryId);
@@ -687,27 +702,37 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
                   >
                     Size (comma separated)
                   </label>
-                   <div className="flex flex-row items-center gap-2">
-                     {
-                       [24,26,28].map((size)=>(
-                         <button 
-                           key={size} 
-                           type="button"
-                           disabled={!formData.category_id || categoriesList.find(cat => cat.category_id === formData.category_id)?.category_name?.toLowerCase() !== "bangles"}
-                           className={`px-4 py-2 rounded-lg border transition-colors ${
-                             isDarkTheme
-                               ? "bg-gray-800 border-gray-700 text-white hover:bg-gray-700 hover:border-gray-600"
-                               : "bg-white border-gray-300 text-gray-900 hover:bg-gray-100 hover:border-gray-400"
-                           } focus:outline-none focus:ring-2 focus:ring-[#E94E8B]`}
-                           onClick={()=>{
-                             setFormData((prev)=>({...prev, size: [...prev.size, size.toString()]}));
-                           }}
-                         >
-                           {size}mm
-                         </button>
-                       ))
-                     }
-                   </div>
+                  <div className="flex flex-row items-center gap-2">
+                    {[24, 26, 28].map((size) => {
+                      const sizeValue = size.toString();
+                      const isSelected = formData.size.includes(sizeValue);
+
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          disabled={!formData.category_id || !isBangleCategory}
+                          className={`px-4 py-2 rounded-lg border transition-colors ${
+                            isSelected
+                              ? "bg-[#E94E8B] border-[#E94E8B] text-white"
+                              : isDarkTheme
+                              ? "bg-gray-800 border-gray-700 text-white hover:bg-gray-700 hover:border-gray-600"
+                              : "bg-white border-gray-300 text-gray-900 hover:bg-gray-100 hover:border-gray-400"
+                          } focus:outline-none focus:ring-2 focus:ring-[#E94E8B]`}
+                          onClick={() => {
+                            setFormData((prev) => {
+                              const nextSizes = prev.size.includes(sizeValue)
+                                ? prev.size.filter((s) => s !== sizeValue)
+                                : [...prev.size, sizeValue];
+                              return { ...prev, size: nextSizes };
+                            });
+                          }}
+                        >
+                          {size}mm
+                        </button>
+                      );
+                    })}
+                  </div>
                   <input
                     type="text"
                     name="size"
@@ -720,14 +745,14 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
                       setFormData((prev) => ({ ...prev, size: sizes }));
                     }}
                     placeholder="Select Size"
-                    disabled={!formData.category_id || categoriesList.find(cat => cat.category_id === formData.category_id)?.category_name?.toLowerCase() !== "bangles"}
+                    disabled={!formData.category_id || !isBangleCategory}
                     className={`w-full px-4 py-2 rounded-lg border transition-colors ${
                       isDarkTheme
                         ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500"
                         : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
                     } focus:outline-none focus:ring-2 focus:ring-[#E94E8B] disabled:opacity-50 disabled:cursor-not-allowed`}
                   />
-                  {(!formData.category_id || categoriesList.find(cat => cat.category_id === formData.category_id)?.category_name?.toLowerCase() !== "bangle") && (
+                  {(!formData.category_id || !isBangleCategory) && (
                     <p className={`text-xs mt-1 ${
                       isDarkTheme ? "text-gray-400" : "text-gray-500"
                     }`}>
@@ -954,7 +979,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
                   </label>
                 </div>
               ) : (
-                <div className="relative w-2/3 max-w-xs aspect-[2/3] rounded-lg border overflow-hidden">
+                <div className="relative w-2/3 max-w-xs aspect-2/3 rounded-lg border overflow-hidden">
                   <OptimizedImage
                     src={thumbnailImagePreview}
                     alt="Thumbnail preview"
