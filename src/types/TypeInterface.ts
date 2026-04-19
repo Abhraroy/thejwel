@@ -84,6 +84,7 @@ export interface ImageResource {
   created_at: ISODateString;
   image_link?: string | null;
   section_name?: string | null;
+  redirect_route?: string | null;
 }
 
 export interface Order {

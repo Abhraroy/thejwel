@@ -112,6 +112,71 @@ export async function createCoupon(payload: CouponPayload) {
   return { success: true };
 }
 
+export async function updateCoupon(couponId: string, payload: CouponPayload) {
+  const auth = await ensureAdmin();
+  if (!auth.ok) {
+    return { success: false, error: auth.message };
+  }
+
+  if (!couponId) {
+    return { success: false, error: "Coupon id is required" };
+  }
+
+  const couponCode = payload.coupon_code.trim().toUpperCase();
+  if (!couponCode) {
+    return { success: false, error: "Coupon code is required" };
+  }
+
+  const validFrom = new Date(payload.valid_from);
+  const validUntil = new Date(payload.valid_until);
+  if (Number.isNaN(validFrom.getTime()) || Number.isNaN(validUntil.getTime())) {
+    return { success: false, error: "Please provide valid start and end date" };
+  }
+  if (validUntil <= validFrom) {
+    return {
+      success: false,
+      error: "Valid until date must be later than valid from date",
+    };
+  }
+
+  if (!Number.isFinite(Number(payload.discount_value)) || payload.discount_value <= 0) {
+    return { success: false, error: "Discount value must be greater than 0" };
+  }
+
+  const { error } = await adminsupabase
+    .from("coupons")
+    .update({
+      coupon_code: couponCode,
+      coupon_type: payload.coupon_type,
+      description: payload.description?.trim() || null,
+      discount_type: payload.discount_type,
+      discount_value: Number(payload.discount_value),
+      min_purchase_amount: Number(payload.min_purchase_amount ?? 0),
+      max_discount_amount:
+        payload.max_discount_amount === undefined || payload.max_discount_amount === null
+          ? null
+          : Number(payload.max_discount_amount),
+      usage_limit:
+        payload.usage_limit === undefined || payload.usage_limit === null
+          ? null
+          : Number(payload.usage_limit),
+      valid_from: validFrom.toISOString(),
+      valid_until: validUntil.toISOString(),
+      is_active: Boolean(payload.is_active),
+    })
+    .eq("coupon_id", couponId);
+
+  if (error) {
+    if (error.message.toLowerCase().includes("duplicate")) {
+      return { success: false, error: "Coupon code already exists" };
+    }
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/admin/resources");
+  return { success: true };
+}
+
 export async function updateCouponState(couponId: string, isActive: boolean) {
   const auth = await ensureAdmin();
   if (!auth.ok) {
@@ -126,6 +191,26 @@ export async function updateCouponState(couponId: string, isActive: boolean) {
     .from("coupons")
     .update({ is_active: isActive })
     .eq("coupon_id", couponId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/admin/resources");
+  return { success: true };
+}
+
+export async function deleteCoupon(couponId: string) {
+  const auth = await ensureAdmin();
+  if (!auth.ok) {
+    return { success: false, error: auth.message };
+  }
+
+  if (!couponId) {
+    return { success: false, error: "Coupon id is required" };
+  }
+
+  const { error } = await adminsupabase.from("coupons").delete().eq("coupon_id", couponId);
 
   if (error) {
     return { success: false, error: error.message };
