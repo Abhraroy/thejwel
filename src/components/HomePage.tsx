@@ -3,6 +3,7 @@ import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
 import Carousel from "@/components/Carousel";
 import CategorySection from "@/components/CategorySection";
+import ShopByBudgetSection from "@/components/ShopByBudgetSection";
 import Collection from "@/components/Collection";
 import OccasionSection from "@/components/OccasionSection";
 import { Product } from "@/types/TypeInterface";
@@ -132,6 +133,8 @@ export default function HomePage({
         ) : (
           <CategorySectionSkeleton />
         )}
+
+        <ShopByBudgetSection />
 
         <InViewSection fallback={<ProductCarouselSkeleton title="Best Sellers" />}>
           {bestSellers && bestSellers.length > 0 ? (

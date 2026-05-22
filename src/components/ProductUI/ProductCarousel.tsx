@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import Link from "next/link";
 import ProductCard from "./ProductCard";
+import HomeSectionHeading from "@/components/HomePageComponents/HomeSectionHeading";
 import { Product } from "@/types/TypeInterface";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, FreeMode } from "swiper/modules";
@@ -44,26 +44,11 @@ export default function ProductCarousel({
     <section
       className={`w-full bg-theme-cream py-4 md:py-6 lg:py-8 ${className}`}
     >
-      {/* Section Heading */}
-      <div className="flex items-center justify-center mb-3 md:mb-5 px-3 sm:px-4 lg:px-6">
-        {tagSlug ? (
-          <Link href={`/tags/${tagSlug}`} className="group">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#360000] relative inline-block font-josefin-sans tracking-wider group-hover:text-[#360000]/80 transition-colors">
-              {sectionHeading}
-              <span className="absolute -bottom-2 left-0 right-0 h-0.5"></span>
-              <span className="absolute -bottom-2 left-0 h-0.5 bg-[#360000] w-0 group-hover:w-full transition-all duration-500 ease-out"></span>
-            </h2>
-            <p className="text-center text-sm sm:text-base md:text-lg font-semibold text-[#360000]/60 mt-4 sm:mt-5 md:mt-6 group-hover:text-[#360000]/80 transition-colors">
-              View All →
-            </p>
-          </Link>
-        ) : (
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#360000] relative inline-block font-josefin-sans tracking-wider">
-            {sectionHeading}
-            <span className="absolute -bottom-2 left-0 right-0 h-0.5 bg-[#360000]"></span>
-          </h2>
-        )}
-      </div>
+      <HomeSectionHeading
+        title={sectionHeading}
+        href={tagSlug ? `/tags/${tagSlug}` : undefined}
+        className="px-3 sm:px-4 lg:px-6"
+      />
 
       {/* Carousel Container */}
       <div className="relative w-full max-w-full overflow-hidden px-3 sm:px-4 lg:px-6">
