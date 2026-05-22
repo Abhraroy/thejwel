@@ -15,6 +15,10 @@ const FeaturedSection = dynamic(
   () => import("./HomePageComponents/FeaturedSection"),
   { ssr: false }
 );
+const TrendingSection = dynamic(
+  () => import("./HomePageComponents/TrendingSection"),
+  { ssr: false }
+);
 const ImageGalleryCarousel = dynamic(
   () => import("./ImageView/ImageGalleryCarousel"),
   { ssr: false }
@@ -40,6 +44,10 @@ export function DynamicBestSellers({ products }: ProductSectionProps) {
 
 export function DynamicFeatured({ products }: ProductSectionProps) {
   return <FeaturedSection products={products} />;
+}
+
+export function DynamicTrending({ products }: ProductSectionProps) {
+  return <TrendingSection products={products} />;
 }
 
 export function DynamicNewArrivals({ products }: ProductSectionProps) {

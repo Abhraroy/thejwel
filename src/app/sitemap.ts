@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { HOMEPAGE_SECTION_TAGS } from "@/lib/product-tags";
 
 /**
  * Base URL for sitemap entries.
@@ -162,10 +163,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       // Tags -> /Tags/[tags]
       const hardcodedTags = [
-        "new-arrivals",
-        "best-sellers",
-        "featured",
-        "trending",
+        ...HOMEPAGE_SECTION_TAGS,
         "sale",
         "limited-edition",
       ];

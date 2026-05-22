@@ -19,13 +19,14 @@ export default async function Home() {
 
   const productFields = "product_id, product_name, thumbnail_image, base_price, final_price, discount_percentage, stock_quantity";
 
-  const [catgoriesRes, bestSellersRes, newArrivalsRes, featuredProductsRes, heroImagesRes, galleryImagesRes] = await Promise.all([
+  const [catgoriesRes, bestSellersRes, newArrivalsRes, featuredProductsRes, trendingProductsRes, heroImagesRes, galleryImagesRes] = await Promise.all([
     supabase.from("categories").select("category_id, category_name, slug, category_image_url"),
     supabase
       .from("products")
       .select(productFields)
       .contains("tags", ["best-sellers"])
       .eq("listed_status", true)
+      .eq("home_visibility", true)
       .order("updated_at", { ascending: false })
       .limit(10),
     supabase
@@ -33,6 +34,7 @@ export default async function Home() {
       .select(productFields)
       .contains("tags", ["new-arrivals"])
       .eq("listed_status", true)
+      .eq("home_visibility", true)
       .order("updated_at", { ascending: false })
       .limit(10),
     supabase
@@ -40,6 +42,15 @@ export default async function Home() {
       .select(productFields)
       .contains("tags", ["featured"])
       .eq("listed_status", true)
+      .eq("home_visibility", true)
+      .order("updated_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("products")
+      .select(productFields)
+      .contains("tags", ["trending"])
+      .eq("listed_status", true)
+      .eq("home_visibility", true)
       .order("updated_at", { ascending: false })
       .limit(10),
     supabase
@@ -73,6 +84,7 @@ export default async function Home() {
       bestSellers={bestSellersRes.data || []}
       newArrivals={newArrivalsRes.data || []}
       featuredProducts={featuredProductsRes.data || []}
+      trendingProducts={trendingProductsRes.data || []}
       heroItems={heroItems}
       galleryItems={galleryItems}
     />

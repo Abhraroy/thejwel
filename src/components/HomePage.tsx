@@ -12,6 +12,7 @@ import HomePageClientShell from "./HomePageClientShell";
 import InViewSection from "./InViewSection";
 import {
   DynamicBestSellers,
+  DynamicTrending,
   DynamicFeatured,
   DynamicNewArrivals,
   DynamicImageGallery,
@@ -72,6 +73,7 @@ export default function HomePage({
   bestSellers,
   newArrivals,
   featuredProducts,
+  trendingProducts,
   heroItems,
   galleryItems = [],
 }: {
@@ -79,6 +81,7 @@ export default function HomePage({
   bestSellers: Product[];
   newArrivals: Product[];
   featuredProducts: Product[];
+  trendingProducts: Product[];
   heroItems: { imageLink: string; redirectRoute: string | null }[];
   galleryItems?: GalleryImage[];
 }) {
@@ -141,6 +144,14 @@ export default function HomePage({
             <DynamicBestSellers products={bestSellers} />
           ) : (
             <ProductCarouselSkeleton title="Best Sellers" />
+          )}
+        </InViewSection>
+
+        <InViewSection fallback={<ProductCarouselSkeleton title="Trending" />}>
+          {trendingProducts && trendingProducts.length > 0 ? (
+            <DynamicTrending products={trendingProducts} />
+          ) : (
+            <ProductCarouselSkeleton title="Trending" />
           )}
         </InViewSection>
 

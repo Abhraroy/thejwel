@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import useAdminStore from "../../../zustandStore/AdminZustandStore";
 import OptimizedImage from "@/components/OptimizedImage";
+import { ADMIN_SELECTABLE_TAGS } from "@/lib/product-tags";
 
 const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB guard to keep server action body small
 
@@ -76,11 +77,12 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
     occasion: "" as string,
     collection: "american-diamond" as string,
     listed_status: true as boolean,
+    home_visibility: true as boolean,
   });
   const [thumbnailImagePreview, setThumbnailImagePreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const providedTags = ["new-arrivals", "best-sellers", "featured", "limited edition", "on sale", "trending", "exclusive", "best value", "new arrival", "top rated"];
+  const providedTags = [...ADMIN_SELECTABLE_TAGS];
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -123,6 +125,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
         occasion: safeString(editingProduct.occasion),
         collection: normalizeCollection(editingProduct.collection),
         listed_status: editingProduct.listed_status ?? true,
+        home_visibility: editingProduct.home_visibility ?? true,
       });
       setThumbnailImagePreview(
         typeof editingProduct.thumbnail_image === "string" && editingProduct.thumbnail_image.length > 0
@@ -152,6 +155,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
         occasion: "",
         collection: "american-diamond",
         listed_status: true,
+        home_visibility: true,
       });
       setThumbnailImagePreview(null);
     }
@@ -358,6 +362,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
       occasion: "",
       collection: "american-diamond",
       listed_status: true,
+      home_visibility: true,
     });
     setThumbnailImagePreview(null);
     setSubCategoriesList([]);
@@ -495,6 +500,27 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
                   </label>
                   <p className={`text-xs mt-1 ${isDarkTheme ? "text-gray-400" : "text-gray-500"}`}>
                     Uncheck to hide this product from all customer views.
+                  </p>
+                </div>
+
+                {/* Home Visibility */}
+                <div className="md:col-span-2">
+                  <label
+                    className={`flex items-center gap-3 text-sm font-medium ${
+                      isDarkTheme ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      name="home_visibility"
+                      checked={!!formData.home_visibility}
+                      onChange={handleInputChange}
+                      className="h-4 w-4 accent-[#E94E8B]"
+                    />
+                    Home visibility
+                  </label>
+                  <p className={`text-xs mt-1 ${isDarkTheme ? "text-gray-400" : "text-gray-500"}`}>
+                    Uncheck to hide from homepage carousels (product can still appear in shop if listed).
                   </p>
                 </div>
               </div>

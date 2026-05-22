@@ -184,6 +184,10 @@ export async function createProduct(productData: any) {
         typeof productData.listed_status === "boolean"
           ? productData.listed_status
           : true,
+      home_visibility:
+        typeof productData.home_visibility === "boolean"
+          ? productData.home_visibility
+          : true,
     };
 
     const { data, error } = await supabase
@@ -201,6 +205,7 @@ export async function createProduct(productData: any) {
 
     // Ensure admin products list reflects the new row in production (RSC cache)
     revalidatePath("/admin/products");
+    revalidatePath("/");
     return { success: true, data };
   } catch (error: any) {
     console.error("Error creating product:", error);
@@ -269,6 +274,10 @@ export async function updateProduct(productId: string, productData: any) {
         typeof productData.listed_status === "boolean"
           ? productData.listed_status
           : true,
+      home_visibility:
+        typeof productData.home_visibility === "boolean"
+          ? productData.home_visibility
+          : true,
     };
     const { data: updatedData, error: updateError } = await supabase
       .from("products")
@@ -284,6 +293,7 @@ export async function updateProduct(productId: string, productData: any) {
     // Invalidate cached admin pages so router.refresh() picks up latest data in production.
     revalidatePath("/admin/products");
     revalidatePath(`/admin/${productId}`);
+    revalidatePath("/");
     return { success: true, data: updatedData };
   } catch (error) {
     console.error("Error updating product:", error);

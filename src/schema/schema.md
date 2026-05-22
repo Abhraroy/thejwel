@@ -130,30 +130,42 @@ CREATE TABLE public.product_images (
 
 
 
-CREATE TABLE public.products (
-  product_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  category_id uuid,
-  product_name character varying,
-  description text,
-  base_price numeric,
-  discount_percentage numeric DEFAULT 0,
-  final_price numeric,
-  stock_quantity integer DEFAULT 0,
-  weight_grams numeric,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  subcategory_id uuid,
-  thumbnail_image text,
-  size ARRAY,
-  tags ARRAY,
-  occasion text,
-  collection text,
-  listed_status boolean DEFAULT false,
-  sku text UNIQUE,
-  CONSTRAINT products_pkey PRIMARY KEY (product_id),
-  CONSTRAINT products_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(category_id),
-  CONSTRAINT products_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.sub_categories(subcategory_id)
-);
+create table public.products (
+  product_id uuid not null default extensions.uuid_generate_v4 (),
+  category_id uuid null,
+  product_name character varying(255) null,
+  description text null,
+  base_price numeric(10, 2) null,
+  discount_percentage numeric(5, 2) null default 0,
+  final_price numeric(10, 2) null,
+  stock_quantity integer null default 0,
+  weight_grams numeric(8, 2) null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  subcategory_id uuid null,
+  thumbnail_image text null,
+  size text[] null,
+  tags text[] null,
+  occasion text null,
+  collection text null,
+  listed_status boolean null default false,
+  sku text null,
+  home_visibility boolean not null default true,
+  constraint products_pkey primary key (product_id),
+  constraint products_sku_key unique (sku),
+  constraint products_category_id_fkey foreign KEY (category_id) references categories (category_id) on delete set null,
+  constraint products_subcategory_id_fkey foreign KEY (subcategory_id) references sub_categories (subcategory_id) on update CASCADE on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_products_category on public.products using btree (category_id) TABLESPACE pg_default;
+
+create index IF not exists products_name_trgm on public.products using gin (product_name gin_trgm_ops) TABLESPACE pg_default;
+
+create index IF not exists products_category_id_idx on public.products using btree (category_id) TABLESPACE pg_default;
+
+create trigger update_products_updated_at BEFORE
+update on products for EACH row
+execute FUNCTION update_updated_at_column ();
 
 
 

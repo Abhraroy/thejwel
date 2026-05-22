@@ -149,6 +149,7 @@ export interface Product {
   occasion?: string | null;
   collection?: string | null;
   listed_status?: boolean | null;
+  home_visibility?: boolean | null;
   sku?: string | null;
 }
 
