@@ -137,15 +137,15 @@ export default function HomePage({
           <CategorySectionSkeleton />
         )}
 
-        <ShopByBudgetSection />
+        
 
-        <InViewSection fallback={<ProductCarouselSkeleton title="Best Sellers" />}>
+        {/* <InViewSection fallback={<ProductCarouselSkeleton title="Best Sellers" />}>
           {bestSellers && bestSellers.length > 0 ? (
             <DynamicBestSellers products={bestSellers} />
           ) : (
             <ProductCarouselSkeleton title="Best Sellers" />
           )}
-        </InViewSection>
+        </InViewSection> */}
 
         <InViewSection fallback={<ProductCarouselSkeleton title="Trending" />}>
           {trendingProducts && trendingProducts.length > 0 ? (
@@ -155,13 +155,16 @@ export default function HomePage({
           )}
         </InViewSection>
 
-        <InViewSection fallback={<ProductCarouselSkeleton title="Featured Products" />}>
+
+        <ShopByBudgetSection />
+
+        {/* <InViewSection fallback={<ProductCarouselSkeleton title="Featured Products" />}>
           {featuredProducts && featuredProducts.length > 0 ? (
             <DynamicFeatured products={featuredProducts} />
           ) : (
             <ProductCarouselSkeleton title="Featured Products" />
           )}
-        </InViewSection>
+        </InViewSection> */}
 
         <Collection />
 
