@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
 import Carousel from "@/components/Carousel";
+import HomePageMarquee from "@/components/HomePageMarquee";
 import CategorySection from "@/components/CategorySection";
 import ShopByBudgetSection from "@/components/ShopByBudgetSection";
 import Collection from "@/components/Collection";
@@ -122,6 +123,8 @@ export default function HomePage({
     <div className="min-h-screen bg-theme-cream">
       <HomePageClientShell categoriesProps={categoriesProps} />
       <main className="w-full">
+        <HomePageMarquee />
+
         <Suspense fallback={<CarouselSkeleton />}>
           <Carousel
             items={carouselItemsArray}
