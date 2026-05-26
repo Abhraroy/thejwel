@@ -13,10 +13,10 @@ function MarqueeTrack({ messages }: { messages: readonly string[] }) {
       {messages.map((message, index) => (
         <span
           key={`${message}-${index}`}
-          className="inline-flex shrink-0 items-center px-6 sm:px-10 text-xs sm:text-sm font-medium tracking-wide whitespace-nowrap font-josefin-sans"
+          className="inline-flex shrink-0 items-center px-6 sm:px-10 text-sm sm:text-sm font-medium tracking-wide whitespace-nowrap font-josefin-sans"
         >
           {message}
-          <span className="mx-4 sm:mx-6 text-white/50" aria-hidden="true">
+          <span className="mx-4 sm:mx-6 text-white" aria-hidden="true">
             ✦
           </span>
         </span>
@@ -34,7 +34,7 @@ export default function HomePageMarquee({
 
   return (
     <div
-      className="relative z-20 w-full overflow-hidden bg-gradient-to-r from-[#360000] via-rose-900 to-[#360000] text-white border-b border-white/10"
+      className="relative z-20 w-full overflow-hidden bg-black text-white border-b border-white/10 py-2 sm:py-2.5"
       role="region"
       aria-label="Store announcements"
     >

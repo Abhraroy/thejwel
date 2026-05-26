@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { checkAdminAuth } from "./login/actions";
 import AdminSidebar from "@/components/AdminComponents/AdminSidebar";
@@ -11,6 +11,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    mainScrollRef.current?.scrollTo(0, 0);
+  }, [pathname]);
 
   // Check authentication on mount
   useEffect(() => {
@@ -106,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <AdminSidebar isDarkTheme={isDarkTheme} onThemeToggle={toggleTheme} />
       
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div ref={mainScrollRef} className="flex-1 overflow-auto">
         {children}
       </div>
     </div>

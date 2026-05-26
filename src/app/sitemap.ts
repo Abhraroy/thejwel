@@ -138,7 +138,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
 
       // Collections -> /collection/[collection]
-      const hardcodedCollections = ["american-diamond", "temple"];
+      const hardcodedCollections = ["american-diamond", "temple-jewellery", "anti-tarnish"];
       const dbCollections = uniqStrings(products.map((p) => p?.collection));
       for (const collection of new Set([...hardcodedCollections, ...dbCollections])) {
         entries.push({

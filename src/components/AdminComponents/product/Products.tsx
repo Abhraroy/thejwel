@@ -53,6 +53,9 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
     ) {
       return "temple-jewellery";
     }
+    if (raw === "anti-tarnish" || raw === "anti tarnish") {
+      return "anti-tarnish";
+    }
 
     // Fallback to a valid option so the dropdown always has a selected value.
     return "american-diamond";
@@ -833,6 +836,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
                   >
                     <option value="american-diamond">American Diamond</option>
                     <option value="temple-jewellery">Temple Jewellery</option>
+                    <option value="anti-tarnish">Anti tarnish</option>
                   </select>
                 </div>
               </div>

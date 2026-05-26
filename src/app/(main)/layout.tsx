@@ -12,6 +12,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import ParentNavbar from "@/components/NavbarUI/ParentNavbar";
+import HomePageMarquee from "@/components/HomePageMarquee";
 import CartBootstrapper from "@/components/CartBootstrapper";
 import SocialConnectSection from "@/components/SocialConnectSection";
 import Footer from "@/components/Footer";
@@ -24,6 +25,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import MetaPixel from "@/components/analytics/MetaPixel";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import RoutePerfTracker from "@/components/analytics/RoutePerfTracker";
+import ScrollToTopOnNavigate from "@/components/ScrollToTopOnNavigate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -203,6 +205,7 @@ export default function RootLayout({
         <GoogleAnalytics />
         <MetaPixel />
         <RoutePerfTracker />
+        <HomePageMarquee />
         <ParentNavbar />
         <CartBootstrapper />
         {children}
@@ -222,6 +225,7 @@ export default function RootLayout({
           theme="light"
         />
         <SpeedInsights />
+        <ScrollToTopOnNavigate />
       </body>
     </html>
   );

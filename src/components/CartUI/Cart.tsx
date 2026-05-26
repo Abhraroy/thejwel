@@ -1,7 +1,8 @@
 "use client";
 
 import { useStore } from "@/zustandStore/zustandStore";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useBodyScrollLock } from "@/lib/body-scroll-lock";
 import { createClient } from "@/lib/supabase/client";
 import { addToDbCart, addToLocalCart, decreaseQuantityFromDbCart, decreaseQuantityFromLocalCart, getCartData, removeFromDbCart, removeFromLocalCart, getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";
 import CartItem from "./CartItem";
@@ -103,33 +104,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
     }
   }, [cartItems]);
 
-  const scrollYRef = useRef(0);
-
-  useEffect(() => {
-    const unlockBody = () => {
-      document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.right = "";
-      window.scrollTo(0, scrollYRef.current);
-    };
-
-    if (isOpen) {
-      scrollYRef.current = window.scrollY;
-      document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollYRef.current}px`;
-      document.body.style.left = "0";
-      document.body.style.right = "0";
-    } else {
-      unlockBody();
-    }
-
-    return () => {
-      unlockBody();
-    };
-  }, [isOpen]);
+  useBodyScrollLock(isOpen);
 
   useEffect(() => {
     const getCartItems = async () => {

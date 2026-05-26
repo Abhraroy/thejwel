@@ -1,6 +1,10 @@
 export type BudgetRangeConfig = {
   id: string;
   label: string;
+  /** Two-word tagline shown above the price on budget cards */
+  tagline: readonly [string, string];
+  /** Large price text on budget cards */
+  priceDisplay: string;
   rangeText: string;
   minPrice: number | null;
   maxPrice: number | null;
@@ -15,6 +19,8 @@ export const BUDGET_RANGES: BudgetRangeConfig[] = [
   {
     id: "under-199",
     label: "Under ₹199",
+    tagline: ["Under"],
+    priceDisplay: "₹199",
     rangeText: "Up to ₹199",
     minPrice: null,
     maxPrice: 199,
@@ -23,6 +29,8 @@ export const BUDGET_RANGES: BudgetRangeConfig[] = [
   {
     id: "199-299",
     label: "₹199 – ₹299",
+    tagline: ["under"],
+    priceDisplay: "₹299",
     rangeText: "₹199 to ₹299",
     minPrice: 199,
     maxPrice: 299,
@@ -31,6 +39,8 @@ export const BUDGET_RANGES: BudgetRangeConfig[] = [
   {
     id: "300-399",
     label: "₹300 – ₹399",
+    tagline: ["under"],
+    priceDisplay: "₹399",
     rangeText: "₹300 to ₹399",
     minPrice: 300,
     maxPrice: 399,
@@ -39,6 +49,8 @@ export const BUDGET_RANGES: BudgetRangeConfig[] = [
   {
     id: "400-499",
     label: "₹400 – ₹499",
+    tagline: ["under"],
+    priceDisplay: "₹499",
     rangeText: "₹400 to ₹499",
     minPrice: 400,
     maxPrice: 499,

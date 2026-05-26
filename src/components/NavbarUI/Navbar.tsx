@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../zustandStore/zustandStore';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useBodyScrollLock } from '@/lib/body-scroll-lock';
 import Link from 'next/link';
 import OptimizedImage from "@/components/OptimizedImage";
 import HamburgerSidebar from './HamburgerSidebar';
@@ -186,38 +187,17 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
   const { setMobnoInputState, AuthenticatedState, categories, setCategories } = useStore();
   const categoriesFetchInFlight = useRef(false);
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = createClient();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const sidebarScrollYRef = useRef(0);
+  useBodyScrollLock(isSidebarOpen);
 
   useEffect(() => {
-    const unlockBody = () => {
-      document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.right = "";
-      window.scrollTo(0, sidebarScrollYRef.current);
-    };
-
-    if (isSidebarOpen) {
-      sidebarScrollYRef.current = window.scrollY;
-      document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${sidebarScrollYRef.current}px`;
-      document.body.style.left = "0";
-      document.body.style.right = "0";
-    } else {
-      unlockBody();
-    }
-
-    return () => {
-      unlockBody();
-    };
-  }, [isSidebarOpen]);
+    setIsSidebarOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (categories.length > 0) return;
@@ -693,7 +673,6 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
       <HamburgerSidebar
         isSidebarOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
-        categories={categories}
         filteredMenuItems={filteredMenuItems}
         onAccountClick={handleAccountClick}
       />
