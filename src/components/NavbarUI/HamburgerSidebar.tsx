@@ -106,7 +106,8 @@ export default function HamburgerSidebar({
 
         for (const row of data) {
           const collectionSlug = (row.collection ?? "").trim();
-          const category = row.categories as Category | null;
+          const categoryData = row.categories as unknown as Category | Category[] | null;
+          const category = Array.isArray(categoryData) ? (categoryData[0] ?? null) : categoryData;
           if (!collectionSlug || !category?.category_id) continue;
           grouped[collectionSlug]?.set(category.category_id, category);
         }

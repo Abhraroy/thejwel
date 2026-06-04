@@ -1,8 +1,8 @@
 export type BudgetRangeConfig = {
   id: string;
   label: string;
-  /** Two-word tagline shown above the price on budget cards */
-  tagline: readonly [string, string];
+  /** Tagline words shown above the price on budget cards */
+  tagline: readonly string[];
   /** Large price text on budget cards */
   priceDisplay: string;
   rangeText: string;
