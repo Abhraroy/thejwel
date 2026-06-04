@@ -23,6 +23,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import { getBaseUrl, toAbsoluteUrl } from "@/lib/seo/metadata";
 import JsonLd from "@/components/seo/JsonLd";
 import MetaPixel from "@/components/analytics/MetaPixel";
+import AttributionTracker from "@/components/analytics/AttributionTracker";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import RoutePerfTracker from "@/components/analytics/RoutePerfTracker";
 import ScrollToTopOnNavigate from "@/components/ScrollToTopOnNavigate";
@@ -204,6 +205,7 @@ export default function RootLayout({
         />
         <GoogleAnalytics />
         <MetaPixel />
+        <AttributionTracker />
         <RoutePerfTracker />
         <HomePageMarquee />
         <ParentNavbar />

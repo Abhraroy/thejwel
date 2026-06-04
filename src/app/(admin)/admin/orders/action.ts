@@ -15,7 +15,8 @@ export async function getOrders() {
     `
     )
     .order("order_date", { ascending: false })
-    .limit(100);
+    .order("order_id", { ascending: false })
+    .limit(300);
 
   console.log("[getOrders] Supabase response:", {
     error: error?.message ?? null,

@@ -16,12 +16,15 @@ export async function POST(request: NextRequest) {
   const userSupabase = await createClient();
   let addressId: string | null = null;
   let couponCode: string | null = null;
+  let attribution: Record<string, unknown> | null = null;
 
   try {
     const body = await request.json();
     addressId = body?.address_id ?? null;
     couponCode =
       typeof body?.coupon_code === "string" ? body.coupon_code.trim() : null;
+    attribution =
+      body?.attribution && typeof body.attribution === "object" ? body.attribution : null;
   } catch {
     devLog("invalid-json");
     return NextResponse.json(
@@ -152,6 +155,7 @@ export async function POST(request: NextRequest) {
   const checkoutData = {
     context: payableContext,
     couponCode: couponCode ?? null,
+    attribution: attribution ?? null,
   };
 
   try {

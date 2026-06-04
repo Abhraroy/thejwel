@@ -5,6 +5,7 @@ import {
   createOrderWithItems,
   prepareCheckoutContext,
 } from "@/app/utils/orderCheckout";
+import { sendPurchaseEvent } from "@/lib/meta/capi";
 
 const COD_ORDER_PREFIX = "COD";
 const devLog = (...args: unknown[]) => {
@@ -29,11 +30,14 @@ export async function POST(request: NextRequest) {
 
   let addressId: string | null = null;
   let couponCode: string | null = null;
+  let attribution: Record<string, unknown> | null = null;
   try {
     const body = await request.json();
     addressId = body?.address_id ?? null;
     couponCode =
       typeof body?.coupon_code === "string" ? body.coupon_code.trim() : null;
+    attribution =
+      body?.attribution && typeof body.attribution === "object" ? body.attribution : null;
   } catch {
     devLog("invalid-json");
     return NextResponse.json(
@@ -169,11 +173,36 @@ export async function POST(request: NextRequest) {
     userId: context.user.user_id,
   });
 
+  // Meta Conversions API (source of truth). Fired at COD placement so ad
+  // optimization sees the conversion immediately. Never blocks the order.
+  try {
+    const contentIds = (orderRes.orderItemsPayload ?? [])
+      .map((item: any) => item.product_id)
+      .filter(Boolean);
+    await sendPurchaseEvent({
+      eventId: orderRes.order.order_id,
+      value: Number(payableContext.totalAmount) || 0,
+      currency: "INR",
+      contentIds,
+      user: {
+        email: context.user?.email,
+        phone: context.user?.phone_number,
+        firstName: context.user?.first_name,
+        lastName: context.user?.last_name,
+      },
+      attribution: attribution as any,
+    });
+  } catch (capiError) {
+    devLog("capi-error", { orderId: orderRes.order.order_id, error: capiError });
+  }
+
   return NextResponse.json(
     {
       message: "COD order created successfully",
       orderId: orderRes.order.order_id,
       orderNumber: orderRes.order.order_number,
+      // event_id == order_id so the client Pixel Purchase dedupes with CAPI.
+      eventId: orderRes.order.order_id,
     },
     { status: 200 }
   );

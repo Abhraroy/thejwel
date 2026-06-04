@@ -10,6 +10,14 @@ import {
   toggleLockOrder,
 } from "@/app/(admin)/admin/actions/order";
 import { toast } from "react-toastify";
+import {
+  formatIstDate,
+  formatIstDateTime,
+  formatIstTime,
+  istDayIndex,
+  istDayIndexFromDateInput,
+  todayIstDayIndex,
+} from "@/lib/datetime";
 
 type OrderStatus =
   | "pending"
@@ -97,37 +105,9 @@ const currency = (value: number) =>
     value || 0
   );
 
-const dateFormatter = new Intl.DateTimeFormat("en-GB", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-});
+const formatDate = (value?: string | null) => formatIstDate(value);
 
-const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-const formatDate = (value?: string | null) =>
-  value ? dateFormatter.format(new Date(value)) : null;
-
-const formatDateTime = (value?: string | null) =>
-  value ? dateTimeFormatter.format(new Date(value)) : null;
-
-function startOfDay(d: Date) {
-  const copy = new Date(d);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-}
-
-function endOfDay(d: Date) {
-  const copy = new Date(d);
-  copy.setHours(23, 59, 59, 999);
-  return copy;
-}
+const formatDateTime = (value?: string | null) => formatIstDateTime(value);
 
 interface OrdersProps {
   initialOrders: Order[];
@@ -164,11 +144,8 @@ export default function Orders({ initialOrders }: OrdersProps) {
   }, []);
 
   const filteredOrders = useMemo(() => {
-    const now = new Date();
-    const todayStart = startOfDay(now);
-    const todayEnd = endOfDay(now);
-    const yesterdayStart = startOfDay(new Date(now.getTime() - 86400000));
-    const yesterdayEnd = endOfDay(new Date(now.getTime() - 86400000));
+    const todayIndex = todayIstDayIndex();
+    const yesterdayIndex = todayIndex - 1;
 
     return orders.filter((order) => {
       const matchesStatus =
@@ -188,17 +165,21 @@ export default function Orders({ initialOrders }: OrdersProps) {
 
       let matchesDate = true;
       if (dateFilter !== "all") {
-        const orderDate = new Date(order.order_date);
-        if (dateFilter === "today") {
-          matchesDate = orderDate >= todayStart && orderDate <= todayEnd;
+        const orderIndex = istDayIndex(order.order_date);
+        if (orderIndex == null) {
+          matchesDate = false;
+        } else if (dateFilter === "today") {
+          matchesDate = orderIndex === todayIndex;
         } else if (dateFilter === "yesterday") {
-          matchesDate = orderDate >= yesterdayStart && orderDate <= yesterdayEnd;
+          matchesDate = orderIndex === yesterdayIndex;
         } else if (dateFilter === "custom") {
           if (customDateFrom) {
-            matchesDate = orderDate >= startOfDay(new Date(customDateFrom));
+            const fromIndex = istDayIndexFromDateInput(customDateFrom);
+            if (fromIndex != null) matchesDate = orderIndex >= fromIndex;
           }
           if (matchesDate && customDateTo) {
-            matchesDate = orderDate <= endOfDay(new Date(customDateTo));
+            const toIndex = istDayIndexFromDateInput(customDateTo);
+            if (toIndex != null) matchesDate = orderIndex <= toIndex;
           }
         }
       }
@@ -611,7 +592,7 @@ export default function Orders({ initialOrders }: OrdersProps) {
                               {formatDate(order.order_date)}
                             </span>
                             <span className="text-xs text-gray-500">
-                              {new Date(order.order_date).toLocaleTimeString("en-GB")}
+                              {formatIstTime(order.order_date)}
                             </span>
                             {order.shipped_date && (
                               <span className="text-xs text-emerald-700">

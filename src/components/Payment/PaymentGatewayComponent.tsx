@@ -14,6 +14,8 @@ import RazorPayButton from "./RazorPay";
 import OptimizedImage from "@/components/OptimizedImage";
 import { createClient } from "@/lib/supabase/client";
 import type { AnyCart } from "@/types/CartTypes";
+import { getAttribution } from "@/lib/attribution";
+import { trackPurchase } from "@/lib/meta/pixel";
 
 type MarketingCoupon = {
   coupon_code: string;
@@ -115,6 +117,13 @@ export default function PaymentGatewayComponent() {
   const selectedAddressDetails = addresses.find(
     (address) => address.address_id === selectedAddress
   );
+  const getCartContentIds = () =>
+    (cartItems as AnyCart)
+      .map((item: any) => {
+        const product = item?.products ?? item?.product ?? item;
+        return product?.product_id;
+      })
+      .filter(Boolean) as string[];
   const isCheckoutDisabled =
     isLoadingPayment ||
     !AuthenticatedState ||
@@ -267,6 +276,7 @@ export default function PaymentGatewayComponent() {
         {
           address_id: selectedAddress,
           coupon_code: activeCoupon?.coupon_code ?? null,
+          attribution: getAttribution(),
         },
         {
           headers: {
@@ -416,12 +426,22 @@ export default function PaymentGatewayComponent() {
       const res = await axios.post("/api/payment/cod", {
         address_id: selectedAddress,
         coupon_code: activeCoupon?.coupon_code ?? null,
+        attribution: getAttribution(),
       });
       if (res.status === 200) {
         devLog("cod:success", {
           orderId: res.data?.orderId,
           orderNumber: res.data?.orderNumber,
         });
+        const codEventId = res.data?.eventId ?? res.data?.orderId;
+        if (codEventId) {
+          trackPurchase({
+            eventId: codEventId,
+            value: activeCoupon ? prepaidPayableAmount : orderTotalNumber,
+            currency: "INR",
+            contentIds: getCartContentIds(),
+          });
+        }
         setPaymentConcluded(true);
         setShowPaymentConcluded(true);
         resetPaymentState();
@@ -1042,6 +1062,16 @@ export default function PaymentGatewayComponent() {
                         orderId: completeRes.data?.order_id,
                         orderNumber: completeRes.data?.order_number,
                       });
+                      const prepaidEventId =
+                        completeRes.data?.event_id ?? completeRes.data?.order_id;
+                      if (prepaidEventId) {
+                        trackPurchase({
+                          eventId: prepaidEventId,
+                          value: prepaidOrderData.total_amount,
+                          currency: "INR",
+                          contentIds: getCartContentIds(),
+                        });
+                      }
                       setPaymentConcluded(true);
                       setShowPaymentConcluded(true);
                       resetPaymentState();
