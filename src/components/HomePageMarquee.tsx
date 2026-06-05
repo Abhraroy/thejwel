@@ -1,10 +1,9 @@
 const DEFAULT_MESSAGES = [
-  "Free shipping on orders above ₹999",
-  "Authentic handcrafted jewellery — TheJWEL Kolkata",
-  "BIS hallmarked gold & silver",
-  "New arrivals every week",
-  "Sparkle without the splurge",
-  "Easy returns within 7 days",
+  "✨ Premium Jewellery for Every Occasion",
+"💎 Anti-Tarnish | Temple | American Diamond",
+"🏷️ Affordable & Festive Luxury",
+"🚚 Pan India Shipping | COD Available",
+"🎁 Extra 10% OFF on Prepaid Orders!"
 ] as const;
 
 function MarqueeTrack({ messages }: { messages: readonly string[] }) {
