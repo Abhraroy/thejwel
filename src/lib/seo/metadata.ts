@@ -18,8 +18,16 @@ export function getBaseUrl() {
 }
 
 export function toAbsoluteUrl(pathname = "/") {
+  if (
+    pathname.startsWith("http://") ||
+    pathname.startsWith("https://")
+  ) {
+    return pathname;
+  }
+
   const baseUrl = getBaseUrl();
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
+
   return `${baseUrl}${path}`;
 }
 
