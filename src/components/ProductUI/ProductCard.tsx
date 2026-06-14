@@ -243,7 +243,7 @@ function ProductCard({
         {/* Wishlist Button - Enhanced */}
         <button
           onClick={handleWishlistClick}
-          className="w-6 h-6 md:w-10 md:h-10 text-sm md:text-base bg-white/95 backdrop-blur-sm hover:bg-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-all duration-300
+          className="w-8 h-8 md:w-10 md:h-10 text-sm md:text-base bg-white/95 backdrop-blur-sm hover:bg-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-all duration-300
           "
           aria-label={
             isWishlistActive ? "Remove from wishlist" : "Add to wishlist"
@@ -269,7 +269,7 @@ function ProductCard({
         </button>
 
         {/* Share button */}
-        <button className="w-6 h-6 md:w-10 md:h-10 text-sm md:text-base bg-white/95 backdrop-blur-sm hover:bg-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-all duration-300"
+        <button className="w-8 h-8 md:w-10 md:h-10 text-sm md:text-base bg-white/95 backdrop-blur-sm hover:bg-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-all duration-300"
         aria-label="Share product"
         onClick={handleShareProduct}
         title="Share product"
