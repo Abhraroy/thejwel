@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase-Utils/client";
 import ProductCard from "@/components/ProductUI/ProductCard";
 import Footer from "@/components/Footer";
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase-Utils/client';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/zustandStore/zustandStore';
 

@@ -1,7 +1,7 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import supabaseAdmin from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase-Utils/server'
+import supabaseAdmin from '@/lib/supabase-Utils/admin'
 import { ADMIN_SECRET_KEY } from '@/lib/admin-config'
 import { revalidatePath } from 'next/cache'
 

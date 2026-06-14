@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase-Utils/server";
 import { HOMEPAGE_SECTION_TAGS } from "@/lib/product-tags";
 
 /**

@@ -5,8 +5,10 @@ import { memo, useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useStore } from "@/zustandStore/zustandStore";
 import { addToDbCart, addToLocalCart } from "@/utilityFunctions/CartFunctions";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase-Utils/client";
 import { Product } from "@/types/TypeInterface";
+import {Send} from "lucide-react";
+
 import { 
   
   addToDbWishlist,
@@ -14,20 +16,7 @@ import {
 } from "@/utilityFunctions/WishListFunctions";
 import { toast } from "react-toastify";
 import { getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";
-
-
-// export interface Product {
-//   id: string;
-//   title: string;
-//   imageUrl: string;
-//   price: number;
-//   originalPrice?: number;
-//   discount?: number;
-//   slug?: string;
-// }
-
-
-// export interface 
+import { shareProduct } from "@/utilityFunctions/ShareProduct";
 
 
 
@@ -176,6 +165,25 @@ function ProductCard({
     }, 500);
   };
 
+  const handleShareProduct = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Sharing product");
+    const result = await shareProduct(product);
+    // if(result.success){
+    //   toast.success("Product shared successfully", {
+    //     style: { backgroundColor: "#eec0c8", color: "#360000" },
+    //     position: "top-right"
+    //   });
+    // }
+    // else{
+    //   toast.error("Failed to share product", {
+    //     style: { backgroundColor: "#eec0c8", color: "#360000" },
+    //     position: "top-right"
+    //   });
+    // }
+  };
+
   // Normalize price values to numbers to avoid string issues
   const basePrice = Number(product?.base_price) || 0;
   const finalPrice = Number(product?.final_price) || 0;
@@ -229,10 +237,14 @@ function ProductCard({
           </div>
         )}
 
+
+        <div className="absolute top-2 right-2 md:top-3 md:right-3 z-10 flex flex-col items-center justify-center  rounded-full w-fit h-fit px-2 py-1 gap-4">
+
         {/* Wishlist Button - Enhanced */}
         <button
           onClick={handleWishlistClick}
-          className="absolute top-2 right-2 md:top-3 md:right-3 p-2 md:p-2.5 bg-white/95 backdrop-blur-sm hover:bg-white rounded-full shadow-lg z-10"
+          className="w-8 h-8 md:w-10 md:h-10 text-sm md:text-base bg-white/95 backdrop-blur-sm hover:bg-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-all duration-300
+          "
           aria-label={
             isWishlistActive ? "Remove from wishlist" : "Add to wishlist"
           }
@@ -255,6 +267,18 @@ function ProductCard({
             />
           </svg>
         </button>
+
+        {/* Share button */}
+        <button className="w-8 h-8 md:w-10 md:h-10 text-sm md:text-base bg-white/95 backdrop-blur-sm hover:bg-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-all duration-300"
+        aria-label="Share product"
+        onClick={handleShareProduct}
+        title="Share product"
+        >
+          <Send className="w-4 h-4 md:w-5 md:h-5 text-[#360000]" />
+        </button>
+        </div>
+
+
       </div>
 
       {/* Product Info */}

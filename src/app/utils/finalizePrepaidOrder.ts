@@ -1,10 +1,11 @@
 import "server-only";
-import adminsupabase from "@/lib/supabase/admin";
+import adminsupabase from "@/lib/supabase-Utils/admin";
 import { createOrderWithItems } from "@/app/utils/orderCheckout";
 import { redis } from "@/app/utils/Redis";
 import { createRapidShypOrderForOrder } from "@/app/utils/rapidShyp";
 import { sendPurchaseEvent } from "@/lib/meta/capi";
 import type { AttributionPayload } from "@/lib/attribution";
+import { decrementStockForOrderItems } from "@/app/utils/stockAdjustment";
 
 const devLog = (...args: unknown[]) => {
   if (process.env.NODE_ENV === "development") {
@@ -117,37 +118,7 @@ export async function finalizePrepaidOrder(params: {
     transactionId: razorpayPaymentId,
   });
 
-  // --- Stock decrement ---
-  try {
-    const items = orderRes.orderItemsPayload ?? [];
-    const qtyByProductId = new Map<string, number>();
-    for (const item of items) {
-      const pid = item.product_id;
-      const qty = Number(item.quantity) || 0;
-      if (!pid || qty <= 0) continue;
-      qtyByProductId.set(pid, (qtyByProductId.get(pid) || 0) + qty);
-    }
-    for (const [productId, orderedQty] of qtyByProductId.entries()) {
-      const productRes = await adminsupabase
-        .from("products")
-        .select("stock_quantity")
-        .eq("product_id", productId)
-        .single();
-      if (productRes.error) {
-        console.error("Failed to fetch product for stock update:", productRes.error);
-        continue;
-      }
-      const currentStock = Number(productRes.data?.stock_quantity) || 0;
-      const nextStock = Math.max(0, currentStock - orderedQty);
-      await adminsupabase
-        .from("products")
-        .update({ stock_quantity: nextStock })
-        .eq("product_id", productId);
-    }
-  } catch (stockError) {
-    devLog("stock-update-error", { source, orderId: order.order_id, error: stockError });
-    console.error("Stock update error:", stockError);
-  }
+  await decrementStockForOrderItems(orderRes.orderItemsPayload ?? []);
 
   // --- Coupon usage ---
   const appliedCouponCode =

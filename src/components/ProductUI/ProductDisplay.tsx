@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useStore } from "@/zustandStore/zustandStore";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase-Utils/client";
 import { addToLocalCart, addToDbCart } from "@/utilityFunctions/CartFunctions";
 import { toast } from "react-toastify";
 import { getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
+import { Share2 } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { shareProduct } from "@/utilityFunctions/ShareProduct";
 
 /** Parses the single description string into labeled sections (Description, Occasion, Material, Stone Type, Care Label). */
 function parseDescriptionSections(description: string): Array<{ label: string; content: string }> {
@@ -24,6 +27,91 @@ function parseDescriptionSections(description: string): Array<{ label: string; c
   }
   if (sections.length === 0) sections.push({ label: "", content: description.trim() });
   return sections;
+}
+
+function WiggleIcon({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  const shouldReduceMotion = useReducedMotion();
+
+  return (
+    <motion.span
+      className={className}
+      animate={
+        shouldReduceMotion
+          ? undefined
+          : { rotate: [0, -12, 12, -8, 0], scale: [1, 1.06, 1] }
+      }
+      transition={{
+        duration: 0.65,
+        repeat: Infinity,
+        repeatDelay: 4.5,
+        ease: "easeInOut",
+      }}
+    >
+      {children}
+    </motion.span>
+  );
+}
+
+function ShareProductButton({
+  onClick,
+  tooltipVisible,
+  tooltipText,
+  tooltipId = "product-share-tooltip",
+  iconClassName = "h-5 w-5",
+}: {
+  onClick: () => void;
+  tooltipVisible: boolean;
+  tooltipText: string;
+  tooltipId?: string;
+  iconClassName?: string;
+}) {
+  const shouldReduceMotion = useReducedMotion();
+
+  return (
+    <div className="relative shrink-0">
+      <motion.button
+        type="button"
+        className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-sm shadow-[0_2px_10px_rgba(54,0,0,0.18)] backdrop-blur-sm"
+        onClick={onClick}
+        aria-label="Share product"
+        aria-describedby={tooltipId}
+        initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.75 }}
+        animate={{ opacity: 1, scale: 1 }}
+        whileTap={shouldReduceMotion ? undefined : { scale: 0.88 }}
+        whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
+        transition={{ type: "spring", stiffness: 420, damping: 22 }}
+      >
+        <WiggleIcon>
+          <Share2 className={`${iconClassName} text-[#360000]`} />
+        </WiggleIcon>
+      </motion.button>
+      <AnimatePresence>
+        {tooltipVisible && (
+          <motion.span
+            id={tooltipId}
+            role="tooltip"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 6, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0, y: 6, scale: 0.92 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="pointer-events-none absolute -top-10 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#360000] px-2.5 py-1 text-xs font-medium text-white shadow-md"
+          >
+            {tooltipText}
+            <span
+              aria-hidden
+              className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-[#360000]"
+            />
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 interface ProductData {
@@ -62,7 +150,10 @@ export default function ProductDisplay({
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
   const [productImageView,setProductImageView] = useState(false);
+  const [shareTooltipVisible, setShareTooltipVisible] = useState(false);
+  const [shareTooltipText, setShareTooltipText] = useState("Share");
 
+  const shareTooltipTimeoutRef = useRef<number | null>(null);
   const { cartItems, setCartItems, AuthenticatedState, CartId, setIsCartOpen } = useStore();
   const supabase = createClient();
 
@@ -287,6 +378,40 @@ export default function ProductDisplay({
     setViewerZoomPosition({ x: clampPercent(x), y: clampPercent(y) });
   };
 
+  useEffect(() => {
+    return () => {
+      if (shareTooltipTimeoutRef.current !== null) {
+        window.clearTimeout(shareTooltipTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showShareTooltip = useCallback((text: string, durationMs = 1800) => {
+    if (shareTooltipTimeoutRef.current !== null) {
+      window.clearTimeout(shareTooltipTimeoutRef.current);
+    }
+    setShareTooltipText(text);
+    setShareTooltipVisible(true);
+    shareTooltipTimeoutRef.current = window.setTimeout(() => {
+      setShareTooltipVisible(false);
+      shareTooltipTimeoutRef.current = null;
+    }, durationMs);
+  }, []);
+
+  const handleShareProduct = async () => {
+    showShareTooltip("Share", 1200);
+    const result = await shareProduct(productDetails[0]);
+    if (result.success) {
+      showShareTooltip("Link shared!", 2000);
+    } else if (result.error) {
+      showShareTooltip("Could not share", 2000);
+    }
+  };
+
+  useEffect(() => {
+    const showTimer = window.setTimeout(() => showShareTooltip("Share", 2300), 900);
+    return () => window.clearTimeout(showTimer);
+  }, [showShareTooltip]);
   // const descriptionLength = product.description.length;
   // const shouldTruncate = descriptionLength > 150;
   // const truncatedDescription = shouldTruncate
@@ -364,9 +489,17 @@ export default function ProductDisplay({
             <div className="flex w-full flex-col gap-4 pt-4">
               {/* Product Name */}
               <div className="space-y-2">
-                <h1 className="text-2xl font-medium text-gray-900 leading-tight">
-                  {productDetails[0]?.product_name}
-                </h1>
+                <div className="flex flex-row items-center gap-2 p-2">
+                  <h1 className="text-2xl font-medium text-gray-900 leading-tight">
+                    {productDetails[0]?.product_name}
+                  </h1>
+                  <ShareProductButton
+                    onClick={handleShareProduct}
+                    tooltipVisible={shareTooltipVisible}
+                    tooltipText={shareTooltipText}
+                    tooltipId="product-share-tooltip-mobile"
+                  />
+                </div>
                 
                 {/* Rating & Review Count */}
                 {reviewCount > 0 && (
@@ -534,9 +667,11 @@ export default function ProductDisplay({
                     </>
                   ) : (
                     <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
+                      <WiggleIcon>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </WiggleIcon>
                       Add to Cart
                     </>
                   )}
@@ -726,9 +861,17 @@ export default function ProductDisplay({
             <div className="flex w-full flex-col gap-4 lg:w-1/2">
               {/* Product Name */}
               <div className="space-y-2">
-                <h1 className="text-3xl font-medium text-gray-900 leading-tight">
-                  {product?.product_name}
-                </h1>
+                <div className="flex flex-row items-center gap-3">
+                  <h1 className="text-3xl font-medium text-gray-900 leading-tight">
+                    {product?.product_name}
+                  </h1>
+                  <ShareProductButton
+                    onClick={handleShareProduct}
+                    tooltipVisible={shareTooltipVisible}
+                    tooltipText={shareTooltipText}
+                    tooltipId="product-share-tooltip-tablet"
+                  />
+                </div>
                 
                 {/* Rating & Review Count */}
                 {reviewCount > 0 && (
@@ -890,9 +1033,11 @@ export default function ProductDisplay({
                     </>
                   ) : (
                     <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
+                      <WiggleIcon>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </WiggleIcon>
                       Add to Cart
                     </>
                   )}
@@ -1045,9 +1190,18 @@ export default function ProductDisplay({
             <div className="w-1/2 flex flex-col gap-5">
               {/* Product Name */}
               <div className="space-y-2">
-                <h1 className="text-4xl font-medium text-gray-900 leading-tight">
-                  {productDetails[0]?.product_name}
-                </h1>
+                <div className="flex flex-row items-center gap-3">
+                  <h1 className="text-4xl font-medium text-gray-900 leading-tight">
+                    {productDetails[0]?.product_name}
+                  </h1>
+                  <ShareProductButton
+                    onClick={handleShareProduct}
+                    tooltipVisible={shareTooltipVisible}
+                    tooltipText={shareTooltipText}
+                    tooltipId="product-share-tooltip-desktop"
+                    iconClassName="h-6 w-6"
+                  />
+                </div>
                 
                 {/* Rating & Review Count */}
                 {reviewCount > 0 && (
@@ -1215,9 +1369,11 @@ export default function ProductDisplay({
                     </>
                   ) : (
                     <>
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
+                      <WiggleIcon>
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </WiggleIcon>
                       Add to Cart
                     </>
                   )}

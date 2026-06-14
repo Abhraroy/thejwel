@@ -2,6 +2,8 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { getOrders } from "@/app/(admin)/admin/orders/action";
+import { Download, Lock, LockOpen, Trash2 } from "lucide-react";
+
 import {
   updateOrdersStatus,
   updatePaymentStatus,
@@ -69,6 +71,7 @@ interface Order {
       final_price?: number;
       base_price?: number;
       discount_percentage?: number;
+      sku?: string;
     } | null;
   }> | null;
 }
@@ -108,6 +111,60 @@ const currency = (value: number) =>
 const formatDate = (value?: string | null) => formatIstDate(value);
 
 const formatDateTime = (value?: string | null) => formatIstDateTime(value);
+
+async function copyTextToClipboard(text: string, label: string) {
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success(`${label} copied`);
+  } catch {
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      textarea.style.top = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      toast.success(`${label} copied`);
+    } catch {
+      toast.error(`Failed to copy ${label.toLowerCase()}`);
+    }
+  }
+}
+
+function CopyableText({
+  value,
+  label,
+  className,
+  fallback = "—",
+}: {
+  value?: string | null;
+  label: string;
+  className?: string;
+  fallback?: string;
+}) {
+  const text = value?.trim() || "";
+  const display = text || fallback;
+
+  return (
+    <button
+      type="button"
+      onClick={() => copyTextToClipboard(text, label)}
+      disabled={!text}
+      title={text ? `Click to copy ${label.toLowerCase()}` : undefined}
+      className={`text-left transition-colors disabled:cursor-default ${
+        text ? "cursor-pointer hover:text-gray-900" : ""
+      } ${className ?? ""}`}
+    >
+      {display}
+    </button>
+  );
+}
 
 interface OrdersProps {
   initialOrders: Order[];
@@ -368,6 +425,12 @@ export default function Orders({ initialOrders }: OrdersProps) {
     setUpdatingId(null);
   };
 
+  const handleDownload = (order: Order) => {
+    toast.info(
+      `Download for ${order.order_number ?? order.order_id.slice(0, 8)} coming soon`
+    );
+  };
+
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
       {/* Fixed top section */}
@@ -481,7 +544,7 @@ export default function Orders({ initialOrders }: OrdersProps) {
       {/* Scrollable table area */}
       <div className="flex-1 min-h-0 bg-white rounded-2xl shadow border border-gray-100 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-auto">
-          <table className="w-full text-left min-w-[1000px]">
+          <table className="w-full text-left min-w-[1080px]">
             <thead className="bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
               <tr className="text-xs uppercase tracking-wide text-gray-500">
                 <Th>Order</Th>
@@ -543,7 +606,7 @@ export default function Orders({ initialOrders }: OrdersProps) {
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
                               {isLocked && (
-                                <LockIcon className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                               )}
                               <span className="text-xs text-gray-500 font-mono">
                                 {order.order_id.slice(0, 8)}...
@@ -720,9 +783,18 @@ export default function Orders({ initialOrders }: OrdersProps) {
                         {/* Actions */}
                         <Td>
                           <div
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 flex-nowrap shrink-0"
                             onClick={(e) => e.stopPropagation()}
                           >
+                            <button
+                              type="button"
+                              title="Download order"
+                              onClick={() => handleDownload(order)}
+                              className="p-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                            >
+                              <Download className="w-4 h-4" />
+                            </button>
+
                             <button
                               type="button"
                               title={isLocked ? "Unlock order (allow changes)" : "Lock order (prevent changes)"}
@@ -737,9 +809,9 @@ export default function Orders({ initialOrders }: OrdersProps) {
                               }`}
                             >
                               {isLocked ? (
-                                <LockIcon className="w-4 h-4" />
+                                <Lock className="w-4 h-4" />
                               ) : (
-                                <UnlockIcon className="w-4 h-4" />
+                                <LockOpen className="w-4 h-4" />
                               )}
                             </button>
 
@@ -772,7 +844,7 @@ export default function Orders({ initialOrders }: OrdersProps) {
                                 }
                                 className="p-1.5 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
                               >
-                                <TrashIcon className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             )}
                           </div>
@@ -792,9 +864,17 @@ export default function Orders({ initialOrders }: OrdersProps) {
                                     className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2"
                                   >
                                     <div className="flex flex-col">
-                                      <span className="font-semibold text-gray-900">
-                                        {item.products?.product_name || "Product"}
-                                      </span>
+                                      <CopyableText
+                                        value={item.products?.sku}
+                                        label="SKU"
+                                        className="text-xs text-gray-500"
+                                      />
+                                      <CopyableText
+                                        value={item.products?.product_name}
+                                        label="Product name"
+                                        fallback="Product"
+                                        className="font-semibold text-gray-900"
+                                      />
                                     </div>
                                     <div className="flex items-center gap-4 text-sm text-gray-700">
                                       <span>Qty: <strong>{item.quantity}</strong></span>
@@ -906,35 +986,6 @@ function SummaryCard({
 }
 
 /* ---------- SVG icons ---------- */
-
-function LockIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  );
-}
-
-function UnlockIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-    </svg>
-  );
-}
-
-function TrashIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="3 6 5 6 21 6" />
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      <line x1="10" y1="11" x2="10" y2="17" />
-      <line x1="14" y1="11" x2="14" y2="17" />
-    </svg>
-  );
-}
 
 function LeftArrowIcon({ className = "" }: { className?: string }) {
   return (

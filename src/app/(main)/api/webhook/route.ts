@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import adminsupabase from "@/lib/supabase/admin";
+import adminsupabase from "@/lib/supabase-Utils/admin";
 import crypto from "crypto";
 
 export async function POST(request: NextRequest) {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase-Utils/client";
 import type { Category } from "@/types/TypeInterface";
 
 interface SidebarMenuItem {

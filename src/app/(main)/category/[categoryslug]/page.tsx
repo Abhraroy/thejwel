@@ -1,5 +1,5 @@
 import CategoryClient from "./CategoryClient";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase-Utils/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { buildPageMetadata, toAbsoluteUrl } from "@/lib/seo/metadata";

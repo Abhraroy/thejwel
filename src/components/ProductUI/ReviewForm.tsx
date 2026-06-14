@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase-Utils/client";
 import { useStore } from "@/zustandStore/zustandStore";
 import { FaStar, FaTimes } from "react-icons/fa";
 import OptimizedImage from "@/components/OptimizedImage";

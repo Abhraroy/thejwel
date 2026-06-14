@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase-Utils/server";
 import { buildPageMetadata, toAbsoluteUrl } from "@/lib/seo/metadata";
 import TagsPageClient from "./TagsPageClient";
 import JsonLd from "@/components/seo/JsonLd";

@@ -3,7 +3,7 @@
 import { useStore } from "@/zustandStore/zustandStore";
 import { useEffect, useState } from "react";
 import { useBodyScrollLock } from "@/lib/body-scroll-lock";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase-Utils/client";
 import { addToDbCart, addToLocalCart, decreaseQuantityFromDbCart, decreaseQuantityFromLocalCart, getCartData, removeFromDbCart, removeFromLocalCart, getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";
 import CartItem from "./CartItem";
 import { toast } from "react-toastify";

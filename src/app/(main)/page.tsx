@@ -3,7 +3,7 @@
 
 
 import HomePage from "@/components/HomePage";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase-Utils/server";
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 
