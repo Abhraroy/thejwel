@@ -6,6 +6,7 @@ import {
   prepareCheckoutContext,
 } from "@/app/utils/orderCheckout";
 import { sendPurchaseEvent } from "@/lib/meta/capi";
+import { decrementStockForOrderItems } from "@/app/utils/stockAdjustment";
 
 const COD_ORDER_PREFIX = "COD";
 const devLog = (...args: unknown[]) => {
@@ -172,6 +173,8 @@ export async function POST(request: NextRequest) {
     orderNumber: orderRes.order.order_number,
     userId: context.user.user_id,
   });
+
+  await decrementStockForOrderItems(orderRes.orderItemsPayload ?? []);
 
   // Meta Conversions API (source of truth). Fired at COD placement so ad
   // optimization sees the conversion immediately. Never blocks the order.

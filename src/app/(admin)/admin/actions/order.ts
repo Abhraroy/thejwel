@@ -3,6 +3,7 @@
 import supabase from "@/lib/supabase-Utils/admin";
 import { revalidatePath } from "next/cache";
 import { createRapidShypOrderForOrder } from "@/app/utils/rapidShyp";
+import { restoreStockForOrderItems } from "@/app/utils/stockAdjustment";
 
 
 
@@ -197,6 +198,23 @@ export async function updatePaymentStatus(orderId: string, paymentStatus: string
 
 export async function deleteOrder(orderId: string) {
     try {
+        const { data: orderItems, error: fetchItemsError } = await supabase
+            .from("order_items")
+            .select("product_id, quantity")
+            .eq("order_id", orderId);
+
+        if (fetchItemsError) {
+            console.error("Error fetching order items for stock restore:", fetchItemsError);
+            return { success: false, message: fetchItemsError.message };
+        }
+
+        await restoreStockForOrderItems(
+            (orderItems ?? []).filter(
+                (item): item is { product_id: string; quantity: number } =>
+                    Boolean(item.product_id) && Number(item.quantity) > 0
+            )
+        );
+
         const { error: itemsError } = await supabase
             .from("order_items")
             .delete()

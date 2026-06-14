@@ -26,7 +26,7 @@ export async function shareProduct(product:any){
 
       const randomMessage = shareMessages[Math.floor(Math.random() * shareMessages.length)];
       const shareText = randomMessage.replace("{productName}", product.product_name);
-        const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/product/${product.product_id}`;
+        const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/product/${product.product_id}`;
         const shareData = {
             title: product.product_name,
             text: `${shareText} | ${randomClosingLine}`,
