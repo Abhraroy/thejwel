@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/zustandStore/zustandStore';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase-Utils/client';
 import { useRouter } from 'next/navigation';
 import { userSignIn } from '@/utilityFunctions/UserSignIn';
 interface OtpInputProps {

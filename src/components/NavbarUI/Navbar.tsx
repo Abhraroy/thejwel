@@ -7,7 +7,7 @@ import { useBodyScrollLock } from '@/lib/body-scroll-lock';
 import Link from 'next/link';
 import OptimizedImage from "@/components/OptimizedImage";
 import HamburgerSidebar from './HamburgerSidebar';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase-Utils/client';
 
 interface NavbarProps {
   cartCount?: number;

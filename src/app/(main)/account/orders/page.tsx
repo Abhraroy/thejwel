@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase-Utils/server";
 import CopyOrderNumberButton from "./CopyOrderNumberButton";
 import OptimizedImage from "@/components/OptimizedImage";
 import { orderItemsWithProducts, orderWithItemsAndProducts, userWithOrdersAndItemsAndProducts } from "@/types/RelationTypeInterface";

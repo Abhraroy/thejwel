@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import adminsupabase from "@/lib/supabase/admin";
+import adminsupabase from "@/lib/supabase-Utils/admin";
 
 export async function POST(request: NextRequest) {
   let couponCode: string | null = null;

@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import adminsupabase from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase-Utils/server";
+import adminsupabase from "@/lib/supabase-Utils/admin";
 import type { Coupon, CouponDiscountType, CouponType } from "@/types/TypeInterface";
 
 type CouponPayload = {

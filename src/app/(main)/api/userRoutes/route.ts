@@ -1,5 +1,5 @@
 import { NextRequest,NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase-Utils/server";
 import { createCart } from "@/utilityFunctions/CartFunctions";
 import { getOrCreateWishlist } from "@/utilityFunctions/WishListFunctions";
 

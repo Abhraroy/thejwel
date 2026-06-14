@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import OptimizedImage from "@/components/OptimizedImage";
 import { useStore } from "@/zustandStore/zustandStore";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase-Utils/client";
 import { addToLocalCart, addToDbCart } from "@/utilityFunctions/CartFunctions";
 import { toast } from "react-toastify";
 import { getCartQuantityForProduct } from "@/utilityFunctions/CartFunctions";

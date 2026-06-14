@@ -1,5 +1,5 @@
 "use client";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase-Utils/client";
 
 import AddressSection from "@/components/Address/AddressSection";
 import OptimizedImage from "@/components/OptimizedImage";

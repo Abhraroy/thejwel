@@ -1,6 +1,6 @@
 "use server";
 import { unstable_noStore } from "next/cache";
-import supabase from "@/lib/supabase/admin";
+import supabase from "@/lib/supabase-Utils/admin";
 
 export async function getOrders() {
   unstable_noStore();

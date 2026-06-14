@@ -12,7 +12,7 @@ import AddressForm from "../Address/AddressForm";
 import CashOnDeliveryConfirmation from "./CashOnDeliveryConfirmation";
 import RazorPayButton from "./RazorPay";
 import OptimizedImage from "@/components/OptimizedImage";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase-Utils/client";
 import type { AnyCart } from "@/types/CartTypes";
 import { getAttribution } from "@/lib/attribution";
 import { trackPurchase } from "@/lib/meta/pixel";

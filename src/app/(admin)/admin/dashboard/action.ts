@@ -1,5 +1,5 @@
 "use server";
-import supabase from "@/lib/supabase/admin";
+import supabase from "@/lib/supabase-Utils/admin";
 
 
 export async function getDashboardData() {

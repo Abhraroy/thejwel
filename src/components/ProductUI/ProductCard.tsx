@@ -5,7 +5,7 @@ import { memo, useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useStore } from "@/zustandStore/zustandStore";
 import { addToDbCart, addToLocalCart } from "@/utilityFunctions/CartFunctions";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase-Utils/client";
 import { Product } from "@/types/TypeInterface";
 import { 
   

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase-Utils/server";
 import { BUDGET_RANGES, getBudgetRangeById } from "@/lib/budget-ranges";
 import { buildPageMetadata, toAbsoluteUrl } from "@/lib/seo/metadata";
 import { productWithImages } from "@/types/RelationTypeInterface";

@@ -1,6 +1,6 @@
 "use server";
 
-import supabase from "@/lib/supabase/admin";
+import supabase from "@/lib/supabase-Utils/admin";
 import { revalidatePath } from "next/cache";
 import {
   deleteImageFromCloudflare,

@@ -1,5 +1,5 @@
 import "server-only";
-import adminsupabase from "@/lib/supabase/admin";
+import adminsupabase from "@/lib/supabase-Utils/admin";
 import { createOrderWithItems } from "@/app/utils/orderCheckout";
 import { redis } from "@/app/utils/Redis";
 import { createRapidShypOrderForOrder } from "@/app/utils/rapidShyp";

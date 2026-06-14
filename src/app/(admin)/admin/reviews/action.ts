@@ -1,4 +1,4 @@
-import supabase from "@/lib/supabase/admin";
+import supabase from "@/lib/supabase-Utils/admin";
 
 export async function getReviews() {
     const { data: reviewsData, error } = await supabase

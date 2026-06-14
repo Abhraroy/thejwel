@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import ProductPageClient from "./ProductPageClient";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase-Utils/server";
 import { buildPageMetadata, toAbsoluteUrl } from "@/lib/seo/metadata";
 import JsonLd from "@/components/seo/JsonLd";
 import { cache } from "react";

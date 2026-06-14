@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import supabase from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase-Utils/server";
+import supabase from "@/lib/supabase-Utils/admin";
 import { deleteImageFromCloudflare } from "@/app/utils/cloudflare";
 import { extractR2KeyFromUrl } from "./utils";
 

@@ -1,4 +1,4 @@
-import adminsupabase from "@/lib/supabase/admin";
+import adminsupabase from "@/lib/supabase-Utils/admin";
 
 const devLog = (...args: unknown[]) => {
   if (process.env.NODE_ENV === "development") {

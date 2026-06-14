@@ -1,5 +1,5 @@
 import axios from "axios";
-import adminsupabase from "@/lib/supabase/admin";
+import adminsupabase from "@/lib/supabase-Utils/admin";
 
 type RapidShypPaymentMethod = "PREPAID" | "COD";
 

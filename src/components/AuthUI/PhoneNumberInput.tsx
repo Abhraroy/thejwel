@@ -1,6 +1,6 @@
 import { useStore } from '@/zustandStore/zustandStore';
 import { useEffect, useRef, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase-Utils/client';
 
 interface PhoneNumberInputProps {
     containerClassName?: string;
