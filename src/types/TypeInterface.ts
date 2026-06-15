@@ -28,6 +28,8 @@ export interface Address {
   created_at?: ISODateString | null;
   address_line1?: string | null;
   address_line2?: string | null;
+  house_no?: string | null;
+  landmark?: string | null;
 }
 
 export interface AdminKey {

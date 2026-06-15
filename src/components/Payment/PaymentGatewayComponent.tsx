@@ -983,6 +983,8 @@ export default function PaymentGatewayComponent() {
                             </div>
                             <p className="text-sm text-gray-800 font-medium leading-relaxed break-words">
                               {address.street_address}
+                              {address.house_no && `, ${address.house_no}`}
+                              {address.landmark && `, ${address.landmark}`}
                             </p>
                             <p className="text-sm text-gray-700 mt-0.5">
                               {address.city}, {address.state} - {address.postal_code}

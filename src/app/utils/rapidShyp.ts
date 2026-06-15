@@ -8,15 +8,40 @@ const parseAddressText = (addressText: string) => {
   const lastPart = addressParts[addressParts.length - 1] || "";
   const statePostalMatch = lastPart.match(/^(.+?)\s*-\s*(\d+)$/);
 
+  const hasExtendedFormat = addressParts.length >= 6;
+
   return {
     streetAddress:
       addressParts[0] && addressParts[0] !== "null" ? addressParts[0] : "",
+    houseNo:
+      hasExtendedFormat && addressParts[1] && addressParts[1] !== "null"
+        ? addressParts[1]
+        : "",
+    landmark:
+      hasExtendedFormat && addressParts[2] && addressParts[2] !== "null"
+        ? addressParts[2]
+        : "",
     addressLine1:
-      addressParts[1] && addressParts[1] !== "null" ? addressParts[1] : "",
+      (hasExtendedFormat ? addressParts[3] : addressParts[1]) &&
+      (hasExtendedFormat ? addressParts[3] : addressParts[1]) !== "null"
+        ? hasExtendedFormat
+          ? addressParts[3]
+          : addressParts[1]
+        : "",
     addressLine2:
-      addressParts[2] && addressParts[2] !== "null" ? addressParts[2] : "",
+      (hasExtendedFormat ? addressParts[4] : addressParts[2]) &&
+      (hasExtendedFormat ? addressParts[4] : addressParts[2]) !== "null"
+        ? hasExtendedFormat
+          ? addressParts[4]
+          : addressParts[2]
+        : "",
     city:
-      addressParts[3] && addressParts[3] !== "null" ? addressParts[3] : "",
+      (hasExtendedFormat ? addressParts[5] : addressParts[3]) &&
+      (hasExtendedFormat ? addressParts[5] : addressParts[3]) !== "null"
+        ? hasExtendedFormat
+          ? addressParts[5]
+          : addressParts[3]
+        : "",
     state: statePostalMatch ? statePostalMatch[1].trim() : "",
     postalCode: statePostalMatch ? statePostalMatch[2].trim() : "",
   };

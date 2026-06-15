@@ -14,6 +14,8 @@ CREATE TABLE public.addresses (
   created_at timestamp without time zone DEFAULT now(),
   address_line1 text,
   address_line2 text,
+  house_no text,
+  landmark text,
   CONSTRAINT addresses_pkey PRIMARY KEY (address_id),
   CONSTRAINT addresses_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
 );
