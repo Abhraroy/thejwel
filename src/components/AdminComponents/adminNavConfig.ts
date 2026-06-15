@@ -80,7 +80,7 @@ export const adminNavItems: NavItem[] = [
     label: "Marketing",
     icon: BadgeDollarSign,
     children: [
-      { id: "coupons", label: "Coupons", disabled: true, icon: RiCoupon3Line },
+      { id: "coupons", label: "Coupons", disabled: false, href: "/admin/coupons", icon: RiCoupon3Line },
     ],
   },
   {

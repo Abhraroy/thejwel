@@ -447,7 +447,7 @@ export default function Orders({ initialOrders }: OrdersProps) {
         </header>
 
         {/* Filters row */}
-        <div className="flex flex-wrap gap-2 items-end">
+        <div className="flex flex-wrap gap-2 justify-around items-end">
           <div className="relative">
             <svg
               className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"

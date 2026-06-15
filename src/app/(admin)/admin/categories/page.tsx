@@ -36,39 +36,10 @@ export default async function CategoriesPage() {
             No categories added yet. Click &quot;Add Category&quot; to create your first category.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className={`border-b ${isDarkTheme ? 'border-gray-700' : 'border-gray-200'}`}>
-                  <th className={`text-left py-3 px-4 font-semibold text-sm ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Image
-                  </th>
-                  <th className={`text-left py-3 px-4 font-semibold text-sm ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Category Name
-                  </th>
-                  <th className={`text-left py-3 px-4 font-semibold text-sm ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Slug
-                  </th>
-                  <th className={`text-left py-3 px-4 font-semibold text-sm ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Description
-                  </th>
-                  <th className={`text-left py-3 px-4 font-semibold text-sm ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Status
-                  </th>
-                  <th className={`text-left py-3 px-4 font-semibold text-sm ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Actions
-                  </th>
-                  <th className={`text-left py-3 px-4 font-semibold text-sm ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Sub Categories
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {categoriesData?.map((category: any) => (
-                  <CategoriesList key={category.category_id} category={category} isDarkTheme={isDarkTheme} />
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-4">
+            {categoriesData?.map((category: any) => (
+              <CategoriesList key={category.category_id} category={category} isDarkTheme={isDarkTheme} />
+            ))}
           </div>
         )}
       </div>
