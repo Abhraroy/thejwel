@@ -86,19 +86,6 @@ export function getImagePreset(baseUrl: string, presetName: ImagePresetName): st
 }
 
 /**
- * Return the image URL for blur placeholder (small, low quality).
- *
- * @param baseUrl - URL from DB
- */
-export function getBlurImageUrl(baseUrl: string): string {
-  if (!baseUrl || typeof baseUrl !== "string") return PLACEHOLDER_IMAGE;
-  if (isCloudflareCdnUrl(baseUrl)) {
-    return buildCloudflareResizeUrl(baseUrl, 40, 30);
-  }
-  return baseUrl;
-}
-
-/**
  * Generate srcSet for responsive images (Cloudflare CDN only).
  *
  * @param baseUrl - URL from DB

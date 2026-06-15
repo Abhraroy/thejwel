@@ -36,8 +36,9 @@ const ImageIcon = ({ className = "w-5 h-5" }) => (
 
 export default function ProductForm({ isDarkTheme, product }: ProductFormProps) {
   const router = useRouter();
-  const { showAddProduct, setShowAddProduct, selectedProduct, setSelectedProduct } = useAdminStore();
-  const editingProduct = product ?? selectedProduct;
+  const { showAddProduct, setShowAddProduct, editingProduct: storeEditingProduct, setEditingProduct } =
+    useAdminStore();
+  const editingProduct = product ?? storeEditingProduct;
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [subCategoriesList, setSubCategoriesList] = useState<any[]>([]);
 
@@ -370,7 +371,7 @@ export default function ProductForm({ isDarkTheme, product }: ProductFormProps) 
     setThumbnailImagePreview(null);
     setSubCategoriesList([]);
     setShowAddProduct(false);
-    setSelectedProduct(null);
+    setEditingProduct(null);
   };
 
 
