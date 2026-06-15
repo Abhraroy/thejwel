@@ -235,3 +235,13 @@ CREATE TABLE public.wishlist_items (
   CONSTRAINT wishlist_items_wishlist_id_fkey FOREIGN KEY (wishlist_id) REFERENCES public.wishlist(wishlist_id),
   CONSTRAINT wishlist_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(product_id)
 );
+
+
+create table public.promo_content (
+  id serial not null,
+  content text not null,
+  place_to_be_displayed public.promo_location not null,
+  created_at timestamp without time zone not null default CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone not null default CURRENT_TIMESTAMP,
+  constraint promo_content_pkey primary key (id)
+) TABLESPACE pg_default;

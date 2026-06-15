@@ -204,3 +204,13 @@ export interface WishlistItem {
   product_id?: UUID | null;
 }
 
+export type PromoLocation = "promotion_banner" | "share_link";
+
+export interface PromoContent {
+  id: number;
+  content: string;
+  place_to_be_displayed: PromoLocation;
+  created_at?: ISODateString | null;
+  updated_at?: ISODateString | null;
+}
+
