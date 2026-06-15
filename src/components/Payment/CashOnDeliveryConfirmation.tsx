@@ -115,7 +115,11 @@ export default function CashOnDeliveryConfirmation({
               <p className="text-xs font-semibold text-[#360000] mb-1">Delivery Address</p>
               {selectedAddressDetails ? (
                 <>
-                  <p className="text-xs text-gray-700">{selectedAddressDetails.street_address}</p>
+                  <p className="text-xs text-gray-700">
+                    {selectedAddressDetails.street_address}
+                    {selectedAddressDetails.house_no && `, ${selectedAddressDetails.house_no}`}
+                    {selectedAddressDetails.landmark && `, ${selectedAddressDetails.landmark}`}
+                  </p>
                   <p className="text-xs text-gray-700">
                     {selectedAddressDetails.city}, {selectedAddressDetails.state} -{" "}
                     {selectedAddressDetails.postal_code}

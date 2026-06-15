@@ -14,6 +14,8 @@ CREATE TABLE public.addresses (
   created_at timestamp without time zone DEFAULT now(),
   address_line1 text,
   address_line2 text,
+  house_no text,
+  landmark text,
   CONSTRAINT addresses_pkey PRIMARY KEY (address_id),
   CONSTRAINT addresses_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
 );
@@ -233,3 +235,13 @@ CREATE TABLE public.wishlist_items (
   CONSTRAINT wishlist_items_wishlist_id_fkey FOREIGN KEY (wishlist_id) REFERENCES public.wishlist(wishlist_id),
   CONSTRAINT wishlist_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(product_id)
 );
+
+
+create table public.promo_content (
+  id serial not null,
+  content text not null,
+  place_to_be_displayed public.promo_location not null,
+  created_at timestamp without time zone not null default CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone not null default CURRENT_TIMESTAMP,
+  constraint promo_content_pkey primary key (id)
+) TABLESPACE pg_default;

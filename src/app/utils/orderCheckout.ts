@@ -20,6 +20,8 @@ type CheckoutAddress = {
   address_id: string;
   user_id: string;
   street_address: string;
+  house_no?: string | null;
+  landmark?: string | null;
   address_line1?: string | null;
   address_line2?: string | null;
   city: string;
@@ -56,7 +58,7 @@ export interface OrderCreationOptions {
 }
 
 const formatAddressText = (address: CheckoutAddress) =>
-  `${address.street_address}, ${address.address_line1 ?? "null"}, ${address.address_line2 ?? "null"}, ${address.city}, ${address.state} - ${address.postal_code}`;
+  `${address.street_address}, ${address.house_no ?? "null"}, ${address.landmark ?? "null"}, ${address.address_line1 ?? "null"}, ${address.address_line2 ?? "null"}, ${address.city}, ${address.state} - ${address.postal_code}`;
 
 export async function prepareCheckoutContext(
   phoneNumber: string,

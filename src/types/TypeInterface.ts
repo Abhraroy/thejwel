@@ -28,6 +28,8 @@ export interface Address {
   created_at?: ISODateString | null;
   address_line1?: string | null;
   address_line2?: string | null;
+  house_no?: string | null;
+  landmark?: string | null;
 }
 
 export interface AdminKey {
@@ -200,5 +202,15 @@ export interface WishlistItem {
   created_at: ISODateString;
   wishlist_id?: UUID | null;
   product_id?: UUID | null;
+}
+
+export type PromoLocation = "promotion_banner" | "share_link";
+
+export interface PromoContent {
+  id: number;
+  content: string;
+  place_to_be_displayed: PromoLocation;
+  created_at?: ISODateString | null;
+  updated_at?: ISODateString | null;
 }
 

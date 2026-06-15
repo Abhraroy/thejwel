@@ -109,6 +109,7 @@ export async function createCoupon(payload: CouponPayload) {
   }
 
   revalidatePath("/admin/resources");
+  revalidatePath("/admin/coupons");
   return { success: true };
 }
 
@@ -174,6 +175,7 @@ export async function updateCoupon(couponId: string, payload: CouponPayload) {
   }
 
   revalidatePath("/admin/resources");
+  revalidatePath("/admin/coupons");
   return { success: true };
 }
 
@@ -197,6 +199,7 @@ export async function updateCouponState(couponId: string, isActive: boolean) {
   }
 
   revalidatePath("/admin/resources");
+  revalidatePath("/admin/coupons");
   return { success: true };
 }
 
@@ -217,5 +220,6 @@ export async function deleteCoupon(couponId: string) {
   }
 
   revalidatePath("/admin/resources");
+  revalidatePath("/admin/coupons");
   return { success: true };
 }

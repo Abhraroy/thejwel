@@ -1,10 +1,27 @@
+import { createClient } from "@/lib/supabase-Utils/server";
+
 const DEFAULT_MESSAGES = [
   "✨ Premium Jewellery for Every Occasion",
-"💎 Anti-Tarnish | Temple | American Diamond",
-"🏷️ Affordable & Festive Luxury",
-"🚚 Pan India Shipping | COD Available",
-"🎁 Extra 10% OFF on Prepaid Orders!"
+  "💎 Anti-Tarnish | Temple | American Diamond",
+  "🏷️ Affordable & Festive Luxury",
+  "🚚 Pan India Shipping | COD Available",
+  "🎁 Extra 10% OFF on Prepaid Orders!",
 ] as const;
+
+async function getPromotionMessages(): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("promo_content")
+    .select("content")
+    .eq("place_to_be_displayed", "promotion_banner")
+    .order("created_at", { ascending: true });
+
+  if (error || !data?.length) {
+    return [...DEFAULT_MESSAGES];
+  }
+
+  return data.map((item) => item.content);
+}
 
 function MarqueeTrack({ messages }: { messages: readonly string[] }) {
   return (
@@ -24,11 +41,8 @@ function MarqueeTrack({ messages }: { messages: readonly string[] }) {
   );
 }
 
-export default function HomePageMarquee({
-  messages = DEFAULT_MESSAGES,
-}: {
-  messages?: readonly string[];
-}) {
+export default async function HomePageMarquee() {
+  const messages = await getPromotionMessages();
   const items = messages.length > 0 ? messages : DEFAULT_MESSAGES;
 
   return (

@@ -63,6 +63,17 @@ export function todayIstDayIndex(now: Date = new Date()): number {
   return Math.floor((now.getTime() + IST_OFFSET_MS) / MS_PER_DAY);
 }
 
+/** True when today's IST day is after the given date's IST calendar day. */
+export function isPastIstCalendarDay(
+  value: string | Date | null | undefined,
+  now: Date = new Date()
+): boolean {
+  const day = istDayIndex(value);
+  const today = todayIstDayIndex(now);
+  if (day === null) return true;
+  return today > day;
+}
+
 const istDateFormatter = new Intl.DateTimeFormat("en-GB", {
   timeZone: IST_TIMEZONE,
   day: "2-digit",

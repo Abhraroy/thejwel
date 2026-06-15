@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  createCoupon,
   deleteCoupon,
   getAllCoupons,
   updateCoupon,
@@ -192,12 +191,8 @@ export default function ResourcesPage() {
     null
   );
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [couponForm, setCouponForm] = useState<CouponFormData>(
-    buildInitialCouponForm()
-  );
   const [couponError, setCouponError] = useState<string | null>(null);
   const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
-  const [isCouponSaving, setIsCouponSaving] = useState(false);
   const [couponList, setCouponList] = useState<Coupon[]>([]);
   const [isCouponLoading, setIsCouponLoading] = useState(true);
   const [toggleLoadingId, setToggleLoadingId] = useState<string | null>(null);
@@ -486,18 +481,6 @@ export default function ResourcesPage() {
     }
   };
 
-  const handleCouponInput = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
-    if (type === "checkbox") {
-      const checked = (e.target as HTMLInputElement).checked;
-      setCouponForm((prev) => ({ ...prev, [name]: checked }));
-      return;
-    }
-    setCouponForm((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleCouponEditInput = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -508,51 +491,6 @@ export default function ResourcesPage() {
       return;
     }
     setCouponEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const resetCouponForm = () => {
-    setCouponForm(buildInitialCouponForm());
-  };
-
-  const handleCreateCoupon = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setCouponError(null);
-    setCouponSuccess(null);
-
-    if (!couponForm.coupon_code.trim()) {
-      setCouponError("Coupon code is required");
-      return;
-    }
-
-    setIsCouponSaving(true);
-    const result = await createCoupon({
-      coupon_code: couponForm.coupon_code,
-      coupon_type: couponForm.coupon_type,
-      description: couponForm.description || undefined,
-      discount_type: couponForm.discount_type,
-      discount_value: Number(couponForm.discount_value || 0),
-      min_purchase_amount: Number(couponForm.min_purchase_amount || 0),
-      max_discount_amount:
-        couponForm.max_discount_amount === ""
-          ? null
-          : Number(couponForm.max_discount_amount),
-      usage_limit:
-        couponForm.usage_limit === "" ? null : Number(couponForm.usage_limit),
-      valid_from: new Date(couponForm.valid_from + ":00+05:30").toISOString(),
-      valid_until: new Date(couponForm.valid_until + ":00+05:30").toISOString(),
-      is_active: couponForm.is_active,
-    });
-
-    if (!result.success) {
-      setCouponError(result.error || "Failed to create coupon");
-      setIsCouponSaving(false);
-      return;
-    }
-
-    setCouponSuccess("Coupon created successfully.");
-    resetCouponForm();
-    await refreshCoupons();
-    setIsCouponSaving(false);
   };
 
   const handleToggleCoupon = async (coupon: Coupon) => {
@@ -1061,189 +999,7 @@ export default function ResourcesPage() {
               </span>
             </div>
 
-            <form onSubmit={handleCreateCoupon} className="mt-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Coupon code
-                  </label>
-                  <input
-                    name="coupon_code"
-                    value={couponForm.coupon_code}
-                    onChange={handleCouponInput}
-                    placeholder="e.g. FESTIVE10"
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Coupon type
-                  </label>
-                  <select
-                    name="coupon_type"
-                    value={couponForm.coupon_type}
-                    onChange={handleCouponInput}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                  >
-                    <option value="COD">COD</option>
-                    <option value="PREPAID">PREPAID</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Discount type
-                  </label>
-                  <select
-                    name="discount_type"
-                    value={couponForm.discount_type}
-                    onChange={handleCouponInput}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                  >
-                    <option value="percentage">Percentage</option>
-                    <option value="fixed">Fixed</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Discount value
-                  </label>
-                  <input
-                    name="discount_value"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={couponForm.discount_value}
-                    onChange={handleCouponInput}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Min purchase amount
-                  </label>
-                  <input
-                    name="min_purchase_amount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={couponForm.min_purchase_amount}
-                    onChange={handleCouponInput}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Max discount amount (optional)
-                  </label>
-                  <input
-                    name="max_discount_amount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={couponForm.max_discount_amount}
-                    onChange={handleCouponInput}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Usage limit (optional)
-                  </label>
-                  <input
-                    name="usage_limit"
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={couponForm.usage_limit}
-                    onChange={handleCouponInput}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Valid from (IST)
-                  </label>
-                  <input
-                    name="valid_from"
-                    type="datetime-local"
-                    value={couponForm.valid_from}
-                    onChange={handleCouponInput}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Valid until (IST)
-                  </label>
-                  <input
-                    name="valid_until"
-                    type="datetime-local"
-                    value={couponForm.valid_until}
-                    onChange={handleCouponInput}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  rows={3}
-                  value={couponForm.description}
-                  onChange={handleCouponInput}
-                  placeholder="Optional coupon description"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-200 outline-none"
-                />
-              </div>
-
-              <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
-                <input
-                  type="checkbox"
-                  name="is_active"
-                  checked={couponForm.is_active}
-                  onChange={handleCouponInput}
-                  className="h-4 w-4 accent-indigo-600"
-                />
-                Active after creation
-              </label>
-
-              {couponError && (
-                <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
-                  {couponError}
-                </div>
-              )}
-              {couponSuccess && (
-                <div className={SUCCESS_BANNER_CLASS}>
-                  {couponSuccess}
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="submit"
-                  disabled={isCouponSaving}
-                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isCouponSaving ? "Creating..." : "Create Coupon"}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetCouponForm}
-                  className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50"
-                >
-                  Reset
-                </button>
-              </div>
-            </form>
-
-            <div className="mt-6 border-t border-slate-200 pt-4">
+            <div className="mt-4 border-t border-slate-200 pt-4">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-base font-semibold text-slate-900">
                   Existing Coupons

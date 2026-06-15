@@ -13,6 +13,8 @@ interface AddressFormProps {
 
 interface AddressFormData {
   street_address: string;
+  house_no: string;
+  landmark: string;
   address_line1: string;
   address_line2: string;
   city: string;
@@ -35,6 +37,8 @@ export default function AddressForm({ userId, onClose, onSuccess }: AddressFormP
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<AddressFormData>({
     street_address: '',
+    house_no: '',
+    landmark: '',
     address_line1: '',
     address_line2: '',
     city: '',
@@ -77,6 +81,8 @@ export default function AddressForm({ userId, onClose, onSuccess }: AddressFormP
           {
             user_id: userId,
             street_address: formData.street_address,
+            house_no: formData.house_no || null,
+            landmark: formData.landmark || null,
             address_line1: formData.address_line1 || null,
             address_line2: formData.address_line2 || null,
             city: formData.city,
@@ -140,6 +146,37 @@ export default function AddressForm({ userId, onClose, onSuccess }: AddressFormP
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 placeholder-gray-400 resize-none"
               required
             />
+          </div>
+
+          {/* House No & Landmark */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                House No. <span className="text-gray-400 text-xs">(Optional)</span>
+              </label>
+              <input
+                type="text"
+                name="house_no"
+                value={formData.house_no}
+                onChange={handleInputChange}
+                placeholder="House / Flat No."
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Landmark <span className="text-gray-400 text-xs">(Optional)</span>
+              </label>
+              <input
+                type="text"
+                name="landmark"
+                value={formData.landmark}
+                onChange={handleInputChange}
+                placeholder="Nearby landmark"
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+              />
+            </div>
           </div>
 
           {/* Address Line 1 & 2 */}

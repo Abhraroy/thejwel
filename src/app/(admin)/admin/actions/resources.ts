@@ -99,11 +99,47 @@ export async function saveImageResource(params: {
     }
 
     revalidatePath("/admin/resources");
+    revalidatePath("/admin/website-assets");
     return { success: true };
   } catch (err) {
     return {
       success: false,
       error: err instanceof Error ? err.message : "Failed to save image resource",
+    };
+  }
+}
+
+export async function getImageResourcesBySection(sectionName: string): Promise<{
+  success: boolean;
+  data?: ImageResourceRecord[];
+  error?: string;
+}> {
+  try {
+    const auth = await ensureAdmin();
+    if (!auth.ok) {
+      return { success: false, error: auth.message };
+    }
+
+    const trimmedSection = sectionName.trim();
+    if (!trimmedSection) {
+      return { success: false, error: "Section name is required" };
+    }
+
+    const { data, error } = await supabase
+      .from("image_resources")
+      .select("id, created_at, image_link, section_name, redirect_route")
+      .eq("section_name", trimmedSection)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: (data ?? []) as ImageResourceRecord[] };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to fetch image resources",
     };
   }
 }
@@ -180,6 +216,7 @@ export async function updateImageResource(params: {
     }
 
     revalidatePath("/admin/resources");
+    revalidatePath("/admin/website-assets");
     return { success: true };
   } catch (err) {
     return {
@@ -227,6 +264,7 @@ export async function deleteImageResource(id: number): Promise<{
     }
 
     revalidatePath("/admin/resources");
+    revalidatePath("/admin/website-assets");
     return { success: true };
   } catch (err) {
     return {
