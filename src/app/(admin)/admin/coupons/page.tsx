@@ -7,7 +7,8 @@ import {
   deleteCoupon,
   getAllCoupons,
   updateCoupon,
-} from "@/app/(admin)/admin/actions/coupons";import { isCouponExpired } from "@/app/(admin)/admin/customers/action";
+  isCouponExpired,
+} from "@/app/(admin)/admin/actions/coupons";
 import { formatIstDateTime } from "@/lib/datetime";
 import type { Coupon, CouponDiscountType, CouponType } from "@/types/TypeInterface";
 
