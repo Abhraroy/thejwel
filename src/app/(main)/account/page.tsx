@@ -8,6 +8,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useStore } from "@/zustandStore/zustandStore";
 import { toast } from "react-toastify";
+import {
+  formatIstDate,
+  formatIstTime,
+  parseDbDateAsUtc,
+} from "@/lib/datetime";
 
 // Icon Components
 const PhoneIcon = () => (
@@ -239,8 +244,8 @@ export default function AccountPage() {
       // Sort orders by order_date descending and limit to 3
       const sortedOrders = (user?.orders ?? [])
         .sort((a: any, b: any) => {
-          const dateA = new Date(a.order_date).getTime();
-          const dateB = new Date(b.order_date).getTime();
+          const dateA = parseDbDateAsUtc(a.order_date)?.getTime() ?? 0;
+          const dateB = parseDbDateAsUtc(b.order_date)?.getTime() ?? 0;
           return dateB - dateA;
         })
         .slice(0, 3);
@@ -588,13 +593,8 @@ export default function AccountPage() {
               ) : orders && orders.length > 0 ? (
                 <div className="space-y-4">
                   {orders.map((order) => {
-                    const orderDate = order?.order_date
-                      ? new Date(order.order_date).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })
-                      : "N/A";
+                    const orderDate = formatIstDate(order?.order_date) ?? "N/A";
+                    const orderTime = formatIstTime(order?.order_date);
                     const orderNumberToCopy =
                       order?.order_number ?? order?.order_id ?? "";
                     const orderNumberToDisplay =
@@ -679,7 +679,14 @@ export default function AccountPage() {
                                 <span className="w-4 h-4 flex items-center justify-center">
                                   <CalendarIcon />
                                 </span>
-                                <span>{orderDate}</span>
+                                <span>
+                                  {orderDate}
+                                  {orderTime && (
+                                    <span className="block text-xs text-gray-500">
+                                      {orderTime} IST
+                                    </span>
+                                  )}
+                                </span>
                               </p>
                               <p className="flex items-center gap-2">
                                 <svg

@@ -4,6 +4,11 @@ import { createClient } from "@/lib/supabase-Utils/server";
 import CopyOrderNumberButton from "./CopyOrderNumberButton";
 import OptimizedImage from "@/components/OptimizedImage";
 import { orderItemsWithProducts, orderWithItemsAndProducts, userWithOrdersAndItemsAndProducts } from "@/types/RelationTypeInterface";
+import {
+  formatIstDate,
+  formatIstTime,
+  parseDbDateAsUtc,
+} from "@/lib/datetime";
 
 const devLog = (...args: unknown[]) => {
   if (process.env.NODE_ENV === "development") {
@@ -97,8 +102,8 @@ export default async function OrdersPage() {
   }
 
   const ordersAll = [...(user?.orders ?? [])].sort((a: orderWithItemsAndProducts, b: orderWithItemsAndProducts) => {
-    const dateA = new Date(a.order_date ?? "").getTime();
-    const dateB = new Date(b.order_date ?? "").getTime();
+    const dateA = parseDbDateAsUtc(a.order_date)?.getTime() ?? 0;
+    const dateB = parseDbDateAsUtc(b.order_date)?.getTime() ?? 0;
     return dateB - dateA;
   });
   devLog("fetch-user-orders:success", {
@@ -137,13 +142,8 @@ export default async function OrdersPage() {
         ) : (
           <div className="space-y-4">
             {ordersAll.map((order: orderWithItemsAndProducts) => {
-              const orderDate = order?.order_date
-                ? new Date(order.order_date ?? "").toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })
-                : "N/A";
+              const orderDate = formatIstDate(order?.order_date) ?? "N/A";
+              const orderTime = formatIstTime(order?.order_date);
               const orderNumberToCopy =
                 order?.order_number ?? order?.order_id ?? "";
               const orderNumberToDisplay =
@@ -201,7 +201,14 @@ export default async function OrdersPage() {
                         <span className="w-4 h-4 flex items-center justify-center">
                           <CalendarIcon />
                         </span>
-                        <span>{orderDate}</span>
+                        <span>
+                          {orderDate}
+                          {orderTime && (
+                            <span className="block text-xs text-gray-500">
+                              {orderTime} IST
+                            </span>
+                          )}
+                        </span>
                       </p>
                       <p className="flex items-center gap-2">
                         <span className="font-semibold text-gray-900">
