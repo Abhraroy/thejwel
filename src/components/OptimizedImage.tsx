@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   getOptimizedImageUrl,
   getImagePreset,
@@ -72,6 +72,12 @@ export default function OptimizedImage({
   draggable,
 }: OptimizedImageProps) {
   const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    // Reset image error state whenever the source changes so a prior failed image
+    // does not keep showing placeholder for the next selected image.
+    setHasError(false);
+  }, [src]);
 
   const { imageSrc, srcSet } = useMemo(() => {
     const effectiveSrc = src?.trim() || "";
