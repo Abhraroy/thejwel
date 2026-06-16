@@ -72,8 +72,10 @@ export const adminNavItems: NavItem[] = [
     id: "customers",
     label: "Customers",
     disabled: false,
-    href: "/admin/customers",
     icon: FaUsers,
+    children: [
+      { id: "customer-list", label: "Customer List", disabled: false, href: "/admin/customer-list", icon: FaUsers },
+    ],
   },
   {
     id: "marketing",

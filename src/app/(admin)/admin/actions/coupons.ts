@@ -1,9 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { isPastIstCalendarDay } from "@/lib/datetime";
 import { createClient } from "@/lib/supabase-Utils/server";
 import adminsupabase from "@/lib/supabase-Utils/admin";
 import type { Coupon, CouponDiscountType, CouponType } from "@/types/TypeInterface";
+
+export async function isCouponExpired(
+  coupon: Pick<Coupon, "valid_until">,
+): Promise<boolean> {
+  return isPastIstCalendarDay(coupon.valid_until);
+}
 
 type CouponPayload = {
   coupon_code: string;
