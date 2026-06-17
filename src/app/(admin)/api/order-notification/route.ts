@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
   console.log("Items", items);
   console.log("SMS message", message);
 
-  const sms = await sendSMS("+917047191222", message);
+  const sms = await sendSMS(process.env.PNONE_NUMBER_TO_NOTIFY || "+916290921328", message);
   console.log("SMS sent", sms);
   return NextResponse.json({ message: "Order notification received" });
 }
