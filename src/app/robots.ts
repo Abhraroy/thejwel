@@ -10,7 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: ["/", "/product/", "/category/", "/collection/", "/occasion/", "/Tags/"],
         disallow: [
-          "/admin",
           "/account",
           "/wishlist",
           "/redirect",

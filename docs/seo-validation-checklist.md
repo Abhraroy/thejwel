@@ -3,7 +3,7 @@
 ## Pre-release checks
 - Verify metadata on core pages: `/`, `/product/[id]`, `/category/[slug]`, `/collection/[slug]`, `/occasion/[slug]`, `/Tags/[tag]`.
 - Validate canonical tags and ensure they resolve with `200` responses.
-- Validate `robots.txt` and confirm sensitive routes are blocked (`/admin`, `/account`, `/wishlist`, `/redirect`, `/api`).
+- Validate `robots.txt` and confirm sensitive routes are blocked (`/account`, `/wishlist`, `/redirect`, `/api`).
 - Validate `sitemap.xml` generation and URL correctness.
 - Run Rich Results Test on:
   - product pages (`Product`, `BreadcrumbList`)

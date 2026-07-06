@@ -32,13 +32,6 @@ export interface Address {
   landmark?: string | null;
 }
 
-export interface AdminKey {
-  id: UUID;
-  key?: string | null;
-  admin?: UUID | null;
-  created_at?: ISODateString | null;
-}
-
 export interface Cart {
   cart_id: UUID;
   user_id?: UUID | null;
