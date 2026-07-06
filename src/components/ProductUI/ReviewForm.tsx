@@ -96,7 +96,7 @@ export default function ReviewForm({ productId, onClose, onSuccess }: ReviewForm
         formData.append("file", image);
         formData.append("folder", "reviews");
 
-        const response = await fetch("/admin/api/uploadImage", {
+        const response = await fetch("/api/upload/review-image", {
           method: "POST",
           body: formData,
         });
