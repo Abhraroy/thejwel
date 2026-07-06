@@ -83,7 +83,6 @@ pnpm start
 - **Search pages set to noindex**: `src/app/(main)/search/[product_arg]/layout.tsx` (exports `metadata.robots.index = false`)
 - **Account area noindex**: `src/app/(main)/account/layout.tsx` (exports `metadata` with `noIndex: true`)
 - **Wishlist area noindex**: `src/app/(main)/wishlist/layout.tsx` (exports `metadata` with `noIndex: true`)
-- **Admin area noindex**: `src/app/(admin)/layout.tsx` (exports `metadata` with `noIndex: true`)
 
 ### Crawling / indexing endpoints
 

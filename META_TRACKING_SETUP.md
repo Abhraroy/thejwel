@@ -109,7 +109,7 @@ order server-side.
 2. **Kill the browser tab immediately** after payment success (before the order page
    loads).
 3. Within a few seconds the webhook should create the order. Confirm it appears in the
-   admin Orders list, and that the Meta `Purchase` fired (Test Events).
+   database (or customer account orders), and that the Meta `Purchase` fired (Test Events).
 4. Reconciliation check: in Razorpay, **captured payments without a matching order should
    be ~0** after this is live.
 
