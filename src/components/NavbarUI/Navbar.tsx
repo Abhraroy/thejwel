@@ -264,7 +264,7 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
 
     try {
       // Call Supabase RPC function (adjust function name as needed)
-      const { data, error } = await supabase.rpc('search_products_fast', {
+      const { data, error } = await supabase.rpc('product_search_vector_func', {
         q: query,
         result_limit: 10,
       });
