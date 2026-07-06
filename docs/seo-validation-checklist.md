@@ -34,4 +34,4 @@
 - More valid indexed URLs for product/listing pages.
 - Fewer excluded URLs due to duplicate/no-canonical signals.
 - Improved organic CTR on product/category pages.
-- Stable or improved Core Web Vitals on SEO landing templates.
+- Stable or improved Core Web Vitals on SEO landing templates
