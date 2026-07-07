@@ -123,7 +123,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Products -> /product/[product_id]
     const { data: products, error: productsError } = await supabase
       .from("products")
-      .select("product_id, updated_at, created_at, listed_status, collection, occasion, tags")
+      .select("product_id, updated_at, created_at, listed_status, style, occasion, tags")
       .eq("listed_status", true);
 
     if (!productsError && products?.length) {
@@ -137,12 +137,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         });
       }
 
-      // Collections -> /collection/[collection]
-      const hardcodedCollections = ["american-diamond", "temple-jewellery", "anti-tarnish"];
-      const dbCollections = uniqStrings(products.map((p) => p?.collection));
-      for (const collection of new Set([...hardcodedCollections, ...dbCollections])) {
+      // Styles -> /style/[style]
+      const hardcodedStyles = ["american-diamond", "temple-jewellery", "anti-tarnish"];
+      const dbStyles = uniqStrings(products.map((p) => p?.style));
+      for (const style of new Set([...hardcodedStyles, ...dbStyles])) {
         entries.push({
-          url: abs(`/collection/${encodeURIComponent(collection)}`),
+          url: abs(`/style/${encodeURIComponent(style)}`),
           lastModified: new Date(),
           changeFrequency: "weekly",
           priority: 0.6,

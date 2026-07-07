@@ -142,7 +142,7 @@ export interface Product {
   size?: string[] | null;
   tags?: string[] | null;
   occasion?: string | null;
-  collection?: string | null;
+  style?: string | null;
   listed_status?: boolean | null;
   home_visibility?: boolean | null;
   sku?: string | null;

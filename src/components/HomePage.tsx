@@ -4,7 +4,7 @@ import Link from "next/link";
 import Carousel from "@/components/Carousel";
 import CategorySection from "@/components/CategorySection";
 import ShopByBudgetSection from "@/components/ShopByBudgetSection";
-import Collection from "@/components/Collection";
+import StyleSection from "@/components/StyleSection";
 import OccasionSection from "@/components/OccasionSection";
 import { Product } from "@/types/TypeInterface";
 import ProductCarouselSkeleton from "@/components/ProductUI/ProductCaraouselSkeleton";
@@ -166,7 +166,7 @@ export default function HomePage({
           )}
         </InViewSection> */}
 
-        <Collection />
+        <StyleSection />
 
         <InViewSection fallback={<ProductCarouselSkeleton title="New Arrivals" />}>
           {newArrivals && newArrivals.length > 0 ? (

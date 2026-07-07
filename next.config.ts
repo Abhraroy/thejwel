@@ -12,6 +12,15 @@ const supabaseHost = (() => {
 
 const nextConfig: NextConfig = {
   reactStrictMode: false,
+  async redirects() {
+    return [
+      {
+        source: "/collection/:slug",
+        destination: "/style/:slug",
+        permanent: true,
+      },
+    ];
+  },
   // Allow larger payloads for server actions (image upload)
   experimental: {
     serverActions: {

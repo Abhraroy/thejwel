@@ -183,7 +183,7 @@ export default function OtpInput({ length = 6, onComplete, containerClassName = 
             <button
               type="submit"
               disabled={isVerifying}
-              className='w-full sm:w-auto px-6 py-2.5 bg-theme-sage hover:bg-theme-olive text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-theme-sage focus:ring-offset-2 whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-30'
+              className='w-full sm:w-auto px-6 py-2.5 bg-[#360000]/80 hover:bg-[#360000] hover:cursor-pointer text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-theme-sage focus:ring-offset-2 whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-30'
             >
               {isVerifying ? (
                 <>

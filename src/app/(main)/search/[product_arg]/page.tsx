@@ -84,7 +84,7 @@ export default function SearchPage() {
               `product_name.ilike.${pattern}`,
               `description.ilike.${pattern}`,
               `sku.ilike.${pattern}`,
-              `collection.ilike.${pattern}`,
+              `style.ilike.${pattern}`,
               `occasion.ilike.${pattern}`,
             ].join(",")
           )

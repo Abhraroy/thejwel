@@ -24,7 +24,7 @@ const getProductBase = cache(async (productId: string) => {
       stock_quantity,
       size,
       tags,
-      collection,
+      style,
       sku,
       category_id,
       categories(category_name)

@@ -7,17 +7,17 @@ import OptimizedImage from "@/components/OptimizedImage";
 import { Category } from "@/types/TypeInterface";
 import { productWithImages } from "@/types/RelationTypeInterface";
 
-type CollectionPageClientProps = {
-  decodedCollection: string;
+type StylePageClientProps = {
+  decodedStyle: string;
   initialProducts: productWithImages[];
   initialCategories: Category[];
 };
 
-export default function CollectionPageClient({
-  decodedCollection,
+export default function StylePageClient({
+  decodedStyle,
   initialProducts,
   initialCategories,
-}: CollectionPageClientProps) {
+}: StylePageClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSort, setSelectedSort] = useState<string>("featured");
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
@@ -65,7 +65,7 @@ export default function CollectionPageClient({
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
-                  {decodedCollection.charAt(0).toUpperCase() + decodedCollection.slice(1)}
+                  {decodedStyle.charAt(0).toUpperCase() + decodedStyle.slice(1)}
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">{sortedProducts.length} products available</p>
               </div>
