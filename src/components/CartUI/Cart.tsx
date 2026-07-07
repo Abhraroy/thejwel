@@ -129,25 +129,25 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
 
   return (
     <>
-      {/* Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity duration-300 touch-none overscroll-none"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
+      {/* Backdrop — always mounted; opacity toggles with isOpen to avoid mount delay */}
+      <div
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-60 transition-opacity duration-50 ease-in-out touch-none overscroll-none ${
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onClose}
+        aria-hidden={!isOpen}
+      />
 
       {/* Cart Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full w-full max-w-[100vw] sm:w-96 md:w-[420px] lg:w-[480px] bg-[#DECAF2] text-white shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-full max-w-[100vw] sm:w-96 md:w-[420px] lg:w-[480px] bg-[#FAF9F6] text-white shadow-2xl z-70 transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Cart Header */}
-          <div className="flex items-center justify-between p-3 sm:p-4 md:p-6 border-b border-white/20 bg-[#DECAF2] sticky top-0 z-10">
-            <h2 className="text-2xl sm:text-xl md:text-2xl text-[#360000] font-josefin-sans tracking-wider">
+          <div className="flex items-center justify-between p-3 sm:p-4 md:p-6 border-b border-white/20  sticky top-0 z-10">
+            <h2 className="text-2xl sm:text-xl md:text-2xl text-[#360000] font-josefin-sans-extrabold tracking-normal">
               Shopping Cart
             </h2>
             <button
@@ -193,8 +193,8 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
                 ))}
               </div>
             ) : cartItems && cartItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center py-8 sm:py-12 px-4 text-white">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-[#CAF2FF] rounded-full flex items-center justify-center mb-4">
+              <div className="flex flex-col items-center justify-center h-full text-center py-8 sm:py-12 px-4   text-white">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mb-4">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -253,7 +253,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
 
           {/* Cart Footer - Summary & Checkout */}
           {cartItems && cartItems.length > 0 && (
-            <div className="border-t border-white/20 bg-[#DECAF2] text-[#7A1C1C] p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 sticky bottom-0">
+            <div className="border-t border-white/20  text-[#7A1C1C] p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 sticky bottom-0">
               {/* Price Summary */}
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex justify-between text-xs sm:text-sm">
@@ -285,7 +285,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
 
               {/* Checkout Button */}
               <button 
-                className="w-full bg-[#CAF2FF] text-[#360000] font-bold py-2.5 sm:py-3 md:py-3.5 px-4 sm:px-6 rounded-xl hover:bg-[#CAF2FF]/70 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm sm:text-base font-open-sans tracking-wider"
+                className="w-full bg-linear-to-r from-pink-500 to-red-500 text-white font-bold py-2.5 sm:py-3 md:py-3.5 px-4 sm:px-6 rounded-xl hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm sm:text-base font-open-sans tracking-wider"
                 onClick={async ()=>{
                   // Before checkout, validate latest stock for all cart items.
                   try {

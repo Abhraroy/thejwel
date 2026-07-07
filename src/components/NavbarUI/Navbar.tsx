@@ -326,6 +326,8 @@ export default function Navbar({ cartCount = 0, isAuthenticated = false, onCartC
     const q = (qRaw ?? searchQuery).trim();
     if (!q) return;
     router.push(`/search/${encodeURIComponent(q)}`);
+    setSearchQuery('');
+    setSearchSuggestions([]);
     setShowSuggestions(false);
     setShowMobileSearch(false);
   };

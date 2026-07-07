@@ -57,7 +57,7 @@ export default function SearchPage() {
         }
 
         const { data: rpcData, error: rpcError } = await supabase.rpc(
-          "search_products_fast",
+          "product_search_vector_func",
           {
             q,
             result_limit: 200,
