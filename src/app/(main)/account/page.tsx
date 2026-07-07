@@ -145,7 +145,7 @@ const Skeleton = ({ className = "" }) => (
 
 export default function AccountPage() {
   const primaryButtonClass =
-    "group relative overflow-hidden inline-flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 text-white font-semibold text-xs sm:text-sm md:text-base rounded-md px-4 py-2 shadow-md hover:shadow-xl hover:shadow-theme-sage/30 transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed";
+    "group relative overflow-hidden inline-flex items-center justify-center gap-2  text-white font-semibold text-xs sm:text-sm md:text-base rounded-md px-4 py-2 shadow-md hover:shadow-xl hover:shadow-theme-sage/30 transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed";
   const [userData, setUserData] = useState<any>(null);
   const [emailUpdateState, setEmailUpdateState] = useState(false);
   const [nameUpdateState, setNameUpdateState] = useState(false);
@@ -389,7 +389,7 @@ export default function AccountPage() {
                     </div>
                     {!loadingProfile && !nameUpdateState && (
                       <button
-                        className={`${primaryButtonClass} self-start sm:self-auto`}
+                        className={`${primaryButtonClass} self-start sm:self-auto bg-[#360000] hover:bg-[#360000]/90 hover:cursor-pointer`}
                         onClick={handleNameUpdateState}
                       >
                         <span
@@ -492,7 +492,7 @@ export default function AccountPage() {
                     </div>
                     {!loadingProfile && !emailUpdateState && (
                       <button
-                        className={`${primaryButtonClass} self-start sm:self-auto`}
+                        className={`${primaryButtonClass} self-start sm:self-auto bg-[#360000] hover:bg-[#360000]/90 hover:cursor-pointer`}
                         onClick={handleEmailUpdateState}
                       >
                         <span
@@ -745,7 +745,7 @@ export default function AccountPage() {
                             <button
                               onClick={() => toggleOrder(order?.order_id)}
                               disabled={loadingOrderItems === order?.order_id}
-                              className={`${primaryButtonClass} w-full sm:w-auto text-xs sm:text-sm`}
+                              className={`${primaryButtonClass} w-full sm:w-auto text-xs sm:text-sm bg-[#360000] hover:bg-[#360000]/90 hover:cursor-pointer`}
                             >
                             {loadingOrderItems === order?.order_id ? (
                               <>
@@ -969,13 +969,13 @@ export default function AccountPage() {
               <div className="space-y-3">
                 <a
                   href="/style/american-diamond"
-                  className="block w-full px-4 py-3 bg-[#CAF2FF] hover:bg-[#DECAF2] text-[#360000] font-medium rounded-lg transition-colors duration-200 text-center"
+                  className="block w-full px-4 py-3 bg-gradient-to-r from-pink-500 to-red-500  hover:cursor-pointer text-white font-medium rounded-lg transition-all duration-200 ease-in-out text-center hover:scale-105 "
                 >
                   Browse Styles
                 </a>
                 <a
                   href="/"
-                  className="block w-full px-4 py-3 bg-[#CAF2FF] hover:bg-[#DECAF2] text-gray-700 font-medium rounded-lg transition-colors duration-200 text-center"
+                  className="block w-full px-4 py-3 bg-gradient-to-r from-pink-500 to-red-500  hover:cursor-pointer text-white font-medium rounded-lg transition-all duration-200 ease-in-out text-center hover:scale-105 "
                 >
                   Continue Shopping
                 </a>
@@ -996,7 +996,7 @@ export default function AccountPage() {
                       router.push("/");
                     }
                   }}
-                  className={`${primaryButtonClass} w-full text-sm sm:text-base py-3`}
+                  className={`${primaryButtonClass} w-full text-sm sm:text-base py-3 bg-[#360000] hover:bg-[#360000]/90 hover:cursor-pointer`}
                 >
                   <LogoutIcon />
                   Logout
