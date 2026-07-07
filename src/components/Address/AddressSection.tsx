@@ -91,7 +91,7 @@ export default function AddressSection({addresses, userId}: {addresses: any[], u
           )}
           <button 
             onClick={handleAddAddress}
-            className="group relative mt-4 w-full px-6 py-3 bg-theme-sage hover:bg-theme-olive text-white font-medium text-sm rounded-lg 
+            className="group relative mt-4 w-full px-6 py-3 bg-linear-to-r from-[#360000] to-[#360000]/80 text-white font-medium text-sm rounded-lg 
                        transition-all duration-300 ease-in-out
                        transform hover:scale-105 active:scale-95
                        shadow-md hover:shadow-xl hover:shadow-theme-sage/30

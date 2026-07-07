@@ -351,6 +351,12 @@ textarea,
   font-weight: 600 !important;
 }
 
+
+.font-josefin-sans-extrabold {
+  font-family: var(--font-josefin-sans);
+  font-weight: 800 ;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -471,7 +471,7 @@ export default function PaymentGatewayComponent() {
       {/* Payment Gateway Modal */}
       <div className="fixed inset-0 sm:inset-auto sm:top-[50%] sm:left-[50%] sm:transform sm:-translate-x-1/2 sm:-translate-y-1/2 w-full sm:w-[85vw] md:w-[75vw] lg:w-[65vw] xl:w-[55vw] 2xl:w-[45vw] sm:max-w-md h-full sm:h-[90vh] sm:max-h-[90vh] bg-white rounded-none sm:rounded-xl shadow-2xl z-[70] overflow-hidden flex flex-col ">
         {/* Header */}
-        <div className="pt-4 sm:pt-5 pb-4 sm:pb-5 border-b border-amber-600/30 flex items-center justify-between gap-4 px-4 sm:px-6 bg-[#CAF2FF]">
+        <div className="pt-4 sm:pt-5 pb-4 sm:pb-5 border-b border-amber-600/30 flex items-center justify-between gap-4 px-4 sm:px-6 bg-[#FAF9F6]">
           <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <button
               onClick={() => setInitiatingCheckout(false)}
@@ -1108,7 +1108,7 @@ export default function PaymentGatewayComponent() {
                   setShowCodConfirmation(false);
                   handleProceedToPayment();
                 }}
-                className="w-full px-4 py-2.5 bg-[#DECAF2] text-[#360000] font-bold rounded-lg transition-all duration-200 text-base shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+                className="w-full px-4 py-2.5 bg-linear-to-r from-pink-500 to-red-500 text-white font-bold rounded-lg transition-all duration-200 text-base shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
                 disabled={isCheckoutDisabled}
               >
                 {isLoadingPayment ? (

@@ -3,27 +3,27 @@ import { createClient } from "@/lib/supabase-Utils/server";
 import { buildPageMetadata, toAbsoluteUrl } from "@/lib/seo/metadata";
 import { Category } from "@/types/TypeInterface";
 import { productWithImages } from "@/types/RelationTypeInterface";
-import CollectionPageClient from "./CollectionPageClient";
+import StylePageClient from "./StylePageClient";
 import JsonLd from "@/components/seo/JsonLd";
 
-type CollectionPageProps = {
-  params: Promise<{ collection: string }>;
+type StylePageProps = {
+  params: Promise<{ style: string }>;
 };
 
-export async function generateMetadata({ params }: CollectionPageProps): Promise<Metadata> {
-  const { collection } = await params;
-  const decodedCollection = decodeURIComponent(collection || "");
-  const title = `${decodedCollection} Jewellery Collection`;
+export async function generateMetadata({ params }: StylePageProps): Promise<Metadata> {
+  const { style } = await params;
+  const decodedStyle = decodeURIComponent(style || "");
+  const title = `${decodedStyle} Jewellery Style`;
   return buildPageMetadata({
     title,
-    description: `Explore ${decodedCollection} jewellery at THE JWEL. Browse curated designs, compare prices, and shop with confidence.`,
-    pathname: `/collection/${encodeURIComponent(decodedCollection)}`,
+    description: `Explore ${decodedStyle} jewellery at THE JWEL. Browse curated designs, compare prices, and shop with confidence.`,
+    pathname: `/style/${encodeURIComponent(decodedStyle)}`,
   });
 }
 
-export default async function CollectionPage({ params }: CollectionPageProps) {
-  const { collection } = await params;
-  const decodedCollection = decodeURIComponent(collection || "");
+export default async function StylePage({ params }: StylePageProps) {
+  const { style } = await params;
+  const decodedStyle = decodeURIComponent(style || "");
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -35,7 +35,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
       categories(*)
       `
     )
-    .filter("collection", "eq", decodedCollection)
+    .filter("style", "eq", decodedStyle)
     .eq("listed_status", true)
     .order("updated_at", { ascending: false });
 
@@ -52,7 +52,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `${decodedCollection} products`,
+    name: `${decodedStyle} products`,
     itemListElement: productsData.slice(0, 100).map((product, index) => ({
       "@type": "ListItem",
       position: index + 1,
@@ -64,8 +64,8 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   return (
     <>
       <JsonLd data={itemListSchema} />
-      <CollectionPageClient
-        decodedCollection={decodedCollection}
+      <StylePageClient
+        decodedStyle={decodedStyle}
         initialProducts={productsData}
         initialCategories={categories}
       />

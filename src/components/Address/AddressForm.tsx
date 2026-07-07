@@ -305,7 +305,7 @@ export default function AddressForm({ userId, onClose, onSuccess }: AddressFormP
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-theme-sage hover:bg-theme-olive text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-[#360000]/90 hover:bg-[#360000] hover:cursor-pointer text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Saving...' : 'Save Address'}
             </button>

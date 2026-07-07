@@ -36,7 +36,7 @@ export default function CartItem({
 
   return (
     <div
-      className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-[#CAF2FF] text-[#360000] rounded-xl hover:bg-[#CAF2FF]/70 transition-colors duration-200 cursor-pointer"
+      className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-black/10 text-[#360000] rounded-xl hover:bg-black/15 transition-colors duration-200 cursor-pointer"
       onClick={handleNavigate}
       role="button"
       tabIndex={0}
@@ -118,7 +118,7 @@ export default function CartItem({
 
           {/* Remove Button */}
           <button
-            className="p-1 sm:p-1.5 text-[#360000] hover:text-[#360000] hover:bg-[#E6F9D7]/70 rounded-full transition-colors duration-200 flex-shrink-0 cursor-pointer"
+            className="p-1 sm:p-1.5 text-[#360000] hover:text-[#360000] hover:scale-105 rounded-full transition-scale duration-200 shrink-0 cursor-pointer"
             aria-label="Remove item"
             onClick={(e) => {
               e.stopPropagation();

@@ -1,7 +1,7 @@
 # SEO Validation Checklist
 
 ## Pre-release checks
-- Verify metadata on core pages: `/`, `/product/[id]`, `/category/[slug]`, `/collection/[slug]`, `/occasion/[slug]`, `/Tags/[tag]`.
+- Verify metadata on core pages: `/`, `/product/[id]`, `/category/[slug]`, `/style/[slug]`, `/occasion/[slug]`, `/Tags/[tag]`.
 - Validate canonical tags and ensure they resolve with `200` responses.
 - Validate `robots.txt` and confirm sensitive routes are blocked (`/account`, `/wishlist`, `/redirect`, `/api`).
 - Validate `sitemap.xml` generation and URL correctness.

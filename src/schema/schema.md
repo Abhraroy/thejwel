@@ -149,7 +149,7 @@ create table public.products (
   size text[] null,
   tags text[] null,
   occasion text null,
-  collection text null,
+  style text null,
   listed_status boolean null default false,
   sku text null,
   home_visibility boolean not null default true,
@@ -245,3 +245,34 @@ create table public.promo_content (
   updated_at timestamp without time zone not null default CURRENT_TIMESTAMP,
   constraint promo_content_pkey primary key (id)
 ) TABLESPACE pg_default;
+
+
+
+create table public.collections (
+  collection_id uuid not null default gen_random_uuid (),
+  collection_name text not null,
+  slug text null,
+  description text null,
+  is_active boolean not null default true,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint collections_pkey primary key (collection_id),
+  constraint collections_slug_key unique (slug)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_collections_slug on public.collections using btree (slug) TABLESPACE pg_default;
+
+
+
+create table public.product_collections (
+  product_id uuid not null,
+  collection_id uuid not null,
+  created_at timestamp with time zone not null default now(),
+  constraint product_collections_pkey primary key (product_id, collection_id),
+  constraint product_collections_collection_id_fkey foreign KEY (collection_id) references collections (collection_id) on delete CASCADE,
+  constraint product_collections_product_id_fkey foreign KEY (product_id) references products (product_id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_product_collections_product_id on public.product_collections using btree (product_id) TABLESPACE pg_default;
+
+create index IF not exists idx_product_collections_collection_id on public.product_collections using btree (collection_id) TABLESPACE pg_default;

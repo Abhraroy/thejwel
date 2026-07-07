@@ -19,7 +19,7 @@ interface HamburgerSidebarProps {
   onAccountClick: () => void;
 }
 
-const COLLECTIONS = [
+const STYLES = [
   { label: "American Diamond", slug: "american-diamond" },
   { label: "Temple Jewellery", slug: "temple-jewellery" },
   { label: "Anti tarnish", slug: "anti-tarnish" },
@@ -67,35 +67,35 @@ export default function HamburgerSidebar({
   filteredMenuItems,
   onAccountClick,
 }: HamburgerSidebarProps) {
-  const [expandedCollection, setExpandedCollection] = useState<string | null>(null);
-  const [categoriesByCollection, setCategoriesByCollection] = useState<
+  const [expandedStyle, setExpandedStyle] = useState<string | null>(null);
+  const [categoriesByStyle, setCategoriesByStyle] = useState<
     Record<string, Category[]>
   >({});
-  const [isLoadingCollections, setIsLoadingCollections] = useState(false);
+  const [isLoadingStyles, setIsLoadingStyles] = useState(false);
   const fetchInFlight = useRef(false);
 
   useEffect(() => {
     if (!isSidebarOpen) {
-      setExpandedCollection(null);
+      setExpandedStyle(null);
       return;
     }
 
-    if (Object.keys(categoriesByCollection).length > 0) return;
+    if (Object.keys(categoriesByStyle).length > 0) return;
     if (fetchInFlight.current) return;
 
     fetchInFlight.current = true;
     let cancelled = false;
 
     void (async () => {
-      setIsLoadingCollections(true);
+      setIsLoadingStyles(true);
       try {
         const supabase = createClient();
-        const slugs = COLLECTIONS.map((c) => c.slug);
+        const slugs = STYLES.map((s) => s.slug);
         const { data, error } = await supabase
           .from("products")
-          .select("collection, categories(category_id, category_name, slug, category_image_url)")
+          .select("style, categories(category_id, category_name, slug, category_image_url)")
           .eq("listed_status", true)
-          .in("collection", slugs);
+          .in("style", slugs);
 
         if (cancelled || error || !data) return;
 
@@ -105,11 +105,11 @@ export default function HamburgerSidebar({
         }
 
         for (const row of data) {
-          const collectionSlug = (row.collection ?? "").trim();
+          const styleSlug = (row.style ?? "").trim();
           const categoryData = row.categories as unknown as Category | Category[] | null;
           const category = Array.isArray(categoryData) ? (categoryData[0] ?? null) : categoryData;
-          if (!collectionSlug || !category?.category_id) continue;
-          grouped[collectionSlug]?.set(category.category_id, category);
+          if (!styleSlug || !category?.category_id) continue;
+          grouped[styleSlug]?.set(category.category_id, category);
         }
 
         const result: Record<string, Category[]> = {};
@@ -120,11 +120,11 @@ export default function HamburgerSidebar({
         }
 
         if (!cancelled) {
-          setCategoriesByCollection(result);
+          setCategoriesByStyle(result);
         }
       } finally {
         if (!cancelled) {
-          setIsLoadingCollections(false);
+          setIsLoadingStyles(false);
           fetchInFlight.current = false;
         }
       }
@@ -134,10 +134,10 @@ export default function HamburgerSidebar({
       cancelled = true;
       fetchInFlight.current = false;
     };
-  }, [isSidebarOpen, categoriesByCollection]);
+  }, [isSidebarOpen, categoriesByStyle]);
 
-  const toggleCollection = (slug: string) => {
-    setExpandedCollection((prev) => (prev === slug ? null : slug));
+  const toggleStyle = (slug: string) => {
+    setExpandedStyle((prev) => (prev === slug ? null : slug));
   };
 
   return (
@@ -150,13 +150,13 @@ export default function HamburgerSidebar({
       )}
 
       <div
-        className={`fixed top-0 left-0 h-full w-80 bg-[#F4C2C2] text-[#360000] shadow-xl z-50 transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed top-0 left-0 h-full w-80 bg-[#FAF9F6] text-[#360000] shadow-xl z-50 transition-transform duration-300 ease-in-out md:hidden ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b border-white/30">
-            <h2 className="text-2xl text-[#360000] font-josefin-sans tracking-wider">Menu</h2>
+            <h2 className="text-2xl text-[#360000] font-josefin-sans-extrabold tracking-wider">Menu</h2>
             <button
               onClick={onClose}
               className="p-2 text-white hover:text-[#FFCDC9] transition-colors"
@@ -168,27 +168,27 @@ export default function HamburgerSidebar({
 
           <nav className="flex-1 overflow-y-auto py-4">
             <ul className="space-y-1 px-4">
-              {COLLECTIONS.map((collection) => {
-                const isExpanded = expandedCollection === collection.slug;
-                const categories = categoriesByCollection[collection.slug] ?? [];
+              {STYLES.map((style) => {
+                const isExpanded = expandedStyle === style.slug;
+                const categories = categoriesByStyle[style.slug] ?? [];
 
                 return (
-                  <li key={collection.slug}>
+                  <li key={style.slug}>
                     <button
                       type="button"
-                      onClick={() => toggleCollection(collection.slug)}
-                      className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#CAF2FF] text-[#360000] hover:bg-[#CAF2FF]/70 rounded-lg transition-colors text-left"
+                      onClick={() => toggleStyle(style.slug)}
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-black/20 text-[#360000] hover:bg-[#CAF2FF]/70 rounded-lg transition-colors text-left"
                       aria-expanded={isExpanded}
                     >
                       <span className="font-medium font-open-sans tracking-wider">
-                        {collection.label}
+                        {style.label}
                       </span>
                       <ChevronIcon expanded={isExpanded} />
                     </button>
 
                     {isExpanded && (
                       <ul className="mt-1 ml-2 space-y-1 border-l-2 border-[#360000]/20 pl-2">
-                        {isLoadingCollections && categories.length === 0 ? (
+                        {isLoadingStyles && categories.length === 0 ? (
                           Array.from({ length: 4 }).map((_, idx) => (
                             <li key={idx} className="px-2 py-2">
                               <div className="h-4 w-28 bg-white/30 rounded animate-pulse" />
@@ -225,7 +225,7 @@ export default function HamburgerSidebar({
                     <li key={index}>
                       <button
                         onClick={onAccountClick}
-                        className="w-full flex items-center gap-3 px-4 py-3 bg-[#CAF2FF] text-[#360000] hover:bg-[#CAF2FF]/70 rounded-lg transition-colors text-left"
+                        className="w-full flex items-center gap-3 px-4 py-3 bg-black/20 text-[#360000] rounded-lg transition-colors text-left"
                       >
                         {item.icon}
                         <span className="font-medium font-open-sans tracking-wider">{item.label}</span>
@@ -237,7 +237,7 @@ export default function HamburgerSidebar({
                   <li key={index}>
                     <Link
                       href={item.href}
-                      className="flex items-center gap-3 px-4 py-3 bg-[#CAF2FF] text-[#360000] hover:bg-[#CAF2FF]/70 rounded-lg transition-colors"
+                      className="flex items-center gap-3 px-4 py-3 bg-black/20 text-[#360000] rounded-lg transition-colors"
                       onClick={onClose}
                     >
                       {item.icon}

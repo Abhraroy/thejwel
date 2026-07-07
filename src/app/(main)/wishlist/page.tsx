@@ -310,7 +310,7 @@ export default function WishlistPage() {
             </p>
             <button
               onClick={handleLogin}
-              className="px-8 py-3 bg-theme-sage hover:bg-theme-olive text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
+              className="px-8 py-3 bg-linear-to-r from-pink-500 to-red-500 hover:opacity-95 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
             >
               Log In
             </button>
@@ -351,7 +351,7 @@ export default function WishlistPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 md:py-24 text-center">
-            <div className="w-24 h-24 bg-theme-sage/20 rounded-full flex items-center justify-center mb-6">
+            <div className="w-24 h-24 bg-black/10 rounded-full flex items-center justify-center mb-6">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -376,7 +376,7 @@ export default function WishlistPage() {
             </p>
             <a
               href="/"
-              className="px-8 py-3 bg-theme-sage hover:bg-theme-olive text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
+              className="px-8 py-3 bg-linear-to-r from-pink-500 to-red-500 hover:opacity-95 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
             >
               Continue Shopping
             </a>

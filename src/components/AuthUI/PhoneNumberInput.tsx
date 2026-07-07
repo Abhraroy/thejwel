@@ -125,7 +125,7 @@ export default function PhoneNumberInput({ containerClassName = 'w-full bg-white
             </div>
             <button
               type="submit"
-              className='w-full sm:w-auto px-6 py-2.5 bg-theme-sage hover:bg-theme-olive text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-theme-sage focus:ring-offset-2 whitespace-nowrap'
+              className='w-full sm:w-auto px-6 py-2.5 bg-[#360000]/80 hover:bg-[#360000] hover:cursor-pointer text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-theme-sage focus:ring-offset-2 whitespace-nowrap'
             >
               Continue
             </button>

@@ -968,10 +968,10 @@ export default function AccountPage() {
 
               <div className="space-y-3">
                 <a
-                  href="/collections"
+                  href="/style/american-diamond"
                   className="block w-full px-4 py-3 bg-[#CAF2FF] hover:bg-[#DECAF2] text-[#360000] font-medium rounded-lg transition-colors duration-200 text-center"
                 >
-                  Browse Collections
+                  Browse Styles
                 </a>
                 <a
                   href="/"

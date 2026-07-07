@@ -35,7 +35,7 @@ const defaultBentoCategories: BentoCategory[] = [
 ];
 
 export default function BentoGrid({
-  title = 'View Our Collections',
+  title = 'View Our Styles',
   categories = defaultBentoCategories,
   className = '',
 }: BentoGridProps) {
@@ -51,7 +51,7 @@ export default function BentoGrid({
           {categories.map((category) => (
             <Link
               key={category.id}
-              href={`/collection/${category.slug}`}
+              href={`/style/${category.slug}`}
               className={`group relative overflow-hidden rounded-2xl md:rounded-3xl bg-theme-sage/10 aspect-[4/3] md:aspect-[3/2] lg:aspect-[4/3] transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] ${category.span || ''}`}
             >
               {/* Image Container */}
@@ -76,7 +76,7 @@ export default function BentoGrid({
                     {category.name}
                   </h3>
                   <div className="flex items-center text-white/90 group-hover:text-white transition-colors duration-300">
-                    <span className="text-sm md:text-base font-medium">Explore Collection</span>
+                    <span className="text-sm md:text-base font-medium">Explore Style</span>
                     <svg
                       className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300"
                       fill="none"

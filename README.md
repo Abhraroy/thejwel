@@ -77,7 +77,7 @@ pnpm start
 - **Home page metadata**: `src/app/(main)/page.tsx` (exports `metadata` via `buildPageMetadata`)
 - **Product page metadata + Product/Breadcrumb JSON-LD**: `src/app/(main)/product/[product_id]/page.tsx` (`generateMetadata`, `JsonLd`)
 - **Category page metadata + ItemList JSON-LD**: `src/app/(main)/category/[categoryslug]/page.tsx` (`generateMetadata`, `JsonLd`)
-- **Collection page metadata + ItemList JSON-LD**: `src/app/(main)/collection/[collection]/page.tsx` (`generateMetadata`, `JsonLd`)
+- **Style page metadata + ItemList JSON-LD**: `src/app/(main)/style/[style]/page.tsx` (`generateMetadata`, `JsonLd`)
 - **Occasion page metadata + ItemList JSON-LD**: `src/app/(main)/occasion/[occasion]/page.tsx` (`generateMetadata`, `JsonLd`)
 - **Tags page metadata + ItemList JSON-LD**: `src/app/(main)/Tags/[tags]/page.tsx` (`generateMetadata`, `JsonLd`)
 - **Search pages set to noindex**: `src/app/(main)/search/[product_arg]/layout.tsx` (exports `metadata.robots.index = false`)

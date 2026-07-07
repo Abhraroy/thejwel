@@ -580,9 +580,9 @@ export default function ProductDisplay({
               {/* Product Info Cards */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-2.5 border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Collection</p>
+                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Style</p>
                   <p className="text-xs font-medium text-gray-900">
-                    {productDetails[0]?.collection ?? "--"}
+                    {productDetails[0]?.style ?? "--"}
                   </p>
                 </div>
                 <div className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-2.5 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
@@ -739,11 +739,11 @@ export default function ProductDisplay({
                       {productDetails[0]?.categories?.category_name ?? "--"}
                     </span>
                   </div>
-                  {productDetails[0]?.collection && (
+                  {productDetails[0]?.style && (
                     <div className="flex justify-between items-center p-3 hover:bg-gray-50 transition-colors">
-                      <span className="text-sm font-medium text-gray-600">Collection</span>
+                      <span className="text-sm font-medium text-gray-600">Style</span>
                       <span className="text-sm font-medium text-gray-900">
-                        {productDetails[0]?.collection ?? "--"}
+                        {productDetails[0]?.style ?? "--"}
                       </span>
                     </div>
                   )}
@@ -957,9 +957,9 @@ export default function ProductDisplay({
               {/* Product Info Cards */}
               <div className="grid grid-cols-1 gap-2">
                 <div className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-2.5 border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Collection</p>
+                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Style</p>
                   <p className="text-xs font-medium text-gray-900">
-                    {product?.collection ?? "--"}
+                    {product?.style ?? "--"}
                   </p>
                 </div>
               </div>
@@ -1091,11 +1091,11 @@ export default function ProductDisplay({
                       {product?.categories?.category_name ?? "--"}
                     </span>
                   </div>
-                  {product?.collection && (
+                  {product?.style && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Collection</span>
+                      <span className="text-gray-600">Style</span>
                       <span className="font-medium text-gray-900">
-                        {product?.collection ?? "--"}
+                        {product?.style ?? "--"}
                       </span>
                     </div>
                   )}
@@ -1287,9 +1287,9 @@ export default function ProductDisplay({
               {/* Product Info Cards */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-3 border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Collection</p>
+                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Style</p>
                   <p className="text-xs font-medium text-gray-900">
-                    {productDetails[0]?.collection ?? "--"}
+                    {productDetails[0]?.style ?? "--"}
                   </p>
                 </div>
                 <div className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-3 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
