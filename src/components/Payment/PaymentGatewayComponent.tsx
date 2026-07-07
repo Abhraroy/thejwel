@@ -608,20 +608,20 @@ export default function PaymentGatewayComponent() {
           <div className="flex flex-col flex-1 overflow-hidden">
             <div className="shrink-0 px-3 sm:px-4 pt-3 sm:pt-4 pb-2">
               {/* Coupon Code Input - Only visible in Cash on Delivery section */}
-              <div className="rounded-xl border-2 border-amber-200/80 bg-gradient-to-br from-amber-50/90 via-white to-rose-50/70 p-4 shadow-sm mb-4">
+              <div className="rounded-xl border-2 border-black border-dashed  p-4 shadow-sm mb-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg" aria-hidden>✨</span>
-                  <h3 className="text-base font-bold text-gray-900">
+                  <h3 className="text-base font-bold text-black">
                     Got a promo code? Unlock your savings!
                   </h3>
                 </div>
-                <p className="text-sm text-gray-600 mb-3">
+                <p className="text-sm text-gray-900 mb-3">
                   Enter your coupon below and watch the price drop.
                 </p>
                 {userCoupon ? (
                   <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-green-600 font-semibold shrink-0">✓</span>
+                      <span className="text-[#360000] font-semibold shrink-0">✓</span>
                       <div>
                         <p className="font-bold text-green-800">
                           {userCoupon.coupon_code} applied — You save ₹{userCouponDiscount.toFixed(2)}!
@@ -650,7 +650,7 @@ export default function PaymentGatewayComponent() {
                       }}
                       onKeyDown={(e) => e.key === "Enter" && handleVerifyUserCoupon()}
                       placeholder="Enter coupon code (e.g. SAVE10)"
-                      className="flex-1 px-4 py-2.5 text-base font-medium border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all placeholder:text-gray-400 uppercase tracking-wide"
+                      className="flex-1 px-4 py-2.5 text-base font-medium border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-amber-500 transition-all placeholder:text-gray-600 uppercase tracking-wide"
                       disabled={isVerifyingCoupon}
                       aria-label="Coupon code"
                     />
@@ -658,7 +658,7 @@ export default function PaymentGatewayComponent() {
                       type="button"
                       onClick={handleVerifyUserCoupon}
                       disabled={isVerifyingCoupon || !userCouponInput.trim()}
-                      className="px-4 py-2.5 font-bold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all hover:shadow-md active:scale-[0.98] shrink-0"
+                      className="px-4 py-2.5 font-bold text-white bg-gradient-to-r from-pink-500 to-red-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all hover:shadow-md active:scale-[0.98] shrink-0 hover:cursor-pointer"
                     >
                       {isVerifyingCoupon ? (
                         <span className="flex items-center gap-1.5">
@@ -693,6 +693,7 @@ export default function PaymentGatewayComponent() {
                 setCodError(null);
                 setShowCodConfirmation(false);
               }}
+              onContinueShopping={() => setInitiatingCheckout(false)}
               onConfirm={handleConfirmCashOnDelivery}
               isLoadingConfirm={isPlacingCodOrder}
               errorMessage={codError}
@@ -989,6 +990,14 @@ export default function PaymentGatewayComponent() {
                     {codShippingCost > 0 ? `₹${codShippingCost.toFixed(2)}` : "FREE"}
                   </span>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setInitiatingCheckout(false)}
+                  className="w-full mt-1 px-4 py-2.5 font-bold text-white bg-gradient-to-r from-pink-500 to-red-500 rounded-lg transition-all hover:shadow-md active:scale-[0.98] hover:cursor-pointer text-sm font-open-sans tracking-wider"
+                >
+                  Continue Shopping
+                </button>
               </div>
 
               {/* Shipping policy notice */}

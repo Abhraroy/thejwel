@@ -294,6 +294,14 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
                     <Check className="w-4 h-4" strokeWidth={2.5} />
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full mt-1 px-4 py-2.5 font-bold text-white bg-gradient-to-r from-pink-500 to-red-500 rounded-xl transition-all hover:shadow-md active:scale-[0.98] hover:cursor-pointer text-sm font-open-sans tracking-wider"
+                >
+                  Continue Shopping
+                </button>
               </div>
               {/* Price Summary */}
               <div className="space-y-2 sm:space-y-3">
@@ -384,14 +392,6 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
                 disabled={initiatingCheckout}
               >
                 {initiatingCheckout ? "Proceeding to checkout..." : "Proceed to Checkout"}
-              </button>
-
-              {/* Continue Shopping Link */}
-              <button
-                onClick={onClose}
-                className="w-full text-center text-xs sm:text-sm text-[#360000] hover:text-[#360000] font-medium transition-colors duration-200 font-open-sans tracking-wider"
-              >
-                Continue Shopping
               </button>
             </div>
           )}

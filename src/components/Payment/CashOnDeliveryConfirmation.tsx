@@ -2,6 +2,10 @@ import type { AnyCart } from "@/types/CartTypes";
 import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
 import RazorPayButton from "./RazorPay";
+import { Truck, PartyPopper, Check } from "lucide-react";
+
+const COD_FREE_SHIPPING_THRESHOLD = 499;
+const COD_SHIPPING_FEE = 75;
 
 interface CashOnDeliveryConfirmationProps {
   cartItems: AnyCart;
@@ -10,6 +14,7 @@ interface CashOnDeliveryConfirmationProps {
   couponDiscount?: number;
   codShippingCost?: number;
   onBack: () => void;
+  onContinueShopping?: () => void;
   onConfirm: () => Promise<void> | void;
   isLoadingConfirm?: boolean;
   errorMessage?: string | null;
@@ -37,6 +42,7 @@ export default function CashOnDeliveryConfirmation({
   couponDiscount = 0,
   codShippingCost = 0,
   onBack,
+  onContinueShopping,
   onConfirm,
   isLoadingConfirm = false,
   errorMessage = null,
@@ -45,7 +51,17 @@ export default function CashOnDeliveryConfirmation({
   onCodShippingSuccess,
   onPaymentInitiated,
 }: CashOnDeliveryConfirmationProps) {
+  const orderTotalNumber = Number(orderTotal);
   const requiresShippingPayment = codShippingCost > 0;
+  const isFreeShippingUnlocked = orderTotalNumber >= COD_FREE_SHIPPING_THRESHOLD;
+  const freeShippingProgress = Math.min(
+    100,
+    (orderTotalNumber / COD_FREE_SHIPPING_THRESHOLD) * 100
+  );
+  const amountLeftForFreeShipping = Math.max(
+    0,
+    COD_FREE_SHIPPING_THRESHOLD - orderTotalNumber
+  );
   const confirmButtonLabel = requiresShippingPayment
     ? `Pay ₹${codShippingCost}`
     : "Confirm Order";
@@ -57,12 +73,86 @@ export default function CashOnDeliveryConfirmation({
     <div className="flex h-full flex-col">
       <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4">
         <div className="w-full space-y-3">
+          {/* Shipping progress — mirrors payment gateway */}
+          <div className="space-y-2.5 border-2 border-[#360000] bg-[#FFF8F6] p-3 sm:p-4 flex flex-col rounded-lg w-full shadow-sm">
+            <div className="flex items-center justify-between gap-3 w-full">
+              <div className="flex items-center gap-2 text-[#360000] font-open-sans tracking-wider flex-1 min-w-0">
+                {isFreeShippingUnlocked && (
+                  <PartyPopper className="w-5 h-5 shrink-0 text-[#360000]" />
+                )}
+                <span className="text-xs sm:text-sm font-bold">
+                  {isFreeShippingUnlocked
+                    ? "Congratulations! You've unlocked FREE shipping on Cash on Delivery!"
+                    : `Add ₹${amountLeftForFreeShipping} more to get free shipping on Cash on Delivery`}
+                </span>
+              </div>
+              <Truck className="w-5 h-5 text-[#360000] shrink-0" />
+            </div>
+
+            <div className="flex items-center gap-2 w-full">
+              <div className="relative flex-1 h-2.5 bg-[#360000]/15 rounded-full overflow-hidden">
+                <div
+                  className="absolute inset-y-0 left-0 bg-[#360000] rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${freeShippingProgress}%` }}
+                />
+              </div>
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border-2 transition-all duration-300 ${
+                  isFreeShippingUnlocked
+                    ? "bg-[#360000] border-[#360000] text-white"
+                    : "bg-transparent border-[#360000]/25 text-[#360000]/30"
+                }`}
+              >
+                <Check className="w-4 h-4" strokeWidth={2.5} />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1 border-t border-[#360000]/15">
+              <span className="text-sm font-bold text-[#360000]">Shipping charges (COD)</span>
+              <span
+                className={`text-base font-extrabold ${
+                  codShippingCost > 0 ? "text-amber-700" : "text-green-700"
+                }`}
+              >
+                {codShippingCost > 0 ? `₹${codShippingCost.toFixed(2)}` : "FREE"}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={onContinueShopping ?? onBack}
+              className="w-full mt-1 px-4 py-2.5 font-bold text-white bg-gradient-to-r from-pink-500 to-red-500 rounded-lg transition-all hover:shadow-md active:scale-[0.98] hover:cursor-pointer text-sm font-open-sans tracking-wider"
+            >
+              Continue Shopping
+            </button>
+          </div>
+
+          {/* Shipping policy notice */}
+          <div className="rounded-lg border-2 border-dashed border-amber-500 bg-amber-50 px-3 py-2.5 sm:px-4 sm:py-3 shadow-sm">
+            <p className="text-xs sm:text-sm font-bold text-[#360000] leading-relaxed">
+              <span className="text-amber-700 text-base align-super">*</span>{" "}
+              ₹{COD_SHIPPING_FEE} shipping will be charged on all Cash on Delivery orders below ₹
+              {COD_FREE_SHIPPING_THRESHOLD}.
+            </p>
+            <p className="text-[11px] sm:text-xs text-[#360000]/80 mt-1 font-medium">
+              Prepaid orders are not charged this shipping fee.
+            </p>
+          </div>
+
+          {codShippingCost > 0 && (
+            <div className="rounded-lg border border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 p-3 sm:p-4 flex items-center justify-between gap-3">
+              <span className="text-sm font-bold text-green-900">
+                Pay online to save ₹{codShippingCost} on Cash on Delivery shipping
+              </span>
+            </div>
+          )}
+
           <div className="rounded-lg border border-[#360000]/20 bg-white p-3 sm:p-4 space-y-3">
             <h3 className="text-sm sm:text-base font-bold text-[#360000]">
               Confirm Cash on Delivery
             </h3>
 
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-2.5">
+            <div className="rounded-md border border-[#360000]/40 bg-black/10 backdrop-blur-sm p-2.5">
               <p className="text-xs font-semibold text-[#360000] mb-1">Products</p>
               <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                 {cartItems.map((item: any, index: number) => {
@@ -202,7 +292,7 @@ export default function CashOnDeliveryConfirmation({
             <button
               onClick={onConfirm}
               disabled={!selectedAddressDetails || isLoadingConfirm}
-              className="flex-1 px-3 py-2.5 bg-[#DECAF2] text-[#360000] text-sm font-semibold rounded-md hover:bg-[#d3b9ec] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-3 py-2.5 bg-[#360000] text-white text-sm font-semibold rounded-md hover:bg-[#360000]/80 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoadingConfirm ? loadingButtonLabel : confirmButtonLabel}
             </button>
@@ -210,7 +300,7 @@ export default function CashOnDeliveryConfirmation({
           <button
             onClick={onBack}
             disabled={isLoadingConfirm}
-            className="flex-1 px-3 py-2.5 border border-[#360000]/20 text-[#360000] text-sm font-semibold rounded-md hover:bg-gray-100 transition-colors"
+            className="flex-1 px-3 py-2.5 border border-[#360000]/30 text-[#360000] text-sm font-semibold rounded-md hover:bg-gray-100 hover:cursor-pointer transition-colors"
           >
             Back
           </button>
