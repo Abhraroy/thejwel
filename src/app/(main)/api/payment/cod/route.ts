@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase-Utils/server";
 import adminsupabase from "@/lib/supabase-Utils/admin";
 import {
   createOrderWithItems,
+  getCodShippingCost,
   prepareCheckoutContext,
 } from "@/app/utils/orderCheckout";
 import { sendPurchaseEvent } from "@/lib/meta/capi";
@@ -155,10 +156,27 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const shipping_cost = getCodShippingCost(context.totalAmount);
+
+  if (shipping_cost > 0) {
+    devLog("cod-blocked:shipping-payment-required", {
+      totalAmount: context.totalAmount,
+      shipping_cost,
+    });
+    return NextResponse.json(
+      {
+        message:
+          "COD shipping charges must be paid online before placing this order",
+      },
+      { status: 403 }
+    );
+  }
+
   const orderRes = await createOrderWithItems(payableContext, {
     orderNumber: codOrderNumber,
     paymentStatus: "pending(cod)",
     orderStatus: "pending",
+    shipping_cost: shipping_cost ?? 0,
   });
 
   if (!orderRes.success) {
@@ -172,6 +190,7 @@ export async function POST(request: NextRequest) {
     orderId: orderRes.order.order_id,
     orderNumber: orderRes.order.order_number,
     userId: context.user.user_id,
+    shipping_cost: orderRes.order.shipping_cost,
   });
 
   await decrementStockForOrderItems(orderRes.orderItemsPayload ?? []);

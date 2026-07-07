@@ -1,16 +1,33 @@
 import type { AnyCart } from "@/types/CartTypes";
 import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
+import RazorPayButton from "./RazorPay";
 
 interface CashOnDeliveryConfirmationProps {
   cartItems: AnyCart;
   selectedAddressDetails: any | null;
   orderTotal: string;
   couponDiscount?: number;
+  codShippingCost?: number;
   onBack: () => void;
   onConfirm: () => Promise<void> | void;
   isLoadingConfirm?: boolean;
   errorMessage?: string | null;
+  codShippingOrderData?: {
+    razorpay_order_id: string;
+    total_amount: number;
+  } | null;
+  razorpayPrefill?: {
+    name?: string;
+    email?: string;
+    contact?: string;
+  };
+  onCodShippingSuccess?: (response: {
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+  }) => Promise<void> | void;
+  onPaymentInitiated?: () => void;
 }
 
 export default function CashOnDeliveryConfirmation({
@@ -18,11 +35,24 @@ export default function CashOnDeliveryConfirmation({
   selectedAddressDetails,
   orderTotal,
   couponDiscount = 0,
+  codShippingCost = 0,
   onBack,
   onConfirm,
   isLoadingConfirm = false,
   errorMessage = null,
+  codShippingOrderData = null,
+  razorpayPrefill,
+  onCodShippingSuccess,
+  onPaymentInitiated,
 }: CashOnDeliveryConfirmationProps) {
+  const requiresShippingPayment = codShippingCost > 0;
+  const confirmButtonLabel = requiresShippingPayment
+    ? `Pay ₹${codShippingCost}`
+    : "Confirm Order";
+  const loadingButtonLabel = requiresShippingPayment
+    ? "Preparing payment..."
+    : "Placing COD Order...";
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4">
@@ -137,6 +167,12 @@ export default function CashOnDeliveryConfirmation({
                 <span className="text-green-600 font-semibold">-₹{couponDiscount.toFixed(2)}</span>
               </div>
             )}
+            {requiresShippingPayment && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Shipping (COD)*</span>
+                <span className="text-amber-700 font-semibold">₹{codShippingCost.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between pt-1 border-t border-gray-200">
               <span className="text-sm font-semibold text-gray-900">Total Amount</span>
               <span className="text-base font-bold text-amber-600">₹{orderTotal}</span>
@@ -150,13 +186,27 @@ export default function CashOnDeliveryConfirmation({
 
       <div className="w-full px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-200 bg-gray-50">
         <div className="flex items-center gap-2">
-          <button
-            onClick={onConfirm}
-            disabled={!selectedAddressDetails || isLoadingConfirm}
-            className="flex-1 px-3 py-2.5 bg-[#DECAF2] text-[#360000] text-sm font-semibold rounded-md hover:bg-[#d3b9ec] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isLoadingConfirm ? "Placing COD Order..." : "Confirm Order"}
-          </button>
+          {codShippingOrderData ? (
+            <div className="flex-1 min-w-0">
+              <RazorPayButton
+                amount={codShippingOrderData.total_amount}
+                razorpayOrderId={codShippingOrderData.razorpay_order_id}
+                description="COD Shipping Charges"
+                prefill={razorpayPrefill}
+                autoOpen
+                onPaymentInitiated={onPaymentInitiated}
+                onSuccess={onCodShippingSuccess}
+              />
+            </div>
+          ) : (
+            <button
+              onClick={onConfirm}
+              disabled={!selectedAddressDetails || isLoadingConfirm}
+              className="flex-1 px-3 py-2.5 bg-[#DECAF2] text-[#360000] text-sm font-semibold rounded-md hover:bg-[#d3b9ec] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isLoadingConfirm ? loadingButtonLabel : confirmButtonLabel}
+            </button>
+          )}
           <button
             onClick={onBack}
             disabled={isLoadingConfirm}

@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase-Utils/client";
 import type { AnyCart } from "@/types/CartTypes";
 import { getAttribution } from "@/lib/attribution";
 import { trackPurchase } from "@/lib/meta/pixel";
+import { Truck, PartyPopper, Check } from "lucide-react";
 
 type MarketingCoupon = {
   coupon_code: string;
@@ -73,11 +74,20 @@ export default function PaymentGatewayComponent() {
   const [userCoupon, setUserCoupon] = useState<MarketingCoupon | null>(null);
   const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
   const [userCouponDiscount, setUserCouponDiscount] = useState(0);
+  const [codShippingOrderData, setCodShippingOrderData] =
+  useState<{
+    razorpay_order_id: string;
+    total_amount: number;
+  } | null>(null);
   const supabase = createClient();
+  const COD_FREE_SHIPPING_THRESHOLD = 499;
+  const COD_SHIPPING_FEE = 75;
+
   const cartItemCount = (cartItems as AnyCart).reduce(
     (sum, item: any) => sum + (Number(item?.quantity ?? 1) || 0),
     0
   );
+  
   const orderTotal = (cartItems as AnyCart)
     .reduce((sum: number, item: any) => {
       const product = item?.products ?? item?.product ?? item;
@@ -87,6 +97,10 @@ export default function PaymentGatewayComponent() {
     }, 0)
     .toFixed(2);
   const orderTotalNumber = Number(orderTotal);
+  const codShippingCost = orderTotalNumber >= COD_FREE_SHIPPING_THRESHOLD ? 0 : COD_SHIPPING_FEE;
+  const isFreeShippingUnlocked = orderTotalNumber >= COD_FREE_SHIPPING_THRESHOLD;
+  const freeShippingProgress = Math.min(100, (orderTotalNumber / COD_FREE_SHIPPING_THRESHOLD) * 100);
+  const amountLeftForFreeShipping = Math.max(0, COD_FREE_SHIPPING_THRESHOLD - orderTotalNumber);
   const activeCoupon = userCoupon ?? (isCouponApplied ? prepaidCoupon : null);
   const couponMinPurchaseAmount = Number(activeCoupon?.min_purchase_amount ?? 0);
   const prepaidOfferText = prepaidCoupon
@@ -391,6 +405,7 @@ export default function PaymentGatewayComponent() {
     setShowOrderdetails(false);
     setShowCodConfirmation(false);
     setPrepaidOrderData(null);
+    setCodShippingOrderData(null);
     setIsPlacingCodOrder(false);
     setCodError(null);
     setAddresses([]);
@@ -411,6 +426,10 @@ export default function PaymentGatewayComponent() {
   };
 
   const handleConfirmCashOnDelivery = async () => {
+    if (codShippingCost > 0) {
+      await handleCodShippingPayment();
+      return;
+    }
     setIsPlacingCodOrder(true);
     setCodError(null);
     if (!selectedAddress) {
@@ -459,7 +478,93 @@ export default function PaymentGatewayComponent() {
       setIsPlacingCodOrder(false);
     }
   };
+  const handleCodShippingPayment = async () => {
+    if (!selectedAddress) {
+      setCodError("Please select a delivery address.");
+      return;
+    }
+    setIsPlacingCodOrder(true);
+    setCodError(null);
+    try {
+      await saveUserDetailsIfNeeded();
+      const res = await axios.post(
+        "/api/payment/createOrder",
+        {
+          address_id: selectedAddress,
+          payment_type: "COD_SHIPPING",
+          coupon_code: activeCoupon?.coupon_code ?? null,
+          attribution: getAttribution(),
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setCodShippingOrderData({
+        razorpay_order_id: res.data.razorpay_order_id,
+        total_amount: res.data.amount_in_paise / 100,
+      });
+    } catch (error: any) {
+      devLog("cod-shipping:create-order-failed", {
+        message: error?.response?.data?.message ?? error?.message,
+      });
+      const message =
+        error?.response?.data?.message ||
+        "Could not start shipping payment. Please try again.";
+      setCodError(message);
+    } finally {
+      setIsPlacingCodOrder(false);
+    }
+  };
 
+  const handleCodShippingPaymentSuccess = async (response: {
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+  }) => {
+    devLog("cod-shipping:razorpay-success", {
+      razorpayOrderId: response.razorpay_order_id,
+      razorpayPaymentId: response.razorpay_payment_id,
+    });
+    try {
+      const completeRes = await axios.post(
+        "/api/payment/complete-razorpay",
+        {
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      if (completeRes.status === 200) {
+        const codEventId = completeRes.data?.event_id ?? completeRes.data?.order_id;
+        if (codEventId) {
+          trackPurchase({
+            eventId: codEventId,
+            value: activeCoupon ? prepaidPayableAmount : orderTotalNumber,
+            currency: "INR",
+            contentIds: getCartContentIds(),
+          });
+        }
+        setPaymentConcluded(true);
+        setShowPaymentConcluded(true);
+        resetPaymentState();
+        router.push("/account/orders");
+      } else {
+        alert(
+          "Could not complete order. Contact support with payment ID: " +
+            response.razorpay_payment_id
+        );
+      }
+    } catch (error: any) {
+      devLog("cod-shipping:complete-failed", {
+        message: error?.response?.data?.message ?? error?.message,
+      });
+      const msg = error?.response?.data?.message ?? "Could not complete order.";
+      alert(msg + " Contact support with payment ID: " + response.razorpay_payment_id);
+    }
+  };
   return (
     <>
       {/* Backdrop */}
@@ -582,10 +687,26 @@ export default function PaymentGatewayComponent() {
               selectedAddressDetails={selectedAddressDetails}
               orderTotal={activeCoupon ? prepaidPayableAmount.toFixed(2) : orderTotal}
               couponDiscount={activeCoupon ? prepaidCouponDiscount : 0}
-              onBack={() => setShowCodConfirmation(false)}
+              codShippingCost={codShippingCost}
+              onBack={() => {
+                setCodShippingOrderData(null);
+                setCodError(null);
+                setShowCodConfirmation(false);
+              }}
               onConfirm={handleConfirmCashOnDelivery}
               isLoadingConfirm={isPlacingCodOrder}
               errorMessage={codError}
+              codShippingOrderData={codShippingOrderData}
+              razorpayPrefill={{
+                name: [existingFirstName || userFirstName, existingLastName || userLastName]
+                  .filter(Boolean)
+                  .join(" ")
+                  .trim() || undefined,
+                email: (existingEmail || userEmail) || undefined,
+                contact: existingPhoneNumber || undefined,
+              }}
+              onCodShippingSuccess={handleCodShippingPaymentSuccess}
+              onPaymentInitiated={() => setInitiatingCheckout(false)}
             />
             </div>
           </div>
@@ -632,6 +753,7 @@ export default function PaymentGatewayComponent() {
                         <span className="text-green-700"> • Prepaid ₹{prepaidPayableAmount}</span>
                       )}
                     </span>
+
                   </div>
                 </div>
                 {showOrderdetails ? (
@@ -720,6 +842,16 @@ export default function PaymentGatewayComponent() {
                       ).toFixed(2)}
                     </span>
                   </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Shipping (COD)*:</span>
+                    <span
+                      className={`font-semibold ${
+                        codShippingCost > 0 ? "text-amber-700" : "text-green-600"
+                      }`}
+                    >
+                      {codShippingCost > 0 ? `₹${codShippingCost.toFixed(2)}` : "FREE"}
+                    </span>
+                  </div>
                   <div className="flex justify-between pt-1.5 border-t border-gray-200">
                     <span className="text-sm font-bold text-gray-900">Total:</span>
                     <span className="text-base font-bold text-amber-600">
@@ -773,7 +905,7 @@ export default function PaymentGatewayComponent() {
               </div>
             ) : (
               <>
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 p-4">
+              {isFetchingCoupon || prepaidCoupon ? <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 p-4">
                 {isFetchingCoupon ? (
                   <p className="text-sm text-gray-700 font-medium">Checking prepaid offers...</p>
                 ) : prepaidCoupon ? (
@@ -812,7 +944,72 @@ export default function PaymentGatewayComponent() {
                 {!isFetchingCoupon && !prepaidCoupon && couponMessage && (
                   <p className="text-sm mt-1 font-medium text-rose-600">{couponMessage}</p>
                 )}
+              </div> : null}
+              {/* Shipping progress — mirrors cart */}
+              <div className="space-y-2.5 border-2 border-[#360000] bg-[#FFF8F6] p-3 sm:p-4 flex flex-col rounded-lg w-full shadow-sm">
+                <div className="flex items-center justify-between gap-3 w-full">
+                  <div className="flex items-center gap-2 text-[#360000] font-open-sans tracking-wider flex-1 min-w-0">
+                    {isFreeShippingUnlocked && (
+                      <PartyPopper className="w-5 h-5 shrink-0 text-[#360000]" />
+                    )}
+                    <span className="text-xs sm:text-sm font-bold">
+                      {isFreeShippingUnlocked
+                        ? "Congratulations! You've unlocked FREE shipping on Cash on Delivery!"
+                        : `Add ₹${amountLeftForFreeShipping} more to get free shipping on Cash on Delivery`}
+                    </span>
+                  </div>
+                  <Truck className="w-5 h-5 text-[#360000] shrink-0" />
+                </div>
+
+                <div className="flex items-center gap-2 w-full">
+                  <div className="relative flex-1 h-2.5 bg-[#360000]/15 rounded-full overflow-hidden">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-[#360000] rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${freeShippingProgress}%` }}
+                    />
+                  </div>
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border-2 transition-all duration-300 ${
+                      isFreeShippingUnlocked
+                        ? "bg-[#360000] border-[#360000] text-white"
+                        : "bg-transparent border-[#360000]/25 text-[#360000]/30"
+                    }`}
+                  >
+                    <Check className="w-4 h-4" strokeWidth={2.5} />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-[#360000]/15">
+                  <span className="text-sm font-bold text-[#360000]">Shipping charges (COD)</span>
+                  <span
+                    className={`text-base font-extrabold ${
+                      codShippingCost > 0 ? "text-amber-700" : "text-green-700"
+                    }`}
+                  >
+                    {codShippingCost > 0 ? `₹${codShippingCost.toFixed(2)}` : "FREE"}
+                  </span>
+                </div>
               </div>
+
+              {/* Shipping policy notice */}
+              <div className="rounded-lg border-2 border-dashed border-amber-500 bg-amber-50 px-3 py-2.5 sm:px-4 sm:py-3 shadow-sm">
+                <p className="text-xs sm:text-sm font-bold text-[#360000] leading-relaxed">
+                  <span className="text-amber-700 text-base align-super">*</span>{" "}
+                  ₹{COD_SHIPPING_FEE} shipping will be charged on all Cash on Delivery orders below ₹
+                  {COD_FREE_SHIPPING_THRESHOLD}.
+                </p>
+                <p className="text-[11px] sm:text-xs text-[#360000]/80 mt-1 font-medium">
+                  Prepaid orders are not charged this shipping fee.
+                </p>
+              </div>
+
+              {codShippingCost > 0 && (
+                <div className="rounded-lg border border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 p-3 sm:p-4 flex items-center justify-between gap-3">
+                  <span className="text-sm font-bold text-green-900">
+                    Pay online to save ₹{codShippingCost} on Cash on Delivery shipping
+                  </span>
+                </div>
+              )}
               {/* Customer Details Section - Name & Email */}
               {(!existingFirstName || !existingLastName || !existingEmail) && (
                 <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">

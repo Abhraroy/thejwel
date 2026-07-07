@@ -6,6 +6,13 @@ const devLog = (...args: unknown[]) => {
   }
 };
 
+export const COD_FREE_SHIPPING_THRESHOLD = 499;
+export const COD_SHIPPING_FEE = 75;
+
+export function getCodShippingCost(cartSubtotal: number): number {
+  return cartSubtotal >= COD_FREE_SHIPPING_THRESHOLD ? 0 : COD_SHIPPING_FEE;
+}
+
 type CheckoutCartItem = {
   product_id: string;
   quantity: number;
@@ -55,6 +62,7 @@ export interface OrderCreationOptions {
   orderStatus?: string;
   transactionId?: string | null;
   couponCode?: string | null;
+  shipping_cost?: number | null;
 }
 
 const formatAddressText = (address: CheckoutAddress) =>
@@ -243,6 +251,7 @@ export async function createOrderWithItems(
     shipping_address_id: context.addressId,
     address_text: context.addressText,
     transaction_id: options.transactionId || null,
+    shipping_cost: options.shipping_cost ?? 0,
   };
   if (options.couponCode != null && options.couponCode !== "") {
     orderPayload.coupon_code = options.couponCode;
