@@ -123,7 +123,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Products -> /product/[product_id]
     const { data: products, error: productsError } = await supabase
       .from("products")
-      .select("product_id, updated_at, created_at, listed_status, style, occasion, tags")
+      .select("product_id, updated_at, created_at, listed_status, tags")
       .eq("listed_status", true);
 
     if (!productsError && products?.length) {
@@ -134,30 +134,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: toDate(p.updated_at || p.created_at),
           changeFrequency: "weekly",
           priority: 0.7,
-        });
-      }
-
-      // Styles -> /style/[style]
-      const hardcodedStyles = ["american-diamond", "temple-jewellery", "anti-tarnish"];
-      const dbStyles = uniqStrings(products.map((p) => p?.style));
-      for (const style of new Set([...hardcodedStyles, ...dbStyles])) {
-        entries.push({
-          url: abs(`/style/${encodeURIComponent(style)}`),
-          lastModified: new Date(),
-          changeFrequency: "weekly",
-          priority: 0.6,
-        });
-      }
-
-      // Occasions -> /occasion/[occasion]
-      const hardcodedOccasions = ["everydaywear", "partywear", "wedding"];
-      const dbOccasions = uniqStrings(products.map((p) => p?.occasion));
-      for (const occasion of new Set([...hardcodedOccasions, ...dbOccasions])) {
-        entries.push({
-          url: abs(`/occasion/${encodeURIComponent(occasion)}`),
-          lastModified: new Date(),
-          changeFrequency: "weekly",
-          priority: 0.6,
         });
       }
 
@@ -183,6 +159,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           priority: 0.5,
         });
       }
+    }
+
+    const { data: styles } = await supabase
+      .from("styles")
+      .select("slug, updated_at")
+      .eq("is_active", true);
+
+    for (const style of styles ?? []) {
+      if (!style?.slug) continue;
+      entries.push({
+        url: abs(`/style/${encodeURIComponent(style.slug)}`),
+        lastModified: toDate(style.updated_at),
+        changeFrequency: "weekly",
+        priority: 0.6,
+      });
+    }
+
+    const { data: occasions } = await supabase
+      .from("occasions")
+      .select("slug, updated_at")
+      .eq("is_active", true);
+
+    for (const occasion of occasions ?? []) {
+      if (!occasion?.slug) continue;
+      entries.push({
+        url: abs(`/occasion/${encodeURIComponent(occasion.slug)}`),
+        lastModified: toDate(occasion.updated_at),
+        changeFrequency: "weekly",
+        priority: 0.6,
+      });
     }
 
     // De-dupe by URL (in case DB contains overlap with hardcoded sets)

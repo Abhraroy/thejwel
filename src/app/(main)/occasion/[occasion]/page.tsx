@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { formatSupabaseError, logProductFetch } from "@/lib/debug/product-fetch-log";
 import { createClient } from "@/lib/supabase-Utils/server";
 import { buildPageMetadata, toAbsoluteUrl } from "@/lib/seo/metadata";
 import { Category } from "@/types/TypeInterface";
@@ -10,13 +12,26 @@ type OccasionPageProps = {
   params: Promise<{ occasion: string }>;
 };
 
+async function getOccasionBySlug(slug: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("occasions")
+    .select("occasion_id, occasion_name, slug")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+  return data;
+}
+
 export async function generateMetadata({ params }: OccasionPageProps): Promise<Metadata> {
   const { occasion } = await params;
   const decodedOccasion = decodeURIComponent(occasion || "");
-  const title = `${decodedOccasion} Jewellery`;
+  const occasionRow = await getOccasionBySlug(decodedOccasion);
+  const displayName = occasionRow?.occasion_name ?? decodedOccasion;
+
   return buildPageMetadata({
-    title,
-    description: `Shop ${decodedOccasion} jewellery at THE JWEL. Discover occasion-ready designs across categories and price ranges.`,
+    title: `${displayName} Jewellery`,
+    description: `Shop ${displayName} jewellery at THE JWEL. Discover occasion-ready designs across categories and price ranges.`,
     pathname: `/occasion/${encodeURIComponent(decodedOccasion)}`,
   });
 }
@@ -26,18 +41,38 @@ export default async function OccasionPage({ params }: OccasionPageProps) {
   const decodedOccasion = decodeURIComponent(occasion || "");
   const supabase = await createClient();
 
+  const occasionRow = await getOccasionBySlug(decodedOccasion);
+  logProductFetch({
+    page: "occasion",
+    query: "occasions_lookup",
+    count: occasionRow ? 1 : 0,
+    meta: { slug: decodedOccasion, occasion_id: occasionRow?.occasion_id ?? null },
+  });
+  if (!occasionRow?.occasion_id) {
+    notFound();
+  }
+
   const { data, error } = await supabase
     .from("products")
     .select(
       `
       *,
       product_images(*),
-      categories(*)
+      categories(*),
+      occasions(occasion_id, occasion_name, slug)
       `
     )
-    .filter("occasion", "eq", decodedOccasion)
+    .eq("occasion_id", occasionRow.occasion_id)
     .eq("listed_status", true)
     .order("updated_at", { ascending: false });
+
+  logProductFetch({
+    page: "occasion",
+    query: "products_by_occasion_id",
+    count: data?.length ?? 0,
+    error: formatSupabaseError(error),
+    meta: { slug: decodedOccasion, occasion_id: occasionRow.occasion_id },
+  });
 
   const productsData = (error ? [] : data ?? []) as productWithImages[];
   const unique = new Map<string, Category>();
@@ -49,10 +84,12 @@ export default async function OccasionPage({ params }: OccasionPageProps) {
     (a.category_name ?? "").localeCompare(b.category_name ?? "")
   );
 
+  const displayName = occasionRow.occasion_name ?? decodedOccasion;
+
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `${decodedOccasion} products`,
+    name: `${displayName} products`,
     itemListElement: productsData.slice(0, 100).map((product, index) => ({
       "@type": "ListItem",
       position: index + 1,
@@ -65,7 +102,7 @@ export default async function OccasionPage({ params }: OccasionPageProps) {
     <>
       <JsonLd data={itemListSchema} />
       <OccasionPageClient
-        decodedOccasion={decodedOccasion}
+        occasionName={displayName}
         initialProducts={productsData}
         initialCategories={categories}
       />

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { formatSupabaseError, logProductFetch } from "@/lib/debug/product-fetch-log";
 import { createClient } from "@/lib/supabase-Utils/server";
 import { buildPageMetadata, toAbsoluteUrl } from "@/lib/seo/metadata";
 import { Category } from "@/types/TypeInterface";
@@ -10,13 +12,26 @@ type StylePageProps = {
   params: Promise<{ style: string }>;
 };
 
+async function getStyleBySlug(slug: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("styles")
+    .select("style_id, style_name, slug")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+  return data;
+}
+
 export async function generateMetadata({ params }: StylePageProps): Promise<Metadata> {
   const { style } = await params;
   const decodedStyle = decodeURIComponent(style || "");
-  const title = `${decodedStyle} Jewellery Style`;
+  const styleRow = await getStyleBySlug(decodedStyle);
+  const displayName = styleRow?.style_name ?? decodedStyle;
+
   return buildPageMetadata({
-    title,
-    description: `Explore ${decodedStyle} jewellery at THE JWEL. Browse curated designs, compare prices, and shop with confidence.`,
+    title: `${displayName} Jewellery Style`,
+    description: `Explore ${displayName} jewellery at THE JWEL. Browse curated designs, compare prices, and shop with confidence.`,
     pathname: `/style/${encodeURIComponent(decodedStyle)}`,
   });
 }
@@ -26,18 +41,38 @@ export default async function StylePage({ params }: StylePageProps) {
   const decodedStyle = decodeURIComponent(style || "");
   const supabase = await createClient();
 
+  const styleRow = await getStyleBySlug(decodedStyle);
+  logProductFetch({
+    page: "style",
+    query: "styles_lookup",
+    count: styleRow ? 1 : 0,
+    meta: { slug: decodedStyle, style_id: styleRow?.style_id ?? null },
+  });
+  if (!styleRow?.style_id) {
+    notFound();
+  }
+
   const { data, error } = await supabase
     .from("products")
     .select(
       `
       *,
       product_images(*),
-      categories(*)
+      categories(*),
+      styles(style_id, style_name, slug)
       `
     )
-    .filter("style", "eq", decodedStyle)
+    .eq("style_id", styleRow.style_id)
     .eq("listed_status", true)
     .order("updated_at", { ascending: false });
+
+  logProductFetch({
+    page: "style",
+    query: "products_by_style_id",
+    count: data?.length ?? 0,
+    error: formatSupabaseError(error),
+    meta: { slug: decodedStyle, style_id: styleRow.style_id },
+  });
 
   const productsData = (error ? [] : data ?? []) as productWithImages[];
   const unique = new Map<string, Category>();
@@ -49,10 +84,12 @@ export default async function StylePage({ params }: StylePageProps) {
     (a.category_name ?? "").localeCompare(b.category_name ?? "")
   );
 
+  const displayName = styleRow.style_name ?? decodedStyle;
+
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `${decodedStyle} products`,
+    name: `${displayName} products`,
     itemListElement: productsData.slice(0, 100).map((product, index) => ({
       "@type": "ListItem",
       position: index + 1,
@@ -65,7 +102,7 @@ export default async function StylePage({ params }: StylePageProps) {
     <>
       <JsonLd data={itemListSchema} />
       <StylePageClient
-        decodedStyle={decodedStyle}
+        styleName={displayName}
         initialProducts={productsData}
         initialCategories={categories}
       />

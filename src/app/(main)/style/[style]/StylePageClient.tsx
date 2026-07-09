@@ -8,13 +8,13 @@ import { Category } from "@/types/TypeInterface";
 import { productWithImages } from "@/types/RelationTypeInterface";
 
 type StylePageClientProps = {
-  decodedStyle: string;
+  styleName: string;
   initialProducts: productWithImages[];
   initialCategories: Category[];
 };
 
 export default function StylePageClient({
-  decodedStyle,
+  styleName,
   initialProducts,
   initialCategories,
 }: StylePageClientProps) {
@@ -65,7 +65,7 @@ export default function StylePageClient({
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
-                  {decodedStyle.charAt(0).toUpperCase() + decodedStyle.slice(1)}
+                  {styleName}
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">{sortedProducts.length} products available</p>
               </div>

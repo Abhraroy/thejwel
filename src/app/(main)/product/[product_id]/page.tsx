@@ -54,7 +54,10 @@ const getProductBase = cache(async (productId: string) => {
       stock_quantity,
       size,
       tags,
-      style,
+      style_id,
+      styles(style_id, style_name, slug, image_link),
+      occasion_id,
+      occasions(occasion_id, occasion_name, slug, image_link),
       sku,
       category_id,
       categories(category_name, slug)

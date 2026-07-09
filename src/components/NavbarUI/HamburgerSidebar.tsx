@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
+import { formatSupabaseError, logProductFetch } from "@/lib/debug/product-fetch-log";
 import { createClient } from "@/lib/supabase-Utils/client";
-import type { Category } from "@/types/TypeInterface";
+import { STYLE_FALLBACKS, STYLE_SLUG_ORDER } from "@/lib/style-fallbacks";
+import type { Category, Style } from "@/types/TypeInterface";
 
 interface SidebarMenuItem {
   label: string;
@@ -19,11 +21,37 @@ interface HamburgerSidebarProps {
   onAccountClick: () => void;
 }
 
-const STYLES = [
-  { label: "American Diamond", slug: "american-diamond" },
-  { label: "Temple Jewellery", slug: "temple-jewellery" },
-  { label: "Anti tarnish", slug: "anti-tarnish" },
-] as const;
+type SidebarStyle = {
+  style_id: string;
+  label: string;
+  slug: string;
+};
+
+function buildSidebarStyles(dbStyles: Style[] | null | undefined): SidebarStyle[] {
+  if (dbStyles && dbStyles.length > 0) {
+    const sorted = [...dbStyles].sort((a, b) => {
+      const aIdx = STYLE_SLUG_ORDER.indexOf(a.slug ?? "");
+      const bIdx = STYLE_SLUG_ORDER.indexOf(b.slug ?? "");
+      if (aIdx === -1 && bIdx === -1) return (a.style_name ?? "").localeCompare(b.style_name ?? "");
+      if (aIdx === -1) return 1;
+      if (bIdx === -1) return -1;
+      return aIdx - bIdx;
+    });
+    return sorted
+      .filter((s) => s.slug)
+      .map((s) => ({
+        style_id: s.style_id,
+        label: s.style_name,
+        slug: s.slug!,
+      }));
+  }
+
+  return STYLE_SLUG_ORDER.map((slug) => ({
+    style_id: slug,
+    label: STYLE_FALLBACKS[slug]?.heading ?? slug,
+    slug,
+  }));
+}
 
 const CloseIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg
@@ -68,6 +96,7 @@ export default function HamburgerSidebar({
   onAccountClick,
 }: HamburgerSidebarProps) {
   const [expandedStyle, setExpandedStyle] = useState<string | null>(null);
+  const [sidebarStyles, setSidebarStyles] = useState<SidebarStyle[]>([]);
   const [categoriesByStyle, setCategoriesByStyle] = useState<
     Record<string, Category[]>
   >({});
@@ -80,7 +109,7 @@ export default function HamburgerSidebar({
       return;
     }
 
-    if (Object.keys(categoriesByStyle).length > 0) return;
+    if (sidebarStyles.length > 0 && Object.keys(categoriesByStyle).length > 0) return;
     if (fetchInFlight.current) return;
 
     fetchInFlight.current = true;
@@ -90,31 +119,83 @@ export default function HamburgerSidebar({
       setIsLoadingStyles(true);
       try {
         const supabase = createClient();
-        const slugs = STYLES.map((s) => s.slug);
-        const { data, error } = await supabase
-          .from("products")
-          .select("style, categories(category_id, category_name, slug, category_image_url)")
-          .eq("listed_status", true)
-          .in("style", slugs);
 
-        if (cancelled || error || !data) return;
+        const { data: stylesData, error: stylesError } = await supabase
+          .from("styles")
+          .select("style_id, style_name, slug")
+          .eq("is_active", true);
 
-        const grouped: Record<string, Map<string, Category>> = {};
-        for (const slug of slugs) {
-          grouped[slug] = new Map();
+        const styles = buildSidebarStyles(stylesData ?? []);
+        logProductFetch({
+          page: "hamburger-sidebar",
+          query: "styles",
+          count: stylesData?.length ?? 0,
+          error: formatSupabaseError(stylesError),
+          meta: { sidebarStyleCount: styles.length, styleIds: styles.map((s) => s.style_id) },
+        });
+        if (cancelled) return;
+
+        setSidebarStyles(styles);
+
+        const styleIds = styles
+          .map((s) => s.style_id)
+          .filter((id) => id && !STYLE_SLUG_ORDER.includes(id));
+
+        let productRows: Array<{
+          style_id: string;
+          styles: { slug: string } | { slug: string }[] | null;
+          categories: Category | Category[] | null;
+        }> = [];
+
+        if (styleIds.length > 0) {
+          const { data, error } = await supabase
+            .from("products")
+            .select("style_id, styles(slug), categories(category_id, category_name, slug, category_image_url)")
+            .eq("listed_status", true)
+            .in("style_id", styleIds);
+
+          logProductFetch({
+            page: "hamburger-sidebar",
+            query: "products_by_style_ids",
+            count: data?.length ?? 0,
+            error: formatSupabaseError(error),
+            meta: { styleIdCount: styleIds.length },
+          });
+
+          if (!error && data) {
+            productRows = data as typeof productRows;
+          }
+        } else {
+          logProductFetch({
+            page: "hamburger-sidebar",
+            query: "products_by_style_ids",
+            count: 0,
+            meta: {
+              skipped: true,
+              reason: "no UUID style_ids — styles table may be empty (using slug fallbacks)",
+            },
+          });
         }
 
-        for (const row of data) {
-          const styleSlug = (row.style ?? "").trim();
-          const categoryData = row.categories as unknown as Category | Category[] | null;
+        const grouped: Record<string, Map<string, Category>> = {};
+        for (const style of styles) {
+          grouped[style.slug] = new Map();
+        }
+
+        for (const row of productRows) {
+          const styleData = row.styles;
+          const styleSlug = (
+            Array.isArray(styleData) ? styleData[0]?.slug : styleData?.slug
+          )?.trim();
+          const categoryData = row.categories;
           const category = Array.isArray(categoryData) ? (categoryData[0] ?? null) : categoryData;
           if (!styleSlug || !category?.category_id) continue;
           grouped[styleSlug]?.set(category.category_id, category);
         }
 
         const result: Record<string, Category[]> = {};
-        for (const slug of slugs) {
-          result[slug] = Array.from(grouped[slug]?.values() ?? []).sort((a, b) =>
+        for (const style of styles) {
+          result[style.slug] = Array.from(grouped[style.slug]?.values() ?? []).sort((a, b) =>
             (a.category_name ?? "").localeCompare(b.category_name ?? "")
           );
         }
@@ -134,11 +215,15 @@ export default function HamburgerSidebar({
       cancelled = true;
       fetchInFlight.current = false;
     };
-  }, [isSidebarOpen, categoriesByStyle]);
+  }, [isSidebarOpen, sidebarStyles.length, categoriesByStyle]);
 
   const toggleStyle = (slug: string) => {
     setExpandedStyle((prev) => (prev === slug ? null : slug));
   };
+
+  const stylesToRender = sidebarStyles.length > 0
+    ? sidebarStyles
+    : buildSidebarStyles(null);
 
   return (
     <>
@@ -168,7 +253,7 @@ export default function HamburgerSidebar({
 
           <nav className="flex-1 overflow-y-auto py-4">
             <ul className="space-y-1 px-4">
-              {STYLES.map((style) => {
+              {stylesToRender.map((style) => {
                 const isExpanded = expandedStyle === style.slug;
                 const categories = categoriesByStyle[style.slug] ?? [];
 
@@ -208,7 +293,13 @@ export default function HamburgerSidebar({
                           ))
                         ) : (
                           <li className="px-3 py-2.5 text-sm text-[#360000]/70 font-open-sans">
-                            No categories found
+                            <Link
+                              href={`/style/${encodeURIComponent(style.slug)}`}
+                              className="hover:underline"
+                              onClick={onClose}
+                            >
+                              Browse {style.label}
+                            </Link>
                           </li>
                         )}
                       </ul>

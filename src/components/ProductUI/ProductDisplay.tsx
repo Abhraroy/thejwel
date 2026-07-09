@@ -19,9 +19,22 @@ function resolveCategory(product: any) {
   return Array.isArray(product?.categories) ? product.categories[0] : product?.categories;
 }
 
-function getStyleHref(style?: string | null) {
-  if (!style) return null;
-  return `/style/${encodeURIComponent(style)}`;
+function resolveStyle(product: any) {
+  return Array.isArray(product?.styles) ? product.styles[0] : product?.styles;
+}
+
+function resolveOccasion(product: any) {
+  return Array.isArray(product?.occasions) ? product.occasions[0] : product?.occasions;
+}
+
+function getStyleHref(slug?: string | null) {
+  if (!slug) return null;
+  return `/style/${encodeURIComponent(slug)}`;
+}
+
+function getOccasionHref(slug?: string | null) {
+  if (!slug) return null;
+  return `/occasion/${encodeURIComponent(slug)}`;
 }
 
 function getCategoryHref(product: any) {
@@ -657,10 +670,10 @@ export default function ProductDisplay({
               {/* Product Info Cards */}
               <div className="grid grid-cols-2 gap-2">
                 <InfoCardLink
-                  href={getStyleHref(productDetails[0]?.style)}
+                  href={getStyleHref(resolveStyle(productDetails[0])?.slug)}
                   className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-2.5 border border-pink-100 shadow-sm hover:shadow-md transition-shadow"
                   label="Style"
-                  value={productDetails[0]?.style ?? "--"}
+                  value={resolveStyle(productDetails[0])?.style_name ?? "--"}
                 />
                 <InfoCardLink
                   href={getCategoryHref(productDetails[0])}
@@ -818,14 +831,25 @@ export default function ProductDisplay({
                       {resolveCategory(productDetails[0])?.category_name ?? "--"}
                     </DetailLink>
                   </div>
-                  {productDetails[0]?.style && (
+                  {resolveStyle(productDetails[0])?.slug && (
                     <div className="flex justify-between items-center p-3 hover:bg-gray-50 transition-colors">
                       <span className="text-sm font-medium text-gray-600">Style</span>
                       <DetailLink
-                        href={getStyleHref(productDetails[0]?.style)}
+                        href={getStyleHref(resolveStyle(productDetails[0])?.slug)}
                         className="text-sm font-medium text-gray-900"
                       >
-                        {productDetails[0]?.style ?? "--"}
+                        {resolveStyle(productDetails[0])?.style_name ?? "--"}
+                      </DetailLink>
+                    </div>
+                  )}
+                  {resolveOccasion(productDetails[0])?.slug && (
+                    <div className="flex justify-between items-center p-3 hover:bg-gray-50 transition-colors">
+                      <span className="text-sm font-medium text-gray-600">Occasion</span>
+                      <DetailLink
+                        href={getOccasionHref(resolveOccasion(productDetails[0])?.slug)}
+                        className="text-sm font-medium text-gray-900"
+                      >
+                        {resolveOccasion(productDetails[0])?.occasion_name ?? "--"}
                       </DetailLink>
                     </div>
                   )}
@@ -1038,10 +1062,10 @@ export default function ProductDisplay({
               {/* Product Info Cards */}
               <div className="grid grid-cols-1 gap-2">
                 <InfoCardLink
-                  href={getStyleHref(product?.style)}
+                  href={getStyleHref(resolveStyle(product)?.slug)}
                   className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-2.5 border border-pink-100 shadow-sm hover:shadow-md transition-shadow"
                   label="Style"
-                  value={product?.style ?? "--"}
+                  value={resolveStyle(product)?.style_name ?? "--"}
                 />
               </div>
 
@@ -1174,14 +1198,25 @@ export default function ProductDisplay({
                       {resolveCategory(product)?.category_name ?? "--"}
                     </DetailLink>
                   </div>
-                  {product?.style && (
+                  {resolveStyle(product)?.slug && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Style</span>
                       <DetailLink
-                        href={getStyleHref(product?.style)}
+                        href={getStyleHref(resolveStyle(product)?.slug)}
                         className="font-medium text-gray-900"
                       >
-                        {product?.style ?? "--"}
+                        {resolveStyle(product)?.style_name ?? "--"}
+                      </DetailLink>
+                    </div>
+                  )}
+                  {resolveOccasion(product)?.slug && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Occasion</span>
+                      <DetailLink
+                        href={getOccasionHref(resolveOccasion(product)?.slug)}
+                        className="font-medium text-gray-900"
+                      >
+                        {resolveOccasion(product)?.occasion_name ?? "--"}
                       </DetailLink>
                     </div>
                   )}
@@ -1382,10 +1417,10 @@ export default function ProductDisplay({
               {/* Product Info Cards */}
               <div className="grid grid-cols-2 gap-2.5">
                 <InfoCardLink
-                  href={getStyleHref(productDetails[0]?.style)}
+                  href={getStyleHref(resolveStyle(productDetails[0])?.slug)}
                   className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-3 border border-pink-100 shadow-sm hover:shadow-md transition-shadow"
                   label="Style"
-                  value={productDetails[0]?.style ?? "--"}
+                  value={resolveStyle(productDetails[0])?.style_name ?? "--"}
                 />
                 <InfoCardLink
                   href={getCategoryHref(productDetails[0])}

@@ -1,4 +1,4 @@
-import { Address, Category, Order, OrderItem, Product, User, ProductImage, SubCategory, Wishlist, WishlistItem } from "./TypeInterface";
+import { Address, Category, Occasion, Order, OrderItem, Product, Style, User, ProductImage, SubCategory, Wishlist, WishlistItem } from "./TypeInterface";
 
 export interface orderItemsWithProducts extends OrderItem {
   products: Product | null;
@@ -16,6 +16,8 @@ export interface userWithOrdersAndItemsAndProducts extends User {
 export interface productWithImages extends Product {
   product_images: ProductImage[];
   categories?: Category | null;
+  styles?: Style | null;
+  occasions?: Occasion | null;
 }
 
 export interface productWithCategoriesAndSubCategories extends productWithImages {
