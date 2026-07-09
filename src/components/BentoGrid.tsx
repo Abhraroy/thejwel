@@ -2,18 +2,20 @@
 
 import OptimizedImage from "@/components/OptimizedImage";
 import Link from 'next/link';
+import type { StyleDisplayItem } from "@/lib/style-fallbacks";
 
 interface BentoCategory {
   id: string;
   name: string;
   imageUrl: string;
   slug: string;
-  span?: 'col-span-1' | 'col-span-2'; // Optional span for grid layout flexibility
+  span?: 'col-span-1' | 'col-span-2';
 }
 
 interface BentoGridProps {
   title?: string;
   categories?: BentoCategory[];
+  styles?: StyleDisplayItem[];
   className?: string;
 }
 
@@ -34,11 +36,33 @@ const defaultBentoCategories: BentoCategory[] = [
   },
 ];
 
+function toBentoItems(styles?: StyleDisplayItem[], categories?: BentoCategory[]): BentoCategory[] {
+  if (styles && styles.length > 0) {
+    return styles.map((style, index) => ({
+      id: style.style_id ?? style.slug ?? String(index),
+      name: style.name,
+      imageUrl:
+        style.imageLink ||
+        defaultBentoCategories.find((c) => c.slug === style.slug)?.imageUrl ||
+        '/logo/cropped-logo.svg',
+      slug: style.slug,
+      span: 'col-span-1' as const,
+    }));
+  }
+  return categories ?? defaultBentoCategories;
+}
+
 export default function BentoGrid({
   title = 'View Our Styles',
-  categories = defaultBentoCategories,
+  categories,
+  styles,
   className = '',
 }: BentoGridProps) {
+  const items =
+    styles && styles.length > 0
+      ? toBentoItems(styles)
+      : categories ?? defaultBentoCategories;
+
   return (
     <section className={`w-full bg-theme-cream py-4 md:py-6 lg:py-8 ${className}`}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
@@ -46,15 +70,13 @@ export default function BentoGrid({
           {title}
         </h2>
 
-        {/* Bento Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5 lg:gap-6">
-          {categories.map((category) => (
+          {items.map((category) => (
             <Link
               key={category.id}
               href={`/style/${category.slug}`}
               className={`group relative overflow-hidden rounded-2xl md:rounded-3xl bg-theme-sage/10 aspect-[4/3] md:aspect-[3/2] lg:aspect-[4/3] transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] ${category.span || ''}`}
             >
-              {/* Image Container */}
               <div className="relative w-full h-full">
                 <OptimizedImage
                   src={category.imageUrl}
@@ -66,11 +88,9 @@ export default function BentoGrid({
                   sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 50vw"
                   priority={category.id === '1' || category.id === '2'}
                 />
-                
-                {/* Gradient Overlay */}
+
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
-                
-                {/* Category Name */}
+
                 <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-10">
                   <h3 className="text-white text-xl md:text-2xl lg:text-3xl font-bold mb-2 group-hover:translate-y-[-4px] transition-transform duration-300">
                     {category.name}
@@ -100,4 +120,3 @@ export default function BentoGrid({
     </section>
   );
 }
-

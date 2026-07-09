@@ -8,13 +8,13 @@ import { Category } from "@/types/TypeInterface";
 import { productWithImages } from "@/types/RelationTypeInterface";
 
 type OccasionPageClientProps = {
-  decodedOccasion: string;
+  occasionName: string;
   initialProducts: productWithImages[];
   initialCategories: Category[];
 };
 
 export default function OccasionPageClient({
-  decodedOccasion,
+  occasionName,
   initialProducts,
   initialCategories,
 }: OccasionPageClientProps) {
@@ -65,7 +65,7 @@ export default function OccasionPageClient({
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
-                  {decodedOccasion.charAt(0).toUpperCase() + decodedOccasion.slice(1)}
+                  {occasionName}
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">{sortedProducts.length} products available</p>
               </div>

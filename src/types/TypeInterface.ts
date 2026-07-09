@@ -126,6 +126,26 @@ export interface ProductImage {
   image_url: string;
 }
 
+export interface Style {
+  style_id: UUID;
+  style_name: string;
+  slug?: string | null;
+  image_link?: string | null;
+  is_active?: boolean | null;
+  created_at?: ISODateString | null;
+  updated_at?: ISODateString | null;
+}
+
+export interface Occasion {
+  occasion_id: UUID;
+  occasion_name: string;
+  slug?: string | null;
+  image_link?: string | null;
+  is_active?: boolean | null;
+  created_at?: ISODateString | null;
+  updated_at?: ISODateString | null;
+}
+
 export interface Product {
   product_id: UUID;
   category_id?: UUID | null;
@@ -142,8 +162,10 @@ export interface Product {
   thumbnail_image?: string | null;
   size?: string[] | null;
   tags?: string[] | null;
-  occasion?: string | null;
-  style?: string | null;
+  style_id?: UUID | null;
+  occasion_id?: UUID | null;
+  styles?: Style | null;
+  occasions?: Occasion | null;
   listed_status?: boolean | null;
   home_visibility?: boolean | null;
   sku?: string | null;

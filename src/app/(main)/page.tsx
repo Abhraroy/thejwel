@@ -4,6 +4,8 @@
 
 import HomePage from "@/components/HomePage";
 import { createClient } from "@/lib/supabase-Utils/server";
+import { buildOccasionDisplayList } from "@/lib/occasion-fallbacks";
+import { buildStyleDisplayList } from "@/lib/style-fallbacks";
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 
@@ -19,7 +21,7 @@ export default async function Home() {
 
   const productFields = "product_id, product_name, thumbnail_image, base_price, final_price, discount_percentage, stock_quantity";
 
-  const [catgoriesRes, bestSellersRes, newArrivalsRes, featuredProductsRes, trendingProductsRes, heroImagesRes, galleryImagesRes] = await Promise.all([
+  const [catgoriesRes, bestSellersRes, newArrivalsRes, featuredProductsRes, trendingProductsRes, heroImagesRes, galleryImagesRes, stylesRes, occasionsRes] = await Promise.all([
     supabase.from("categories").select("category_id, category_name, slug, category_image_url"),
     supabase
       .from("products")
@@ -62,6 +64,14 @@ export default async function Home() {
       .select("image_link, redirect_route")
       .eq("section_name", "homepage_image_gallery")
       .order("created_at", { ascending: true }),
+    supabase
+      .from("styles")
+      .select("style_id, style_name, slug, image_link")
+      .eq("is_active", true),
+    supabase
+      .from("occasions")
+      .select("occasion_id, occasion_name, slug, image_link")
+      .eq("is_active", true),
   ]);
   
 
@@ -78,6 +88,9 @@ export default async function Home() {
     })
   );
 
+  const stylesData = buildStyleDisplayList(stylesRes.data ?? []);
+  const occasionsData = buildOccasionDisplayList(occasionsRes.data ?? []);
+
   return (
     <HomePage
       categoriesProps={catgoriesRes.data || []}
@@ -87,6 +100,8 @@ export default async function Home() {
       trendingProducts={trendingProductsRes.data || []}
       heroItems={heroItems}
       galleryItems={galleryItems}
+      stylesData={stylesData}
+      occasionsData={occasionsData}
     />
   )
 }

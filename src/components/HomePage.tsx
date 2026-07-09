@@ -7,6 +7,8 @@ import ShopByBudgetSection from "@/components/ShopByBudgetSection";
 import StyleSection from "@/components/StyleSection";
 import OccasionSection from "@/components/OccasionSection";
 import { Product } from "@/types/TypeInterface";
+import type { OccasionDisplayItem } from "@/lib/occasion-fallbacks";
+import type { StyleDisplayItem } from "@/lib/style-fallbacks";
 import ProductCarouselSkeleton from "@/components/ProductUI/ProductCaraouselSkeleton";
 import HomePageClientShell from "./HomePageClientShell";
 import InViewSection from "./InViewSection";
@@ -76,6 +78,8 @@ export default function HomePage({
   trendingProducts,
   heroItems,
   galleryItems = [],
+  stylesData,
+  occasionsData,
 }: {
   categoriesProps: any;
   bestSellers: Product[];
@@ -84,6 +88,8 @@ export default function HomePage({
   trendingProducts: Product[];
   heroItems: { imageLink: string; redirectRoute: string | null }[];
   galleryItems?: GalleryImage[];
+  stylesData: StyleDisplayItem[];
+  occasionsData: OccasionDisplayItem[];
 }) {
   const carouselItemsArray = heroItems.map((item, index) => {
     const image = (
@@ -166,7 +172,7 @@ export default function HomePage({
           )}
         </InViewSection> */}
 
-        <StyleSection />
+        <StyleSection styles={stylesData} />
 
         <InViewSection fallback={<ProductCarouselSkeleton title="New Arrivals" />}>
           {newArrivals && newArrivals.length > 0 ? (
@@ -176,7 +182,7 @@ export default function HomePage({
           )}
         </InViewSection>
 
-        <OccasionSection />
+        <OccasionSection occasions={occasionsData} />
 
         <InViewSection fallback={<ImageGalleryCarouselSkeleton />}>
           <DynamicImageGallery images={galleryItems} />

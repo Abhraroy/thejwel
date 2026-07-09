@@ -119,13 +119,28 @@ export default function RazorPayButton({
                 },
             }
         };
-        if (prefill?.name || prefill?.email || prefill?.contact) {
-            options.prefill = {
-                ...(prefill.name && { name: prefill.name }),
-                ...(prefill.email && { email: prefill.email }),
-                ...(prefill.contact && { contact: prefill.contact }),
-            };
-        }
+
+        // const options = {
+        //     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
+        //     amount: Math.round(amount * 100),
+        //     currency: "INR",
+        //     name,
+        //     description,
+        //     image:
+        //       image ??
+        //       "https://pub-6da66eab69fe457ca97348b35f86f86b.r2.dev/resources/logo/cropped-logo.svg",
+        //     order_id: razorpayOrderId,
+        //     theme: {
+        //       color: "#3399cc",
+        //     },
+        // } as any;
+        // if (prefill?.name || prefill?.email || prefill?.contact) {
+        //     options.prefill = {
+        //         ...(prefill.name && { name: prefill.name }),
+        //         ...(prefill.email && { email: prefill.email }),
+        //         ...(prefill.contact && { contact: prefill.contact }),
+        //     };
+        // }
         if (callbackUrl) options.callback_url = callbackUrl;
         if (onSuccess) {
             options.handler = async (response: { razorpay_payment_id: string; razorpay_order_id: string, razorpay_signature: string }) => {
