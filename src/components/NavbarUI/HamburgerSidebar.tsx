@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
+import { formatSupabaseError, logProductFetch } from "@/lib/debug/product-fetch-log";
 import { createClient } from "@/lib/supabase-Utils/client";
 import { STYLE_FALLBACKS, STYLE_SLUG_ORDER } from "@/lib/style-fallbacks";
 import type { Category, Style } from "@/types/TypeInterface";
@@ -119,12 +120,19 @@ export default function HamburgerSidebar({
       try {
         const supabase = createClient();
 
-        const { data: stylesData } = await supabase
+        const { data: stylesData, error: stylesError } = await supabase
           .from("styles")
           .select("style_id, style_name, slug")
           .eq("is_active", true);
 
         const styles = buildSidebarStyles(stylesData ?? []);
+        logProductFetch({
+          page: "hamburger-sidebar",
+          query: "styles",
+          count: stylesData?.length ?? 0,
+          error: formatSupabaseError(stylesError),
+          meta: { sidebarStyleCount: styles.length, styleIds: styles.map((s) => s.style_id) },
+        });
         if (cancelled) return;
 
         setSidebarStyles(styles);
@@ -146,9 +154,27 @@ export default function HamburgerSidebar({
             .eq("listed_status", true)
             .in("style_id", styleIds);
 
+          logProductFetch({
+            page: "hamburger-sidebar",
+            query: "products_by_style_ids",
+            count: data?.length ?? 0,
+            error: formatSupabaseError(error),
+            meta: { styleIdCount: styleIds.length },
+          });
+
           if (!error && data) {
             productRows = data as typeof productRows;
           }
+        } else {
+          logProductFetch({
+            page: "hamburger-sidebar",
+            query: "products_by_style_ids",
+            count: 0,
+            meta: {
+              skipped: true,
+              reason: "no UUID style_ids — styles table may be empty (using slug fallbacks)",
+            },
+          });
         }
 
         const grouped: Record<string, Map<string, Category>> = {};

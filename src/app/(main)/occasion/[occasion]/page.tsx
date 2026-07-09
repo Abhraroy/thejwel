@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { formatSupabaseError, logProductFetch } from "@/lib/debug/product-fetch-log";
 import { createClient } from "@/lib/supabase-Utils/server";
 import { buildPageMetadata, toAbsoluteUrl } from "@/lib/seo/metadata";
 import { Category } from "@/types/TypeInterface";
@@ -41,6 +42,12 @@ export default async function OccasionPage({ params }: OccasionPageProps) {
   const supabase = await createClient();
 
   const occasionRow = await getOccasionBySlug(decodedOccasion);
+  logProductFetch({
+    page: "occasion",
+    query: "occasions_lookup",
+    count: occasionRow ? 1 : 0,
+    meta: { slug: decodedOccasion, occasion_id: occasionRow?.occasion_id ?? null },
+  });
   if (!occasionRow?.occasion_id) {
     notFound();
   }
@@ -58,6 +65,14 @@ export default async function OccasionPage({ params }: OccasionPageProps) {
     .eq("occasion_id", occasionRow.occasion_id)
     .eq("listed_status", true)
     .order("updated_at", { ascending: false });
+
+  logProductFetch({
+    page: "occasion",
+    query: "products_by_occasion_id",
+    count: data?.length ?? 0,
+    error: formatSupabaseError(error),
+    meta: { slug: decodedOccasion, occasion_id: occasionRow.occasion_id },
+  });
 
   const productsData = (error ? [] : data ?? []) as productWithImages[];
   const unique = new Map<string, Category>();

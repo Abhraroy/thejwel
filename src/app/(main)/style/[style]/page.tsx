@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { formatSupabaseError, logProductFetch } from "@/lib/debug/product-fetch-log";
 import { createClient } from "@/lib/supabase-Utils/server";
 import { buildPageMetadata, toAbsoluteUrl } from "@/lib/seo/metadata";
 import { Category } from "@/types/TypeInterface";
@@ -41,6 +42,12 @@ export default async function StylePage({ params }: StylePageProps) {
   const supabase = await createClient();
 
   const styleRow = await getStyleBySlug(decodedStyle);
+  logProductFetch({
+    page: "style",
+    query: "styles_lookup",
+    count: styleRow ? 1 : 0,
+    meta: { slug: decodedStyle, style_id: styleRow?.style_id ?? null },
+  });
   if (!styleRow?.style_id) {
     notFound();
   }
@@ -58,6 +65,14 @@ export default async function StylePage({ params }: StylePageProps) {
     .eq("style_id", styleRow.style_id)
     .eq("listed_status", true)
     .order("updated_at", { ascending: false });
+
+  logProductFetch({
+    page: "style",
+    query: "products_by_style_id",
+    count: data?.length ?? 0,
+    error: formatSupabaseError(error),
+    meta: { slug: decodedStyle, style_id: styleRow.style_id },
+  });
 
   const productsData = (error ? [] : data ?? []) as productWithImages[];
   const unique = new Map<string, Category>();
