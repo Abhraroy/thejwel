@@ -367,7 +367,7 @@ export default function ProductDisplay({
   const handleAddToCart = async () => {
     if (!product) {
       toast.error("Product information is not available", {
-        style: { backgroundColor: "#eec0c8", color: "#360000" },
+        style: { backgroundColor: "#2B241E", color: "#FFFDF8" },
         position: "top-right",
       });
       return;
@@ -381,14 +381,14 @@ export default function ProductDisplay({
     if (Number.isFinite(availableStock)) {
       if (availableStock <= 0) {
         toast.error("This product is out of stock.", {
-          style: { backgroundColor: "#eec0c8", color: "#360000" },
+          style: { backgroundColor: "#2B241E", color: "#FFFDF8" },
           position: "top-right",
         });
         return;
       }
       if (currentQtyInCart + requestedQty > availableStock) {
         toast.error(`Only ${availableStock} item(s) available in stock.`, {
-          style: { backgroundColor: "#eec0c8", color: "#360000" },
+          style: { backgroundColor: "#2B241E", color: "#FFFDF8" },
           position: "top-right",
         });
         return;
@@ -425,7 +425,7 @@ export default function ProductDisplay({
     } catch (error) {
       console.error("Error adding to cart:", error);
       toast.error("Failed to add item to cart. Please try again.", {
-        style: { backgroundColor: "#eec0c8", color: "#360000" },
+          style: { backgroundColor: "#2B241E", color: "#FFFDF8" },
         position: "top-right",
       });
     } finally {

@@ -413,3 +413,13 @@ button{
 .scrollbar-hide::-webkit-scrollbar {
   display: none;             /* Chrome, Safari, Opera */
 }
+
+.Toastify__close-button {
+  color: #ffffff;
+  opacity: 1;
+}
+
+.Toastify__close-button:hover {
+  color: #ffffff;
+  opacity: 0.8;
+}

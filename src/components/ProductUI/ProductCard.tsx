@@ -123,14 +123,14 @@ function ProductCard({
     if (Number.isFinite(availableStock)) {
       if (availableStock <= 0) {
         toast.error("This product is out of stock.", {
-          style: { backgroundColor: "#eec0c8", color: "#360000" },
+          style: { backgroundColor: "#2B241E", color: "#FFFDF8" },
           position: "top-right",
         });
         return;
       }
       if (currentQtyInCart >= availableStock) {
         toast.error(`Only ${availableStock} item(s) available in stock.`, {
-          style: { backgroundColor: "#eec0c8", color: "#360000" },
+          style: { backgroundColor: "#2B241E", color: "#FFFDF8" },
           position: "top-right",
         });
         return;
@@ -153,8 +153,8 @@ function ProductCard({
     // Show success toast
     toast.success(`Item added to cart!`,{
       style:{
-        backgroundColor:"#eec0c8",
-        color:"#360000",
+        backgroundColor:"#2B241E",
+        color:"#FFFDF8",
       },
       position:"top-right"
     });

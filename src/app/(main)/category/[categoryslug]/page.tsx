@@ -1,5 +1,4 @@
 import CategoryClient from "./CategoryClient";
-import { formatSupabaseError, logProductFetch } from "@/lib/debug/product-fetch-log";
 import { createClient } from "@/lib/supabase-Utils/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -68,20 +67,12 @@ export default async function CategoryPage({
     .eq("category_id", category.category_id)
     .eq("is_active", true);
 
-  const { data: products, error: productsError } = await supabase
+  const { data: products } = await supabase
     .from("products")
     .select("product_id, product_name, base_price, discount_percentage, final_price, stock_quantity, updated_at, thumbnail_image, tags, subcategory_id")
     .eq("category_id", category.category_id)
     .eq("listed_status", true)
     .order("updated_at", { ascending: false });
-
-  logProductFetch({
-    page: "category",
-    query: "products_by_category_id",
-    count: products?.length ?? 0,
-    error: formatSupabaseError(productsError),
-    meta: { slug, category_id: category.category_id, category_name: category.category_name },
-  });
 
   const itemListSchema = {
     "@context": "https://schema.org",
