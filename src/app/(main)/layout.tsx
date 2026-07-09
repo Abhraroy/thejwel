@@ -216,15 +216,15 @@ export default function RootLayout({
         <PaymentGatewayWrapper />
         <ToastContainer
           position="bottom-right"
-          autoClose={3000}
+          autoClose={2000}
           hideProgressBar={false}
           newestOnTop
           closeOnClick
           rtl={false}
-          pauseOnFocusLoss
+          pauseOnFocusLoss={false}
           draggable
-          pauseOnHover
-          theme="light"
+          pauseOnHover={false}
+          theme="dark"
         />
         <SpeedInsights />
         <ScrollToTopOnNavigate />

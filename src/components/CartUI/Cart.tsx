@@ -23,7 +23,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
   const FREE_SHIPPING_THRESHOLD = 499;
   const SHIPPING_COST = 75;
   const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const total = subtotal;
+  const displayTotal = subtotal + shippingCost;
   const isFreeShippingUnlocked = subtotal >= FREE_SHIPPING_THRESHOLD;
   const freeShippingProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
   const amountLeftForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
@@ -305,11 +305,18 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
               </div>
               {/* Price Summary */}
               <div className="space-y-2 sm:space-y-3">
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-[#360000] font-extrabold font-open-sans tracking-wider">Subtotal</span>
-                  <span className="font-medium text-[#360000] font-open-sans tracking-wider">
-                    ₹{subtotal.toFixed(2)}
-                  </span>
+                <div className="flex justify-between items-center text-xs sm:text-sm">
+                  <span className="text-[#360000] font-extrabold font-open-sans tracking-wider">Shipping</span>
+                  {isFreeShippingUnlocked ? (
+                    <span className="font-medium font-open-sans tracking-wider flex items-center gap-2">
+                      <span className="text-[#360000]/50 line-through">₹{SHIPPING_COST.toFixed(2)}</span>
+                      <span className="text-green-700 font-semibold">FREE</span>
+                    </span>
+                  ) : (
+                    <span className="font-medium text-[#360000] font-open-sans tracking-wider">
+                      ₹{SHIPPING_COST.toFixed(2)}
+                    </span>
+                  )}
                 </div>
                 <div className="border-t border-gray-200 pt-2 sm:pt-3">
                   <div className="flex justify-between">
@@ -317,7 +324,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
                       Total
                     </span>
                     <span className="text-lg sm:text-xl font-bold text-[#360000] font-open-sans tracking-wider">
-                      ₹{total.toFixed(2)}
+                      ₹{displayTotal.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -343,7 +350,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
 
                     const productIds = Array.from(qtyByProductId.keys());
                     if (productIds.length === 0) {
-                      toast.error("Your cart is empty.", { style: { backgroundColor: "#eec0c8", color: "#360000" }, position: "top-right" });
+                      toast.error("Your cart is empty.", { style: { backgroundColor: "#2B241E", color: "#FFFDF8" }, position: "top-right" });
                       return;
                     }
 
@@ -353,7 +360,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
                       .in("product_id", productIds);
 
                     if (stockRes.error) {
-                      toast.error("Could not validate stock. Please try again.", { style: { backgroundColor: "#eec0c8", color: "#360000" }, position: "top-right" });
+                      toast.error("Could not validate stock. Please try again.", { style: { backgroundColor: "#2B241E", color: "#FFFDF8" }, position: "top-right" });
                       return;
                     }
 
@@ -378,7 +385,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
                     }
 
                     if (issues.length > 0) {
-                      toast.error(issues.join(". "), { style: { backgroundColor: "#eec0c8", color: "#360000" }, position: "top-right" });
+                      toast.error(issues.join(". "), { style: { backgroundColor: "#2B241E", color: "#FFFDF8" }, position: "top-right" });
                       return;
                     }
 
@@ -386,7 +393,7 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
                     onClose?.(); // Close the cart sidebar
                   } catch (e) {
                     console.error("Checkout stock validation failed:", e);
-                    toast.error("Could not validate stock. Please try again.", { style: { backgroundColor: "#eec0c8", color: "#360000" }, position: "top-right" });
+                    toast.error("Could not validate stock. Please try again.", { style: { backgroundColor: "#2B241E", color: "#FFFDF8" }, position: "top-right" });
                   }
                 }}
                 disabled={initiatingCheckout}
