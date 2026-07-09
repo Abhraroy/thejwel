@@ -2,7 +2,11 @@ import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-Utils/server";
 import adminsupabase from "@/lib/supabase-Utils/admin";
-import { prepareCheckoutContext } from "@/app/utils/orderCheckout";
+import {
+  COD_SHIPPING_FEE,
+  getCodShippingCost,
+  prepareCheckoutContext,
+} from "@/app/utils/orderCheckout";
 import razorpayInstance from "@/app/utils/RazorPay";
 import { redis } from "@/app/utils/Redis";
 
@@ -17,7 +21,7 @@ export async function POST(request: NextRequest) {
   let addressId: string | null = null;
   let couponCode: string | null = null;
   let attribution: Record<string, unknown> | null = null;
-
+  let paymentType: "PREPAID" | "COD_SHIPPING" | null = "PREPAID";
   try {
     const body = await request.json();
     addressId = body?.address_id ?? null;
@@ -25,7 +29,8 @@ export async function POST(request: NextRequest) {
       typeof body?.coupon_code === "string" ? body.coupon_code.trim() : null;
     attribution =
       body?.attribution && typeof body.attribution === "object" ? body.attribution : null;
-  } catch {
+    paymentType = typeof body?.payment_type === "string" ? body.payment_type.trim() as "PREPAID" | "COD_SHIPPING" : "PREPAID";
+    } catch {
     devLog("invalid-json");
     return NextResponse.json(
       { message: "No address_id in request body or invalid JSON" },
@@ -64,10 +69,27 @@ export async function POST(request: NextRequest) {
     );
   }
   const context = contextRes.data;
+  const codShippingCost = getCodShippingCost(context.totalAmount);
+
+  if (paymentType === "COD_SHIPPING") {
+    if (codShippingCost <= 0) {
+      devLog("cod-shipping:not-applicable", {
+        totalAmount: context.totalAmount,
+      });
+      return NextResponse.json(
+        {
+          message:
+            "COD shipping payment is not required for this order total",
+        },
+        { status: 400 }
+      );
+    }
+  }
+
   let discountedTotalAmount = context.totalAmount;
   let discountedAmountInPaise = context.amountInPaise;
 
-  if (couponCode) {
+  if (paymentType === "PREPAID" && couponCode) {
     devLog("coupon-check:start", { couponCode });
     const nowIso = new Date().toISOString();
     const couponRes = await adminsupabase
@@ -153,6 +175,7 @@ export async function POST(request: NextRequest) {
   };
 
   const checkoutData = {
+    paymentType: paymentType,
     context: payableContext,
     couponCode: couponCode ?? null,
     attribution: attribution ?? null,
@@ -160,15 +183,19 @@ export async function POST(request: NextRequest) {
 
   try {
     const receipt = crypto.randomUUID().replace(/-/g, "");
+    const razorpayAmount =
+      paymentType === "COD_SHIPPING"
+        ? COD_SHIPPING_FEE * 100
+        : payableContext.amountInPaise;
     const razorpayOptions = {
-      amount: payableContext.amountInPaise,
+      amount: razorpayAmount,
       currency: "INR",
       receipt,
     };
     const razorpayOrder = await razorpayInstance.orders.create(razorpayOptions);
     devLog("razorpay-order-created", {
       razorpayOrderId: razorpayOrder.id,
-      amountInPaise: payableContext.amountInPaise,
+      amountInPaise: razorpayAmount,
       userId: payableContext.user.user_id,
     });
 
@@ -179,7 +206,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         total_amount: payableContext.totalAmount,
-        amount_in_paise: payableContext.amountInPaise,
+        amount_in_paise: razorpayAmount,
         address_id: payableContext.addressId,
         address_text: payableContext.addressText,
         user_id: payableContext.user.user_id,

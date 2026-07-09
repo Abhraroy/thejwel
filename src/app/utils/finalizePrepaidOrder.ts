@@ -1,6 +1,6 @@
 import "server-only";
 import adminsupabase from "@/lib/supabase-Utils/admin";
-import { createOrderWithItems } from "@/app/utils/orderCheckout";
+import { createOrderWithItems, getCodShippingCost } from "@/app/utils/orderCheckout";
 import { redis } from "@/app/utils/Redis";
 import { createRapidShypOrderForOrder } from "@/app/utils/rapidShyp";
 import { sendPurchaseEvent } from "@/lib/meta/capi";
@@ -25,6 +25,7 @@ interface StoredCheckoutData {
   context: any;
   couponCode: string | null;
   attribution?: Partial<AttributionPayload> | null;
+  paymentType?: "PREPAID" | "COD_SHIPPING";
 }
 
 /**
@@ -84,20 +85,30 @@ export async function finalizePrepaidOrder(params: {
     return { success: false, message: "Invalid checkout data", status: 500 };
   }
 
-  const { context: payableContext, couponCode, attribution } = checkoutData;
+  const { context: payableContext, couponCode, attribution, paymentType } = checkoutData;
   if (!payableContext) {
     devLog("missing-payable-context", { source, redisKey });
     return { success: false, message: "Invalid checkout context", status: 500 };
   }
 
-  const orderNumber = `PREPAID-${payableContext.user.user_id.slice(0, 8)}-${Date.now()}`;
+  const resolvedPaymentType = paymentType ?? "PREPAID";
+  const orderNumber =
+    resolvedPaymentType === "COD_SHIPPING"
+      ? `COD-${payableContext.user.user_id.slice(0, 8)}-${Date.now()}`
+      : `PREPAID-${payableContext.user.user_id.slice(0, 8)}-${Date.now()}`;
+
+  const shippingCost =
+    resolvedPaymentType === "COD_SHIPPING"
+      ? 75
+      : 0;
 
   const orderRes = await createOrderWithItems(payableContext, {
     orderNumber,
-    paymentStatus: "confirm",
-    orderStatus: "processing",
+    paymentStatus: resolvedPaymentType === "COD_SHIPPING" ? "pending(cod)" : "confirm",
+    orderStatus: resolvedPaymentType === "COD_SHIPPING" ? "pending" : "processing",
     transactionId: razorpayPaymentId,
     couponCode: couponCode ?? undefined,
+    shipping_cost: shippingCost ?? 0,
   });
 
   if (!orderRes.success) {
@@ -147,7 +158,10 @@ export async function finalizePrepaidOrder(params: {
 
   // --- Shipping ---
   try {
-    await createRapidShypOrderForOrder(order.order_id, "PREPAID");
+    await createRapidShypOrderForOrder(
+      order.order_id,
+      resolvedPaymentType === "COD_SHIPPING" ? "COD" : "PREPAID"
+    );
   } catch (rapidShypError) {
     devLog("rapidshyp-create-failed", { source, orderId: order.order_id, error: rapidShypError });
     console.error("RapidShyp order creation error:", rapidShypError);

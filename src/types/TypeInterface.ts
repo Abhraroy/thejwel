@@ -97,6 +97,7 @@ export interface Order {
   transaction_id?: string | null;
   address_text?: string | null;
   coupon_code?: string | null;
+  shipping_cost?: number | null;
 }
 
 export interface OrderItem {

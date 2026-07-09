@@ -9,7 +9,7 @@ import CartItem from "./CartItem";
 import { toast } from "react-toastify";
 import type { AnyCart, AnyCartItem, DbCartItem, LocalCartItem, LocalCart } from "@/types/CartTypes";
 import { isDbCartItem, isLocalCartItem } from "@/types/CartTypes";
-
+import { Truck, PartyPopper, Check } from "lucide-react";
 
 interface CartProps {
   isOpen?: boolean;
@@ -20,6 +20,13 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
   const { AuthenticatedState, cartItems, setCartItems, CartId, setInitiatingCheckout, initiatingCheckout } = useStore();
   const [subtotal, setSubtotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const FREE_SHIPPING_THRESHOLD = 499;
+  const SHIPPING_COST = 75;
+  const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const total = subtotal;
+  const isFreeShippingUnlocked = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const freeShippingProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const amountLeftForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   // Sample cart items for UI demonstration
   const supabase = createClient();
 
@@ -254,6 +261,48 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
           {/* Cart Footer - Summary & Checkout */}
           {cartItems && cartItems.length > 0 && (
             <div className="border-t border-white/20  text-[#7A1C1C] p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 sticky bottom-0">
+              {/* shipping charge,cod information,tax information,etc. */}
+              <div className="space-y-2.5 sm:space-y-3 border-1 border-black p-3 sm:p-4 flex flex-col rounded-lg w-full">
+                <div className="flex items-center justify-between gap-3 w-full">
+                  <div className="flex items-center gap-2 text-[#360000] font-open-sans tracking-wider flex-1 min-w-0">
+                    {isFreeShippingUnlocked && (
+                      <PartyPopper className="w-5 h-5 shrink-0" />
+                    )}
+                    <span className="text-xs sm:text-sm font-semibold">
+                      {isFreeShippingUnlocked
+                        ? "Congratulations! You've unlocked FREE shipping!"
+                        : `Add ₹${amountLeftForFreeShipping} more to get free shipping on cash on delivery`}
+                    </span>
+                  </div>
+                  <Truck className="w-5 h-5 text-[#360000] shrink-0" />
+                </div>
+
+                <div className="flex items-center gap-2 w-full">
+                  <div className="relative flex-1 h-2.5 bg-[#360000]/15 rounded-full overflow-hidden">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-[#360000] rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${freeShippingProgress}%` }}
+                    />
+                  </div>
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border-2 transition-all duration-300 ${
+                      isFreeShippingUnlocked
+                        ? "bg-[#360000] border-[#360000] text-white"
+                        : "bg-transparent border-[#360000]/25 text-[#360000]/30"
+                    }`}
+                  >
+                    <Check className="w-4 h-4" strokeWidth={2.5} />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full mt-1 px-4 py-2.5 font-bold text-white bg-gradient-to-r from-pink-500 to-red-500 rounded-xl transition-all hover:shadow-md active:scale-[0.98] hover:cursor-pointer text-sm font-open-sans tracking-wider"
+                >
+                  Continue Shopping
+                </button>
+              </div>
               {/* Price Summary */}
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex justify-between text-xs sm:text-sm">
@@ -262,22 +311,13 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
                     ₹{subtotal.toFixed(2)}
                   </span>
                 </div>
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-[#360000] font-extrabold font-open-sans tracking-wider">Shipping</span>
-                  <span className=" text-base sm:text-lg text-[#360000] font-bold font-open-sans tracking-wider">
-                    <span className="font-medium text-[#360000]/80 line-through text-xs sm:text-sm mr-2 font-open-sans tracking-wider">
-                      ₹70
-                    </span>
-                    Free
-                  </span>
-                </div>
                 <div className="border-t border-gray-200 pt-2 sm:pt-3">
                   <div className="flex justify-between">
                     <span className="text-sm sm:text-base font-semibold text-[#360000] font-open-sans tracking-wider">
                       Total
                     </span>
                     <span className="text-lg sm:text-xl font-bold text-[#360000] font-open-sans tracking-wider">
-                      ₹{subtotal.toFixed(2)}
+                      ₹{total.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -352,14 +392,6 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
                 disabled={initiatingCheckout}
               >
                 {initiatingCheckout ? "Proceeding to checkout..." : "Proceed to Checkout"}
-              </button>
-
-              {/* Continue Shopping Link */}
-              <button
-                onClick={onClose}
-                className="w-full text-center text-xs sm:text-sm text-[#360000] hover:text-[#360000] font-medium transition-colors duration-200 font-open-sans tracking-wider"
-              >
-                Continue Shopping
               </button>
             </div>
           )}
