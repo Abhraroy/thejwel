@@ -7,11 +7,13 @@ const ProductDisplay = dynamic(() => import("@/components/ProductUI/ProductDispl
 });
 
 const ProductReview = dynamic(() => import("@/components/ProductUI/ProductReview"));
-
+const ProductRecommended = dynamic(() => import("@/components/ProductUI/ProductRecommend"));
+const SameCategoryProduct = dynamic(() => import("@/components/ProductUI/SameCategoryProduct"));
 type ProductPageClientProps = {
   productDetails: any[] | null;
   reviews: any[];
   error?: string | null;
+  recommendedProducts: any[];
 };
 
 const ProductPageSkeleton = () => {
@@ -58,10 +60,12 @@ export default function ProductPageClient({
   productDetails,
   reviews,
   error,
+  recommendedProducts,
 }: ProductPageClientProps) {
   if (productDetails === null && !error) {
     return <ProductPageSkeleton />;
   }
+  console.log("recommendedProducts", recommendedProducts);
 
   if (error || !productDetails || productDetails.length === 0) {
     return (
@@ -82,11 +86,29 @@ export default function ProductPageClient({
     );
   }
 
-  const productId = String(productDetails[0]?.product_id ?? "");
+  const product = productDetails[0];
+  const productId = String(product?.product_id ?? "");
+  const categoryId = product?.category_id ? String(product.category_id) : "";
+  const categoryData = Array.isArray(product?.categories)
+    ? product.categories[0]
+    : product?.categories;
+  const categoryName = categoryData?.category_name;
+  const categorySlug = categoryData?.slug;
 
   return (
     <div className="min-h-screen bg-theme-cream flex flex-col">
       <ProductDisplay productDetails={productDetails} />
+      {recommendedProducts.length > 0 ? (
+        <ProductRecommended products={recommendedProducts} productId={productId} />
+      ) : null}
+      {categoryId ? (
+        <SameCategoryProduct
+          categoryId={categoryId}
+          currentProductId={productId}
+          categorySlug={categorySlug}
+          categoryName={categoryName}
+        />
+      ) : null}
       {productId ? <ProductReview reviews={reviews ?? []} /> : null}
     </div>
   );

@@ -186,7 +186,7 @@ export default function ProductReview({ reviews }: { reviews: any }) {
   };
 
   return (
-    <div className="bg-white py-6 md:py-8 px-4 md:px-6 lg:px-8">
+    <div className=" py-6 md:py-8 px-4 md:px-6 lg:px-8 ">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Customer Reviews</h2>

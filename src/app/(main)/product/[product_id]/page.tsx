@@ -9,33 +9,6 @@ type ProductPageProps = {
   params: Promise<{ product_id: string }>;
 };
 
-const getProductBase = cache(async (productId: string) => {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("products")
-    .select(`
-      product_id,
-      product_name,
-      description,
-      thumbnail_image,
-      base_price,
-      discount_percentage,
-      final_price,
-      stock_quantity,
-      size,
-      tags,
-      style,
-      sku,
-      category_id,
-      categories(category_name)
-    `)
-    .eq("product_id", productId)
-    .eq("listed_status", true)
-    .maybeSingle();
-
-  if (error) return null;
-  return data;
-});
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { product_id } = await params;
@@ -66,11 +39,38 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     imagePath: product.thumbnail_image || "/faviconFolder/android-chrome-512x512.png",
   });
 }
+const getProductBase = cache(async (productId: string) => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select(`
+      product_id,
+      product_name,
+      description,
+      thumbnail_image,
+      base_price,
+      discount_percentage,
+      final_price,
+      stock_quantity,
+      size,
+      tags,
+      style,
+      sku,
+      category_id,
+      categories(category_name, slug)
+    `)
+    .eq("product_id", productId)
+    .eq("listed_status", true)
+    .maybeSingle();
+
+  if (error) return null;
+  return data;
+});
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { product_id } = await params;
   const supabase = await createClient();
-  const [product, productImagesRes, reviewsRes] = await Promise.all([
+  const [product, productImagesRes, reviewsRes , recommendedProductsRes] = await Promise.all([
     getProductBase(product_id),
     supabase
       .from("product_images")
@@ -90,7 +90,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
         users(user_id, first_name, last_name, email)
       `)
       .eq("product_id", product_id),
+    supabase.rpc(
+      "get_recommended_products",
+      {
+        current_product_id: product_id,
+        result_limit: 8
+      }
+    )
   ]);
+
+  console.log("recommendedProductsRes", recommendedProductsRes);
 
   if (!product) {
     return (
@@ -98,6 +107,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         productDetails={[]}
         reviews={[]}
         error="The product you're looking for doesn't exist."
+        recommendedProducts={[]}
       />
     );
   }
@@ -184,7 +194,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <JsonLd data={schemaBreadcrumb} />
       <ProductPageClient
         productDetails={[normalizedProduct]}
+        recommendedProducts={recommendedProductsRes.data || []}
         reviews={reviewError ? [] : reviewData || []}
+        
       />
     </>
   );

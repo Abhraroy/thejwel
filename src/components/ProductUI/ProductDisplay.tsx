@@ -13,6 +13,83 @@ import "swiper/css";
 import { Share2 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { shareProduct } from "@/utilityFunctions/ShareProduct";
+import Link from "next/link";
+
+function resolveCategory(product: any) {
+  return Array.isArray(product?.categories) ? product.categories[0] : product?.categories;
+}
+
+function getStyleHref(style?: string | null) {
+  if (!style) return null;
+  return `/style/${encodeURIComponent(style)}`;
+}
+
+function getCategoryHref(product: any) {
+  const category = resolveCategory(product);
+  if (!category?.slug) return null;
+  return `/category/${encodeURIComponent(category.slug)}`;
+}
+
+function getTagHref(tag: string) {
+  return `/tags/${encodeURIComponent(tag)}`;
+}
+
+function InfoCardLink({
+  href,
+  className,
+  label,
+  value,
+}: {
+  href: string | null;
+  className: string;
+  label: string;
+  value: string;
+}) {
+  const content = (
+    <>
+      <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">{label}</p>
+      <p className="text-xs font-medium text-gray-900">{value}</p>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={`${className} hover:ring-2 hover:ring-[#E94E8B]/30`}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={className}>{content}</div>;
+}
+
+function DetailLink({
+  href,
+  className,
+  children,
+}: {
+  href: string | null;
+  className?: string;
+  children: ReactNode;
+}) {
+  if (!href) {
+    return <span className={className}>{children}</span>;
+  }
+
+  return (
+    <Link href={href} className={`${className ?? ""} hover:text-[#E94E8B] transition-colors`}>
+      {children}
+    </Link>
+  );
+}
+
+function TagLink({ tag, className }: { tag: string; className: string }) {
+  return (
+    <Link href={getTagHref(tag)} className={className}>
+      {tag}
+    </Link>
+  );
+}
 
 /** Parses the single description string into labeled sections (Description, Occasion, Material, Stone Type, Care Label). */
 function parseDescriptionSections(description: string): Array<{ label: string; content: string }> {
@@ -579,18 +656,18 @@ export default function ProductDisplay({
 
               {/* Product Info Cards */}
               <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-2.5 border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Style</p>
-                  <p className="text-xs font-medium text-gray-900">
-                    {productDetails[0]?.style ?? "--"}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-2.5 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Category</p>
-                  <p className="text-xs font-medium text-gray-900">
-                    {productDetails[0]?.categories?.category_name ?? "--"}
-                  </p>
-                </div>
+                <InfoCardLink
+                  href={getStyleHref(productDetails[0]?.style)}
+                  className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-2.5 border border-pink-100 shadow-sm hover:shadow-md transition-shadow"
+                  label="Style"
+                  value={productDetails[0]?.style ?? "--"}
+                />
+                <InfoCardLink
+                  href={getCategoryHref(productDetails[0])}
+                  className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-2.5 border border-blue-100 shadow-sm hover:shadow-md transition-shadow"
+                  label="Category"
+                  value={resolveCategory(productDetails[0])?.category_name ?? "--"}
+                />
               </div>
 
               {/* Tags */}
@@ -603,12 +680,11 @@ export default function ProductDisplay({
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {productDetails[0].tags.map((tag: string, index: number) => (
-                        <span
+                        <TagLink
                           key={index}
+                          tag={tag}
                           className="inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1 text-[11px] font-medium text-white shadow-md hover:shadow-lg transition-all duration-200"
-                        >
-                          {tag}
-                        </span>
+                        />
                       ))}
                     </div>
                   </div>
@@ -735,16 +811,22 @@ export default function ProductDisplay({
                 <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
                   <div className="flex justify-between items-center p-3 hover:bg-gray-50 transition-colors">
                     <span className="text-sm font-medium text-gray-600">Category</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {productDetails[0]?.categories?.category_name ?? "--"}
-                    </span>
+                    <DetailLink
+                      href={getCategoryHref(productDetails[0])}
+                      className="text-sm font-medium text-gray-900"
+                    >
+                      {resolveCategory(productDetails[0])?.category_name ?? "--"}
+                    </DetailLink>
                   </div>
                   {productDetails[0]?.style && (
                     <div className="flex justify-between items-center p-3 hover:bg-gray-50 transition-colors">
                       <span className="text-sm font-medium text-gray-600">Style</span>
-                      <span className="text-sm font-medium text-gray-900">
+                      <DetailLink
+                        href={getStyleHref(productDetails[0]?.style)}
+                        className="text-sm font-medium text-gray-900"
+                      >
                         {productDetails[0]?.style ?? "--"}
-                      </span>
+                      </DetailLink>
                     </div>
                   )}
                   {productDetails[0]?.tags &&
@@ -754,12 +836,11 @@ export default function ProductDisplay({
                         <span className="text-sm font-medium text-gray-600">Tags</span>
                         <div className="flex flex-wrap gap-2">
                           {productDetails[0].tags.map((tag: string, idx: number) => (
-                            <span
+                            <TagLink
                               key={idx}
-                              className="inline-flex items-center rounded-full bg-gray-100 text-gray-800 px-3 py-1 text-xs font-medium"
-                            >
-                              {tag}
-                            </span>
+                              tag={tag}
+                              className="inline-flex items-center rounded-full bg-gray-100 text-gray-800 px-3 py-1 text-xs font-medium hover:bg-gray-200 transition-colors"
+                            />
                           ))}
                         </div>
                       </div>
@@ -901,10 +982,10 @@ export default function ProductDisplay({
                 )}
                 
               
-                {product?.categories?.category_name && (
-                  <p className="text-sm text-gray-500">
-                    {product.categories.category_name}
-                  </p>
+                {resolveCategory(product)?.category_name && (
+                  <DetailLink href={getCategoryHref(product)} className="text-sm text-gray-500">
+                    {resolveCategory(product)?.category_name}
+                  </DetailLink>
                 )}
               </div>
 
@@ -956,12 +1037,12 @@ export default function ProductDisplay({
 
               {/* Product Info Cards */}
               <div className="grid grid-cols-1 gap-2">
-                <div className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-2.5 border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Style</p>
-                  <p className="text-xs font-medium text-gray-900">
-                    {product?.style ?? "--"}
-                  </p>
-                </div>
+                <InfoCardLink
+                  href={getStyleHref(product?.style)}
+                  className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-2.5 border border-pink-100 shadow-sm hover:shadow-md transition-shadow"
+                  label="Style"
+                  value={product?.style ?? "--"}
+                />
               </div>
 
               {/* Tags */}
@@ -970,12 +1051,11 @@ export default function ProductDisplay({
                   <span className="text-sm font-medium text-gray-900 uppercase tracking-wide">Tags</span>
                   <div className="flex flex-wrap gap-2">
                     {product.tags.map((tag: string, index: number) => (
-                      <span
+                      <TagLink
                         key={index}
+                        tag={tag}
                         className="inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-4 py-1.5 text-xs font-medium text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
-                      >
-                        {tag}
-                      </span>
+                      />
                     ))}
                   </div>
                 </div>
@@ -1087,24 +1167,36 @@ export default function ProductDisplay({
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Category</span>
-                    <span className="font-medium text-gray-900">
-                      {product?.categories?.category_name ?? "--"}
-                    </span>
+                    <DetailLink
+                      href={getCategoryHref(product)}
+                      className="font-medium text-gray-900"
+                    >
+                      {resolveCategory(product)?.category_name ?? "--"}
+                    </DetailLink>
                   </div>
                   {product?.style && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Style</span>
-                      <span className="font-medium text-gray-900">
+                      <DetailLink
+                        href={getStyleHref(product?.style)}
+                        className="font-medium text-gray-900"
+                      >
                         {product?.style ?? "--"}
-                      </span>
+                      </DetailLink>
                     </div>
                   )}
                   {product?.tags && Array.isArray(product?.tags) && product?.tags.length > 0 && (
-                    <div className="flex justify-between">
+                    <div className="flex flex-col gap-2">
                       <span className="text-gray-600">Tags</span>
-                      <span className="font-medium text-gray-900">
-                        {product.tags.join(", ")}
-                      </span>
+                      <div className="flex flex-wrap gap-2 justify-end">
+                        {product.tags.map((tag: string, idx: number) => (
+                          <TagLink
+                            key={idx}
+                            tag={tag}
+                            className="inline-flex items-center rounded-full bg-gray-100 text-gray-800 px-3 py-1 text-xs font-medium hover:bg-gray-200 transition-colors"
+                          />
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1231,10 +1323,13 @@ export default function ProductDisplay({
                 )}
                 
                 
-                {productDetails[0]?.categories?.category_name && (
-                  <p className="text-base text-gray-600">
-                    {productDetails[0]?.categories?.category_name}
-                  </p>
+                {resolveCategory(productDetails[0])?.category_name && (
+                  <DetailLink
+                    href={getCategoryHref(productDetails[0])}
+                    className="text-base text-gray-600"
+                  >
+                    {resolveCategory(productDetails[0])?.category_name}
+                  </DetailLink>
                 )}
               </div>
 
@@ -1286,18 +1381,18 @@ export default function ProductDisplay({
 
               {/* Product Info Cards */}
               <div className="grid grid-cols-2 gap-2.5">
-                <div className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-3 border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Style</p>
-                  <p className="text-xs font-medium text-gray-900">
-                    {productDetails[0]?.style ?? "--"}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-3 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Category</p>
-                  <p className="text-xs font-medium text-gray-900">
-                    {productDetails[0]?.categories?.category_name ?? "--"}
-                  </p>
-                </div>
+                <InfoCardLink
+                  href={getStyleHref(productDetails[0]?.style)}
+                  className="rounded-lg bg-gradient-to-br from-pink-50 to-rose-50 p-3 border border-pink-100 shadow-sm hover:shadow-md transition-shadow"
+                  label="Style"
+                  value={productDetails[0]?.style ?? "--"}
+                />
+                <InfoCardLink
+                  href={getCategoryHref(productDetails[0])}
+                  className="rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 p-3 border border-blue-100 shadow-sm hover:shadow-md transition-shadow"
+                  label="Category"
+                  value={resolveCategory(productDetails[0])?.category_name ?? "--"}
+                />
               </div>
 
               {/* Tags */}
@@ -1306,12 +1401,11 @@ export default function ProductDisplay({
                   <span className="text-base font-medium text-gray-900 uppercase tracking-wide">Tags</span>
                   <div className="flex flex-wrap gap-2.5">
                     {productDetails[0].tags.map((tag: string, index: number) => (
-                      <span
+                      <TagLink
                         key={index}
+                        tag={tag}
                         className="inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-5 py-2 text-sm font-medium text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
-                      >
-                        {tag}
-                      </span>
+                      />
                     ))}
                   </div>
                 </div>
