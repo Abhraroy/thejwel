@@ -151,6 +151,9 @@ export async function POST(request: NextRequest) {
         message: "COD order already created",
         orderId: duplicateRes.data.order_id,
         orderNumber: duplicateRes.data.order_number,
+        // Same event_id so a late Pixel fire still dedupes with the first CAPI send.
+        eventId: duplicateRes.data.order_id,
+        purchaseValue: Number(duplicateRes.data.total_amount) || 0,
       },
       { status: 200 }
     );
@@ -195,15 +198,18 @@ export async function POST(request: NextRequest) {
 
   await decrementStockForOrderItems(orderRes.orderItemsPayload ?? []);
 
+  const purchaseValue = Number(payableContext.totalAmount) || 0;
+  const contentIds = (orderRes.orderItemsPayload ?? [])
+    .map((item: any) => item.product_id)
+    .filter(Boolean);
+
   // Meta Conversions API (source of truth). Fired at COD placement so ad
   // optimization sees the conversion immediately. Never blocks the order.
+  // This path is COD with free shipping only (shipping_cost === 0).
   try {
-    const contentIds = (orderRes.orderItemsPayload ?? [])
-      .map((item: any) => item.product_id)
-      .filter(Boolean);
     await sendPurchaseEvent({
       eventId: orderRes.order.order_id,
-      value: Number(payableContext.totalAmount) || 0,
+      value: purchaseValue,
       currency: "INR",
       contentIds,
       user: {
@@ -225,6 +231,8 @@ export async function POST(request: NextRequest) {
       orderNumber: orderRes.order.order_number,
       // event_id == order_id so the client Pixel Purchase dedupes with CAPI.
       eventId: orderRes.order.order_id,
+      purchaseValue,
+      contentIds,
     },
     { status: 200 }
   );

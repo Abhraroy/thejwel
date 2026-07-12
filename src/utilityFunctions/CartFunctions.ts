@@ -7,8 +7,7 @@ import type {
   LocalCartItem,
 } from "@/types/CartTypes";
 import { SupabaseClient } from "@supabase/supabase-js";
-
-             
+import { trackAddToCart } from "@/lib/meta/pixel";
 
 export const addToLocalCart = (product: CartProduct): LocalCart => {
     let cartMap = new Map<string, LocalCartItem>();
@@ -33,6 +32,7 @@ export const addToLocalCart = (product: CartProduct): LocalCart => {
     }
     const updatedCart: LocalCart = Array.from(cartMap.values())
     localStorage.setItem("cartItems",JSON.stringify(updatedCart))
+    fireAddToCartEvent(product_obj, 1);
     return updatedCart;
 }
 
@@ -176,6 +176,28 @@ const getProductIdFromInput = (input: DbCartItem | LocalCartItem | CartProduct |
   return null;
 };
 
+function productUnitPrice(product: CartProduct | DbCartProductRef | null | undefined): number {
+  const p = product as any;
+  const nested = p?.products ?? p?.product ?? p;
+  const price = Number(nested?.final_price ?? nested?.base_price ?? p?.final_price ?? p?.base_price ?? 0);
+  return Number.isFinite(price) ? price : 0;
+}
+
+function fireAddToCartEvent(
+  product: CartProduct | DbCartProductRef,
+  quantity = 1
+): void {
+  const pid = getProductIdFromInput(product as any);
+  if (!pid) return;
+  const unit = productUnitPrice(product);
+  trackAddToCart({
+    contentIds: [pid],
+    value: unit * Math.max(1, quantity),
+    currency: "INR",
+    numItems: Math.max(1, quantity),
+  });
+}
+
 export const addToDbCart = async (
   product: CartProduct | DbCartProductRef,
   CartId: string,
@@ -196,6 +218,7 @@ export const addToDbCart = async (
         else{
             const updatedCartItems = await getCartData(CartId,supabase)
             if(updatedCartItems.success){
+                fireAddToCartEvent(product, 1);
                 return updatedCartItems.data as DbCart;
             }
             return { success: false, error: null, message: "Failed to get cart data" };
@@ -213,6 +236,7 @@ export const addToDbCart = async (
         else{
             const updatedCartItems = await getCartData(CartId,supabase)
             if(updatedCartItems.success){
+                fireAddToCartEvent(product, 1);
                 return updatedCartItems.data as DbCart;
             }
             return { success: false, error: null, message: "Failed to get cart data" };

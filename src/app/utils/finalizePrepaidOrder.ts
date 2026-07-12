@@ -18,6 +18,9 @@ export type FinalizePrepaidResult =
       success: true;
       alreadyExisted: boolean;
       order: { order_id: string; order_number: string | null };
+      /** Order value sent to Meta (products + COD shipping fee when applicable). */
+      purchaseValue: number;
+      contentIds: string[];
     }
   | { success: false; message: string; status: number };
 
@@ -68,6 +71,9 @@ export async function finalizePrepaidOrder(params: {
         order_id: existingOrder.data.order_id,
         order_number: existingOrder.data.order_number ?? null,
       },
+      // CAPI already fired on first create; Pixel uses these for dedupe only.
+      purchaseValue: 0,
+      contentIds: [],
     };
   }
 
@@ -99,7 +105,7 @@ export async function finalizePrepaidOrder(params: {
 
   const shippingCost =
     resolvedPaymentType === "COD_SHIPPING"
-      ? 75
+      ? getCodShippingCost(Number(payableContext.totalAmount) || 0) || 75
       : 0;
 
   const orderRes = await createOrderWithItems(payableContext, {
@@ -122,11 +128,20 @@ export async function finalizePrepaidOrder(params: {
   }
 
   const order = orderRes.order;
+  const contentIds = (orderRes.orderItemsPayload ?? [])
+    .map((item: any) => item.product_id)
+    .filter(Boolean) as string[];
+  // Meta Purchase value = merchandise total + COD shipping fee (when charged).
+  const purchaseValue =
+    (Number(payableContext.totalAmount) || 0) + (Number(shippingCost) || 0);
+
   devLog("order-created", {
     source,
     orderId: order.order_id,
     orderNumber: order.order_number,
     transactionId: razorpayPaymentId,
+    paymentType: resolvedPaymentType,
+    purchaseValue,
   });
 
   await decrementStockForOrderItems(orderRes.orderItemsPayload ?? []);
@@ -168,13 +183,11 @@ export async function finalizePrepaidOrder(params: {
   }
 
   // --- Meta Conversions API (source of truth; never blocks the order) ---
+  // Covers PREPAID and COD_SHIPPING (COD with online shipping fee).
   try {
-    const contentIds = (orderRes.orderItemsPayload ?? [])
-      .map((item: any) => item.product_id)
-      .filter(Boolean);
     await sendPurchaseEvent({
       eventId: order.order_id,
-      value: Number(payableContext.totalAmount) || 0,
+      value: purchaseValue,
       currency: "INR",
       contentIds,
       user: {
@@ -196,5 +209,7 @@ export async function finalizePrepaidOrder(params: {
     success: true,
     alreadyExisted: false,
     order: { order_id: order.order_id, order_number: order.order_number ?? null },
+    purchaseValue,
+    contentIds,
   };
 }
