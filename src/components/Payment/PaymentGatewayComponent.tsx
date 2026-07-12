@@ -456,9 +456,16 @@ export default function PaymentGatewayComponent() {
         if (codEventId) {
           trackPurchase({
             eventId: codEventId,
-            value: activeCoupon ? prepaidPayableAmount : orderTotalNumber,
+            value:
+              typeof res.data?.purchaseValue === "number"
+                ? res.data.purchaseValue
+                : activeCoupon
+                  ? prepaidPayableAmount
+                  : orderTotalNumber,
             currency: "INR",
-            contentIds: getCartContentIds(),
+            contentIds: Array.isArray(res.data?.contentIds)
+              ? res.data.contentIds
+              : getCartContentIds(),
           });
         }
         setPaymentConcluded(true);
@@ -539,12 +546,19 @@ export default function PaymentGatewayComponent() {
       );
       if (completeRes.status === 200) {
         const codEventId = completeRes.data?.event_id ?? completeRes.data?.order_id;
-        if (codEventId) {
+        if (codEventId && !completeRes.data?.already_existed) {
+          const shippingPurchaseValue =
+            typeof completeRes.data?.purchase_value === "number" &&
+            completeRes.data.purchase_value > 0
+              ? completeRes.data.purchase_value
+              : orderTotalNumber + COD_SHIPPING_FEE;
           trackPurchase({
             eventId: codEventId,
-            value: activeCoupon ? prepaidPayableAmount : orderTotalNumber,
+            value: shippingPurchaseValue,
             currency: "INR",
-            contentIds: getCartContentIds(),
+            contentIds: Array.isArray(completeRes.data?.content_ids)
+              ? completeRes.data.content_ids
+              : getCartContentIds(),
           });
         }
         setPaymentConcluded(true);
@@ -1272,12 +1286,18 @@ export default function PaymentGatewayComponent() {
                       });
                       const prepaidEventId =
                         completeRes.data?.event_id ?? completeRes.data?.order_id;
-                      if (prepaidEventId) {
+                      if (prepaidEventId && !completeRes.data?.already_existed) {
                         trackPurchase({
                           eventId: prepaidEventId,
-                          value: prepaidOrderData.total_amount,
+                          value:
+                            typeof completeRes.data?.purchase_value === "number" &&
+                            completeRes.data.purchase_value > 0
+                              ? completeRes.data.purchase_value
+                              : prepaidOrderData.total_amount,
                           currency: "INR",
-                          contentIds: getCartContentIds(),
+                          contentIds: Array.isArray(completeRes.data?.content_ids)
+                            ? completeRes.data.content_ids
+                            : getCartContentIds(),
                         });
                       }
                       setPaymentConcluded(true);

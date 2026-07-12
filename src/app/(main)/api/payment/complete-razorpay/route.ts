@@ -65,6 +65,10 @@ export async function POST(request: NextRequest) {
       order_number: result.order.order_number,
       // event_id == order_id so the client Pixel Purchase dedupes with CAPI.
       event_id: result.order.order_id,
+      // Same value CAPI used (PREPAID merchandise, or COD + shipping fee).
+      purchase_value: result.purchaseValue,
+      content_ids: result.contentIds,
+      already_existed: result.alreadyExisted,
     },
     { status: 200 }
   );

@@ -125,10 +125,13 @@ order server-side.
 - **Attribution capture** (`AttributionTracker`): on landing from an ad, stores `fbclid`
   → `_fbc` cookie, persists UTM params, and cleans tracking params from the URL.
 - **Server Purchase event** fires **only after a successful order insert**:
-  - COD → at order placement (`/api/payment/cod`).
-  - Prepaid → on `/api/payment/complete-razorpay` **and** on webhook recovery.
+  - COD (free shipping / no shipping fee) → `/api/payment/cod`
+  - COD with shipping fee → Razorpay `COD_SHIPPING` → `finalizePrepaidOrder`
+  - Prepaid → Razorpay `PREPAID` → `finalizePrepaidOrder` (also webhook recovery)
 - **Browser Pixel Purchase** fires only after the order API returns `200`, with the same
-  `event_id` for deduplication.
+  `event_id` for deduplication. Value matches CAPI (includes ₹75 COD shipping when charged).
+- **AddToCart** (browser Pixel) fires from `addToLocalCart` / `addToDbCart` on every
+  successful add (product page, cards, wishlist, cart quantity +).
 - **Admin timezone:** the Orders page now displays and filters Today/Yesterday/custom in
   **IST (Asia/Kolkata)**, fixing late-night orders showing on the wrong day. No DB change
   was made — `order_date` stays `timestamp without time zone` (UTC) and is converted to
@@ -136,7 +139,51 @@ order server-side.
 
 ---
 
-## 8. Optional: audit columns on `orders`
+## 8. Meta Ads Manager — use these events in campaigns
+
+After events show as **Active** in Events Manager (Test Events first), wire them into ads:
+
+### A. Confirm events in Events Manager
+1. [Events Manager](https://business.facebook.com/events_manager) → your Pixel.
+2. **Overview** / **Test Events**: you should see `PageView`, `AddToCart`, `Purchase`.
+3. For `Purchase`, open an event → confirm `value`, `currency = INR`, `content_ids`, and
+   that Browser + Server share the same `event_id` (deduped to one conversion).
+
+### B. Aggregated Event Measurement (iOS / domain)
+1. Events Manager → **Aggregated Event Measurement** → **Configure web events**.
+2. Select your verified domain.
+3. Prioritize (top of list is highest):
+   1. **Purchase**
+   2. **AddToCart** (optional but useful for mid-funnel)
+   3. **PageView** (usually automatic)
+4. Submit / publish. Without this, iOS attribution for Purchase is unreliable.
+
+### C. Custom conversions (only if needed)
+Prefer the standard **Purchase** / **AddToCart** events. Do **not** recreate URL-based
+custom conversions for thank-you or `/account/orders` pages (that was the old bug).
+
+### D. Create / edit a campaign
+1. Ads Manager → **Create** (or edit an existing campaign).
+2. **Buying type:** Auction. **Objective:** **Sales** (Conversions).
+3. At ad set level → **Conversion** / **Optimization**:
+   - Primary: **Website** → **Purchase** (Pixel / Dataset).
+   - For retargeting / TOFU tests you can also optimize for **AddToCart**.
+4. **Conversion location:** Website. Dataset = your Pixel ID.
+5. Attribution setting: start with **7-day click, 1-day view** (or Meta’s recommended default).
+6. Audience, budget, creatives as usual. Publish.
+
+### E. Catalog / dynamic ads (optional)
+If you use Advantage+ catalog ads later, map `content_ids` to catalog product IDs
+(same as your `product_id` values sent in events).
+
+### F. Reporting
+- Ads Manager columns → customize → add **Purchases**, **Purchase ROAS**, **Add to cart**.
+- Compare Purchases in Ads Manager vs orders in your admin (IST “Today”). They should
+  track closely; small gaps are normal (iOS, blockers, delayed attribution).
+
+---
+
+## 9. Optional: audit columns on `orders`
 
 The code logs CAPI outcomes to the server console (search logs for `[meta/capi]`). It does
 **not** write to new DB columns, so nothing breaks if you skip this. If you later want to
@@ -156,7 +203,8 @@ ALTER TABLE public.orders
 - [ ] Env vars set (`META_CAPI_ACCESS_TOKEN`, `RAZORPAY_WEBHOOK_SECRET`, pixel id) and redeployed
 - [ ] CAPI access token generated (Step 2)
 - [ ] Old URL-based custom conversion disabled (Step 3)
-- [ ] Domain verified + `Purchase` prioritized (Step 4)
-- [ ] Tested with `META_TEST_EVENT_CODE`, saw one deduped `Purchase` per order (Step 5)
+- [ ] Domain verified + `Purchase` prioritized (Step 4 / section 8B)
+- [ ] Tested with `META_TEST_EVENT_CODE`: AddToCart on product add; one deduped Purchase per order (COD free shipping, COD+shipping, prepaid)
 - [ ] Razorpay webhook created in test + live, recovery tested (Step 6)
+- [ ] Ads Manager campaign optimization set to **Purchase** (section 8D)
 - [ ] `META_TEST_EVENT_CODE` removed for production
