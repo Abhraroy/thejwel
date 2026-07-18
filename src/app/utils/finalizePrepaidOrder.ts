@@ -1,6 +1,7 @@
 import "server-only";
 import adminsupabase from "@/lib/supabase-Utils/admin";
 import { createOrderWithItems, getCodShippingCost } from "@/app/utils/orderCheckout";
+import { SHIPPING_FEE } from "@/lib/shipping-config";
 import { redis } from "@/app/utils/Redis";
 import { createRapidShypOrderForOrder } from "@/app/utils/rapidShyp";
 import { sendPurchaseEvent } from "@/lib/meta/capi";
@@ -105,7 +106,7 @@ export async function finalizePrepaidOrder(params: {
 
   const shippingCost =
     resolvedPaymentType === "COD_SHIPPING"
-      ? getCodShippingCost(Number(payableContext.totalAmount) || 0) || 75
+      ? getCodShippingCost(Number(payableContext.totalAmount) || 0) || SHIPPING_FEE
       : 0;
 
   const orderRes = await createOrderWithItems(payableContext, {

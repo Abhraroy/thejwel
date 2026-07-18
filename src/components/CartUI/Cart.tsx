@@ -10,6 +10,12 @@ import { toast } from "react-toastify";
 import type { AnyCart, AnyCartItem, DbCartItem, LocalCartItem, LocalCart } from "@/types/CartTypes";
 import { isDbCartItem, isLocalCartItem } from "@/types/CartTypes";
 import { Truck, PartyPopper, Check } from "lucide-react";
+import {
+  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_FEE,
+  SHIPPING_ENABLED,
+  getShippingCost,
+} from "@/lib/shipping-config";
 
 interface CartProps {
   isOpen?: boolean;
@@ -20,11 +26,10 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
   const { AuthenticatedState, cartItems, setCartItems, CartId, setInitiatingCheckout, initiatingCheckout } = useStore();
   const [subtotal, setSubtotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const FREE_SHIPPING_THRESHOLD = 499;
-  const SHIPPING_COST = 75;
-  const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const shippingCost = getShippingCost(subtotal);
   const displayTotal = subtotal + shippingCost;
-  const isFreeShippingUnlocked = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const isFreeShippingUnlocked =
+    !SHIPPING_ENABLED || subtotal >= FREE_SHIPPING_THRESHOLD;
   const freeShippingProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
   const amountLeftForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   // Sample cart items for UI demonstration
@@ -309,12 +314,12 @@ export default function Cart({ isOpen = false, onClose }: CartProps) {
                   <span className="text-[#360000] font-extrabold font-open-sans tracking-wider">Shipping</span>
                   {isFreeShippingUnlocked ? (
                     <span className="font-medium font-open-sans tracking-wider flex items-center gap-2">
-                      <span className="text-[#360000]/50 line-through">₹{SHIPPING_COST.toFixed(2)}</span>
+                      <span className="text-[#360000]/50 line-through">₹{SHIPPING_FEE.toFixed(2)}</span>
                       <span className="text-green-700 font-semibold">FREE</span>
                     </span>
                   ) : (
                     <span className="font-medium text-[#360000] font-open-sans tracking-wider">
-                      ₹{SHIPPING_COST.toFixed(2)}
+                      ₹{shippingCost.toFixed(2)}
                     </span>
                   )}
                 </div>
