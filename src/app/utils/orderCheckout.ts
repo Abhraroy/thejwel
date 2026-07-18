@@ -1,4 +1,9 @@
 import adminsupabase from "@/lib/supabase-Utils/admin";
+import {
+  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_FEE,
+  getShippingCost,
+} from "@/lib/shipping-config";
 
 const devLog = (...args: unknown[]) => {
   if (process.env.NODE_ENV === "development") {
@@ -6,11 +11,11 @@ const devLog = (...args: unknown[]) => {
   }
 };
 
-export const COD_FREE_SHIPPING_THRESHOLD = 499;
-export const COD_SHIPPING_FEE = 75;
+export const COD_FREE_SHIPPING_THRESHOLD = FREE_SHIPPING_THRESHOLD;
+export const COD_SHIPPING_FEE = SHIPPING_FEE;
 
 export function getCodShippingCost(cartSubtotal: number): number {
-  return cartSubtotal >= COD_FREE_SHIPPING_THRESHOLD ? 0 : COD_SHIPPING_FEE;
+  return getShippingCost(cartSubtotal);
 }
 
 type CheckoutCartItem = {

@@ -3,9 +3,14 @@ import OptimizedImage from "@/components/OptimizedImage";
 import Link from "next/link";
 import RazorPayButton from "./RazorPay";
 import { Truck, PartyPopper, Check } from "lucide-react";
+import {
+  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_FEE,
+  SHIPPING_ENABLED,
+} from "@/lib/shipping-config";
 
-const COD_FREE_SHIPPING_THRESHOLD = 499;
-const COD_SHIPPING_FEE = 75;
+const COD_FREE_SHIPPING_THRESHOLD = FREE_SHIPPING_THRESHOLD;
+const COD_SHIPPING_FEE = SHIPPING_FEE;
 
 interface CashOnDeliveryConfirmationProps {
   cartItems: AnyCart;
@@ -53,7 +58,8 @@ export default function CashOnDeliveryConfirmation({
 }: CashOnDeliveryConfirmationProps) {
   const orderTotalNumber = Number(orderTotal);
   const requiresShippingPayment = codShippingCost > 0;
-  const isFreeShippingUnlocked = orderTotalNumber >= COD_FREE_SHIPPING_THRESHOLD;
+  const isFreeShippingUnlocked =
+    !SHIPPING_ENABLED || orderTotalNumber >= COD_FREE_SHIPPING_THRESHOLD;
   const freeShippingProgress = Math.min(
     100,
     (orderTotalNumber / COD_FREE_SHIPPING_THRESHOLD) * 100

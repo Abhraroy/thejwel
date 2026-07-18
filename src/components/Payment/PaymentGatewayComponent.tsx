@@ -17,6 +17,12 @@ import type { AnyCart } from "@/types/CartTypes";
 import { getAttribution } from "@/lib/attribution";
 import { trackPurchase } from "@/lib/meta/pixel";
 import { Truck, PartyPopper, Check } from "lucide-react";
+import {
+  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_FEE,
+  SHIPPING_ENABLED,
+  getShippingCost,
+} from "@/lib/shipping-config";
 
 type MarketingCoupon = {
   coupon_code: string;
@@ -80,8 +86,8 @@ export default function PaymentGatewayComponent() {
     total_amount: number;
   } | null>(null);
   const supabase = createClient();
-  const COD_FREE_SHIPPING_THRESHOLD = 499;
-  const COD_SHIPPING_FEE = 75;
+  const COD_FREE_SHIPPING_THRESHOLD = FREE_SHIPPING_THRESHOLD;
+  const COD_SHIPPING_FEE = SHIPPING_FEE;
 
   const cartItemCount = (cartItems as AnyCart).reduce(
     (sum, item: any) => sum + (Number(item?.quantity ?? 1) || 0),
@@ -97,8 +103,9 @@ export default function PaymentGatewayComponent() {
     }, 0)
     .toFixed(2);
   const orderTotalNumber = Number(orderTotal);
-  const codShippingCost = orderTotalNumber >= COD_FREE_SHIPPING_THRESHOLD ? 0 : COD_SHIPPING_FEE;
-  const isFreeShippingUnlocked = orderTotalNumber >= COD_FREE_SHIPPING_THRESHOLD;
+  const codShippingCost = getShippingCost(orderTotalNumber);
+  const isFreeShippingUnlocked =
+    !SHIPPING_ENABLED || orderTotalNumber >= COD_FREE_SHIPPING_THRESHOLD;
   const freeShippingProgress = Math.min(100, (orderTotalNumber / COD_FREE_SHIPPING_THRESHOLD) * 100);
   const amountLeftForFreeShipping = Math.max(0, COD_FREE_SHIPPING_THRESHOLD - orderTotalNumber);
   const activeCoupon = userCoupon ?? (isCouponApplied ? prepaidCoupon : null);
